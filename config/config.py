@@ -22,3 +22,10 @@ class StorageConfig:
 class AuthConfig:
     JWT_SECRET: str = os.getenv("JWT_SECRET", "change-me")
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
+
+
+class FinMindConfig:
+    # FinMind 免費版不需要 API key，有 token 可提高 rate limit
+    # 資料來源：https://finmindtrade.com（TWSE/MOPS 公開資料彙整）
+    BASE_URL: str = "https://api.finmindtrade.com/api/v4/data"
+    TOKEN: str = os.getenv("FINMIND_TOKEN", "")  # 可選，提高 rate limit 用

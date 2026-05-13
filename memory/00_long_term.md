@@ -26,6 +26,7 @@
 - Phase 3: Financial Section Classification（rule-based + Claude Haiku fallback）
 - Phase 4: Two-PDF Diff Report（section-level，tone_only flag，evidence required）
 - Phase 5: Table Extraction（pdfplumber，markdown，numeric cross-check）
+- Phase 6: Taiwan Data Source（FinMind API，auxiliary only，cross-check）
 
 ## 重要設計決策
 
@@ -38,3 +39,5 @@
 - tone_shift 強制標記 tone_only=True，禁止直接等同財務惡化
 - numeric-check: 在 PDFTable 中搜尋數字 → confirmed / unreliable
 - extraction_quality=low → requires_human_review=True（自動）
+- ExternalDataRecord.is_auxiliary 永遠=True，禁止作為主要 evidence
+- FinMind cross-check 只輸出 consistent/needs_review/not_comparable，不輸出投資判斷

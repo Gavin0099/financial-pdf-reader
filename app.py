@@ -53,3 +53,7 @@ app.include_router(DiffRouter, tags=["Diff"], prefix="/api/v1/reports")
 # Phase 5: table extraction & numeric cross-check
 from apis.v1.routers.tables import router as TablesRouter
 app.include_router(TablesRouter, tags=["Tables"], prefix="/api/v1/documents")
+
+# Phase 6: Taiwan data source integration
+from apis.v1.routers.data_source import router as DataSourceRouter
+app.include_router(DataSourceRouter, tags=["DataSource"], prefix="/api/v1/stocks")

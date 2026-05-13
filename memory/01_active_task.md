@@ -1,7 +1,7 @@
 # Active Task
 
 **最後更新**: 2026-05-13
-**當前 Phase**: Phase 5 完成，準備進 Phase 6
+**當前 Phase**: Phase 6 完成，準備進 Phase 7（Governance Layer）
 
 ## 已完成
 
@@ -46,10 +46,20 @@
 - GET /{id}/tables（查詢，支援 ?page / ?section 過濾）
 - GET /{id}/numeric-check?number=12.3（數字 cross-check，回傳 confirmed/unreliable）
 
-## 下一步：Phase 6 — Taiwan Data Source Integration
+### Phase 6 ✅
+- `ExternalDataRecord` model（is_auxiliary 永遠=True，防止混淆）
+- FinMind API 整合（月營收 + 財務報表，資料來源標示）
+- Period 轉日期範圍（2026Q1 → 2026-01-01 ~ 2026-03-31）
+- Cross-check：consistent / needs_review / not_comparable（不輸出投資判斷）
+- POST /{stock_id}/fetch-revenue（月營收）
+- POST /{stock_id}/fetch-financials（財務報表）
+- GET /{stock_id}/crosscheck（PDF 數字 vs 外部資料）
+- GET /{stock_id}/external-data（快取查詢）
 
-**目標**: 補上結構化台股資料作為輔助基準
-- 評估合法資料源（公開資訊觀測站 / FinMind）
-- 月營收、基本財務比率
-- 與 PDF 報告做 cross-check
-- 外部資料來源必須標示 source，不混淆 PDF 原文
+## 下一步：Phase 7 — Governance Layer
+
+**目標**: 導入完整 evidence discipline
+- 每個 claim 都有 claim_level 與 evidence 狀態
+- 無 evidence claim 自動降級
+- Claim audit report 輸出
+- R1-R7 governance rules 實作
