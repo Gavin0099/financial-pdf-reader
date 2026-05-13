@@ -49,3 +49,7 @@ app.include_router(ClassificationRouter, tags=["Classification"], prefix="/api/v
 # Phase 4: two-PDF diff report
 from apis.v1.routers.diff import router as DiffRouter
 app.include_router(DiffRouter, tags=["Diff"], prefix="/api/v1/reports")
+
+# Phase 5: table extraction & numeric cross-check
+from apis.v1.routers.tables import router as TablesRouter
+app.include_router(TablesRouter, tags=["Tables"], prefix="/api/v1/documents")

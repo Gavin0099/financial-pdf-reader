@@ -61,3 +61,28 @@ class PDFChunk(Document):
         "collection": "pdf_chunks",
         "indexes": ["document_id", "page", "stock_id", "period"],
     }
+
+
+class PDFTable(Document):
+    """從 PDF 抽出的表格，保留頁碼與 markdown 格式"""
+    table_id = StringField(required=True, unique=True)
+    document_id = StringField(required=True)
+    stock_id = StringField(required=True)
+    period = StringField(required=True)
+    page = IntField(required=True)                  # 1-based 頁碼
+    section = StringField(default="unknown")
+    table_index = IntField(default=0)               # 同頁第幾個表格（0-based）
+    table_markdown = StringField(required=True)     # markdown 格式
+    row_count = IntField(default=0)
+    col_count = IntField(default=0)
+    extraction_quality = StringField(
+        choices=["high", "medium", "low", "failed"],
+        default="medium",
+    )
+    requires_human_review = BooleanField(default=False)
+    created_at = DateTimeField(default=lambda: datetime.now(timezone.utc))
+
+    meta = {
+        "collection": "pdf_tables",
+        "indexes": ["document_id", "page", "stock_id"],
+    }

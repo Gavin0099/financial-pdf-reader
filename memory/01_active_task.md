@@ -1,7 +1,7 @@
 # Active Task
 
 **最後更新**: 2026-05-13
-**當前 Phase**: Phase 2 完成，準備進 Phase 3
+**當前 Phase**: Phase 5 完成，準備進 Phase 6
 
 ## 已完成
 
@@ -37,10 +37,19 @@
 - 每個 diff item 至少一個來源頁碼，無來源自動跳過
 - POST /api/v1/reports/diff，GET /api/v1/reports/diff/{id}
 
-## 下一步：Phase 5 — Table Extraction & Numeric Cross-Check
+### Phase 5 ✅
+- `PDFTable` model（帶頁碼、section、markdown、品質評估）
+- pdfplumber 逐頁表格抽取，轉 markdown
+- extraction_quality：high / medium / low / failed
+- 品質 low → requires_human_review=True 自動標記
+- POST /{id}/extract-tables（抽取表格）
+- GET /{id}/tables（查詢，支援 ?page / ?section 過濾）
+- GET /{id}/numeric-check?number=12.3（數字 cross-check，回傳 confirmed/unreliable）
 
-**目標**: 抽出財務表格，對 AI summary 中的數字做 evidence check
-- pdfplumber table extraction
-- 表格轉 markdown
-- 數字型 claim 連回表格來源
-- 表格解析失敗時提示人工確認
+## 下一步：Phase 6 — Taiwan Data Source Integration
+
+**目標**: 補上結構化台股資料作為輔助基準
+- 評估合法資料源（公開資訊觀測站 / FinMind）
+- 月營收、基本財務比率
+- 與 PDF 報告做 cross-check
+- 外部資料來源必須標示 source，不混淆 PDF 原文

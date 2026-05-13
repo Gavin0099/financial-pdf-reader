@@ -25,6 +25,7 @@
 - Phase 2: Evidence-Bound Summary（Claude API + governance guards）
 - Phase 3: Financial Section Classification（rule-based + Claude Haiku fallback）
 - Phase 4: Two-PDF Diff Report（section-level，tone_only flag，evidence required）
+- Phase 5: Table Extraction（pdfplumber，markdown，numeric cross-check）
 
 ## 重要設計決策
 
@@ -35,3 +36,5 @@
 - diff: max 8 chunks per section per document 送給 Claude
 - DiffItem 無頁碼來源 → 自動跳過，不存入報告
 - tone_shift 強制標記 tone_only=True，禁止直接等同財務惡化
+- numeric-check: 在 PDFTable 中搜尋數字 → confirmed / unreliable
+- extraction_quality=low → requires_human_review=True（自動）
