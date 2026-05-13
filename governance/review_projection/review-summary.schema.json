@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Review Summary Schema",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at_utc",
+    "advisory_only",
+    "projection_non_canonical",
+    "coverage_complete",
+    "omitted_sections_count",
+    "omitted_section_categories",
+    "integrity_status",
+    "runtime_completeness",
+    "claim_drift_detected",
+    "authority_override_required",
+    "high_attention_items",
+    "signals",
+    "source_artifacts"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^0\\.1$"
+    },
+    "generated_at_utc": {
+      "type": "string"
+    },
+    "advisory_only": {
+      "const": true
+    },
+    "projection_non_canonical": {
+      "const": true
+    },
+    "coverage_complete": {
+      "type": "boolean"
+    },
+    "omitted_sections_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "omitted_section_categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "integrity_status": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "PARTIAL",
+        "UNKNOWN"
+      ]
+    },
+    "runtime_completeness": {
+      "enum": [
+        "COMPLETE",
+        "PARTIAL",
+        "MISSING"
+      ]
+    },
+    "claim_drift_detected": {
+      "type": "boolean"
+    },
+    "authority_override_required": {
+      "type": "boolean"
+    },
+    "high_attention_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "severity",
+          "epistemic_status",
+          "source_artifact",
+          "source_path"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "high",
+              "medium",
+              "low",
+              "info"
+            ]
+          },
+          "epistemic_status": {
+            "enum": [
+              "VERIFIED",
+              "OBSERVED",
+              "INFERRED",
+              "UNVERIFIED",
+              "MISSING"
+            ]
+          },
+          "value": {},
+          "note": {
+            "type": "string"
+          },
+          "source_artifact": {
+            "type": "string"
+          },
+          "source_path": {
+            "type": "string"
+          },
+          "evidence_snippet": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "source_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

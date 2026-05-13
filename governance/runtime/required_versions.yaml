@@ -1,0 +1,77 @@
+# governance/runtime/required_versions.yaml
+#
+# Framework-side minimum version requirements.
+# This file is authoritative for what "governance-compatible" means.
+#
+# Compared against the consuming repo's .governance/version_manifest.yaml
+# by governance_tools/governance_version_check.py.
+#
+# ── Update discipline ─────────────────────────────────────────────────────────
+# Bump a required version here only when the framework introduces a breaking
+# change to that component. Bumping without a real change raises false
+# migration_required verdicts in all consuming repos.
+#
+# ── Version operators ─────────────────────────────────────────────────────────
+# Only ">=" is supported in v0.1.  Exact-match and range operators are not yet
+# defined.  Do not use "==", "~=", or "^" — they will fail comparison.
+
+schema_version: "1.0"
+framework_version: "0.4.0"
+
+# ── Required version constraints ──────────────────────────────────────────────
+# All keys must be present in the repo-side version_manifest.yaml.
+required:
+  contract_schema_version: ">=1.2.0"
+  runtime_entrypoint_version: ">=1.1.0"
+  hook_wiring_version: ">=1.0.0"
+  artifact_layout_version: ">=1.0.0"
+  memory_layout_version: ">=1.0.0"
+
+# ── Feature matrix ────────────────────────────────────────────────────────────
+# Maps runtime features to version constraints.
+#
+# tier: core
+#   A disabled core feature causes verdict=migration_required.
+#   Core features are the minimum needed for runtime governance to be active.
+#
+# tier: extended
+#   A disabled extended feature causes verdict=compatible_with_degradation.
+#   Extended features are additive; core governance still runs without them.
+#
+# This is the single source of truth for session_start behavior decisions.
+# Do not define feature enablement logic anywhere else.
+
+features:
+  pre_task_check:
+    tier: core
+    requires:
+      runtime_entrypoint_version: ">=1.0.0"
+      hook_wiring_version: ">=1.0.0"
+
+  post_task_check:
+    tier: core
+    requires:
+      runtime_entrypoint_version: ">=1.0.0"
+      hook_wiring_version: ">=1.0.0"
+
+  canonical_closeout:
+    tier: extended
+    requires:
+      artifact_layout_version: ">=1.0.0"
+      runtime_entrypoint_version: ">=1.0.0"
+
+  session_index:
+    tier: extended
+    requires:
+      memory_layout_version: ">=1.0.0"
+
+  agents_rule_candidates:
+    tier: extended
+    requires:
+      artifact_layout_version: ">=1.0.0"
+
+  decision_context_bridge:
+    tier: extended
+    requires:
+      runtime_entrypoint_version: ">=1.1.0"
+      contract_schema_version: ">=1.2.0"

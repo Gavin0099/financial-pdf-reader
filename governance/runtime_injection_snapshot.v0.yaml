@@ -1,0 +1,22 @@
+name: runtime-injection-snapshot-v0
+policy_version: "0"
+source_refs:
+  - docs/runtime-injection-layer-plan.md
+  - docs/decision-context-bridge.md
+task_level_scope:
+  - L0
+  - L1
+  - L2
+target_agent_classes:
+  - instruction_capable
+  - instruction_limited
+consumption_requirements:
+  - inject_before_turn
+  - reread_before_edit
+  - require_full_read_for_large_files
+validation_requirements:
+  - require_validation_after_edit
+  - forbid_claim_without_evidence
+escalation_triggers:
+  - escalate_if_context_degraded
+  - escalate_if_required_evidence_missing

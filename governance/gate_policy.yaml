@@ -1,0 +1,95 @@
+# gate_policy.yaml
+#
+# Defines how session_end_hook evaluates the test-result artifact and
+# decides whether to block session closeout.
+#
+# This is the ONLY authoritative source for gating behaviour.
+# session_end_hook must NOT hardcode any of these decisions.
+#
+# ── fail_mode ─────────────────────────────────────────────────────────────────
+# strict      → absent artifact = error, malformed = error, stale = warning+gate
+# permissive  → absent / malformed / stale all skip the gate silently
+# audit       → any artifact state is recorded in warnings; gate is never triggered
+#
+# Default is strict for production governance.
+# Tests that want to isolate gate behaviour may create a local override.
+#
+# ── blocking_actions ──────────────────────────────────────────────────────────
+# List of ActionPolicy values that MUST block closeout (ok=False) when present
+# in the failure_disposition of the test result artifact.
+#
+# ── unknown_treatment ─────────────────────────────────────────────────────────
+# never_block           → unknowns never trigger a gate (escalate advisory only)
+# block_if_count_exceeds N → block when unknown_count > N
+# always_block          → any unknown failure blocks closeout
+#
+# ── artifact_stale_seconds ────────────────────────────────────────────────────
+# An artifact whose mtime is older than this threshold is considered stale.
+# stale behaviour depends on fail_mode:
+#   strict     → stale = warning added, gate still applied
+#   permissive → stale = skip silently
+#   audit      → stale = warning added, gate not applied
+#
+# Set to 0 to disable stale detection.
+
+# ── canonical_audit_trend ─────────────────────────────────────────────
+# Sliding-window advisory trend computed from the canonical-audit-log.jsonl.
+# This is ALWAYS advisory_only=True.  It never contributes to gate.blocked.
+#
+# window_size
+#   Number of most-recent log entries (by timestamp) to include in the window.
+#   Repos with higher session frequency may want a larger window.
+#
+# signal_threshold_ratio
+#   Fraction of window entries that must have at least one advisory signal
+#   before adoption_risk=True is emitted.
+#   0.5 means 50% of the recent sessions lacked a canonical footprint.
+#
+# Consuming repos should override these to match their actual session cadence.
+# Framework default is intentionally conservative (small window, high ratio).
+
+version: "1"
+
+fail_mode: strict
+
+blocking_actions:
+  - production_fix_required
+
+unknown_treatment:
+  mode: block_if_count_exceeds
+  threshold: 3
+
+artifact_stale_seconds: 86400   # 24 h
+
+canonical_audit_trend:
+  window_size: 20
+  signal_threshold_ratio: 0.5
+
+# ── skip_test_result_check ────────────────────────────────────────────
+# Set to true for repos that structurally cannot produce a test-result
+# artifact (e.g. C++ projects, pure documentation repos, tooling repos
+# with no Python test suite).
+#
+# Effect: suppresses test_result_artifact_absent from canonical_path_audit
+# signals.  The audit log entry is still written with signals=[] so that
+# the absence of a signal can itself be observed over time.
+#
+# Does NOT affect gate.blocked — gating behaviour is unchanged.
+# Does NOT suppress canonical_interpretation_missing — that signal requires
+# the artifact to be present, so it cannot be emitted in the absent case.
+#
+# This is an explicit structural declaration, not a threshold workaround.
+# Prefer this over raising signal_threshold_ratio to suppress false positives.
+
+skip_test_result_check: false
+
+# ── hook coverage tier ─────────────────────────────────────────────
+# Declares the session_end_hook triggering mechanism for this repo.
+# Tier A: native auto-closeout (Claude Code Stop hook)
+# Tier B: wrapper-based (Copilot VS Code task, Gemini CLI wrapper)
+# Tier C: manual only
+#
+# Affects how E8b trend results should be interpreted.
+# See: docs/hook-coverage-model.md
+#
+hook_coverage_tier: A

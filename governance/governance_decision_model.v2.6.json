@@ -1,0 +1,267 @@
+{
+  "version": "2.6",
+  "title": "Governance Runtime Decision Model",
+  "status": "draft",
+  "enforcement_model": {
+    "runtime_role": "single decision computation source",
+    "machine_checkable_contract": true,
+    "current_state": "transitional mixed enforcement",
+    "target_state": "runtime-centered enforcement",
+    "evaluation_order": [
+      "resolve policy scope",
+      "resolve decision ownership",
+      "validate evidence",
+      "classify violations",
+      "compute verdict impact",
+      "apply fallback behavior",
+      "emit trace"
+    ],
+    "fallback_rules": [
+      {
+        "when": "required evidence is missing",
+        "action": "degrade to constrained verdict and request evidence",
+        "verdict_impact": "escalate"
+      },
+      {
+        "when": "runtime fails to classify a violation",
+        "action": "fail closed for protected domains",
+        "verdict_impact": "stop"
+      },
+      {
+        "when": "policy conflict cannot be resolved automatically",
+        "action": "escalate to reviewer with trace",
+        "verdict_impact": "escalate"
+      }
+    ]
+  },
+  "matrices": {
+    "decision_ownership": [
+      {
+        "concern": "final governance verdict",
+        "owner": "runtime",
+        "can_override": [
+          "human-reviewer"
+        ],
+        "override_path": "reviewer-approved override record",
+        "trace_required": true,
+        "violation_effect": "stop"
+      },
+      {
+        "concern": "domain-specific validator logic",
+        "owner": "domain-contract",
+        "can_override": [
+          "runtime"
+        ],
+        "override_path": "runtime policy mapping update",
+        "trace_required": true,
+        "violation_effect": "escalate"
+      },
+      {
+        "concern": "policy precedence resolution",
+        "owner": "runtime-policy",
+        "can_override": [],
+        "override_path": "not-allowed",
+        "trace_required": true,
+        "violation_effect": "stop"
+      },
+      {
+        "concern": "emergency risk downgrade",
+        "owner": "human-reviewer",
+        "can_override": [],
+        "override_path": "explicit emergency override trace",
+        "trace_required": true,
+        "violation_effect": "record-only"
+      }
+    ],
+    "policy_precedence": [
+      {
+        "policy_type": "runtime-safety-policy",
+        "scope": "all protected domains",
+        "override_target": "domain-policy",
+        "allowed": true,
+        "conflict_resolution": "runtime-safety-policy wins",
+        "violation_effect": "stop"
+      },
+      {
+        "policy_type": "reviewer-approved exception",
+        "scope": "single decision instance",
+        "override_target": "runtime default verdict",
+        "allowed": true,
+        "conflict_resolution": "reviewer exception wins with trace",
+        "violation_effect": "escalate"
+      },
+      {
+        "policy_type": "domain-contract policy",
+        "scope": "domain validators and required evidence",
+        "override_target": "repo-local defaults",
+        "allowed": true,
+        "conflict_resolution": "domain policy wins inside declared domain scope",
+        "violation_effect": "escalate"
+      },
+      {
+        "policy_type": "repo-local workflow preference",
+        "scope": "non-protected workflow behavior",
+        "override_target": "runtime-safety-policy",
+        "allowed": false,
+        "conflict_resolution": "reject illegal override",
+        "violation_effect": "stop"
+      }
+    ],
+    "evidence_classification": [
+      {
+        "evidence_kind": "pytest-text",
+        "required": false,
+        "producer": "pytest",
+        "schema": "normalized checks summary",
+        "validation_rule": "parseable normalized test result bundle",
+        "trust_level": "medium",
+        "missing_effect": "record-only"
+      },
+      {
+        "evidence_kind": "junit-xml",
+        "required": false,
+        "producer": "test runner",
+        "schema": "junit xml",
+        "validation_rule": "xml parse plus normalized case extraction",
+        "trust_level": "medium",
+        "missing_effect": "record-only"
+      },
+      {
+        "evidence_kind": "sdv-text",
+        "required": true,
+        "producer": "static driver verifier",
+        "schema": "normalized checks summary",
+        "validation_rule": "recognized sdv signal extraction",
+        "trust_level": "high",
+        "missing_effect": "escalate"
+      },
+      {
+        "evidence_kind": "public-api-diff",
+        "required": true,
+        "producer": "public_api_diff_checker.py",
+        "schema": "json summary with removals and additions",
+        "validation_rule": "schema match and source provenance",
+        "trust_level": "high",
+        "missing_effect": "escalate"
+      },
+      {
+        "evidence_kind": "domain-validator-result",
+        "required": true,
+        "producer": "declared domain validator",
+        "schema": "ValidatorResult envelope",
+        "validation_rule": "interface conformance plus declared validator identity",
+        "trust_level": "high",
+        "missing_effect": "escalate"
+      },
+      {
+        "evidence_kind": "unknown-tool-report",
+        "required": false,
+        "producer": "unknown",
+        "schema": "untrusted",
+        "validation_rule": "accept only as supplemental evidence",
+        "trust_level": "low",
+        "missing_effect": "record-only"
+      }
+    ],
+    "violation_handling": [
+      {
+        "violation_type": "missing_required_evidence",
+        "detected_by": "runtime evidence validator",
+        "severity": "high",
+        "default_verdict_impact": "escalate",
+        "override_allowed": true,
+        "trace_required": true
+      },
+      {
+        "violation_type": "invalid_evidence_schema",
+        "detected_by": "runtime evidence validator",
+        "severity": "high",
+        "default_verdict_impact": "stop",
+        "override_allowed": true,
+        "trace_required": true
+      },
+      {
+        "violation_type": "policy_conflict",
+        "detected_by": "policy precedence resolver",
+        "severity": "high",
+        "default_verdict_impact": "escalate",
+        "override_allowed": true,
+        "trace_required": true
+      },
+      {
+        "violation_type": "illegal_override",
+        "detected_by": "ownership and precedence validator",
+        "severity": "critical",
+        "default_verdict_impact": "stop",
+        "override_allowed": false,
+        "trace_required": true
+      },
+      {
+        "violation_type": "runtime_failure",
+        "detected_by": "runtime execution wrapper",
+        "severity": "critical",
+        "default_verdict_impact": "stop",
+        "override_allowed": true,
+        "trace_required": true
+      },
+      {
+        "violation_type": "integration_failure",
+        "detected_by": "adapter or loader boundary",
+        "severity": "high",
+        "default_verdict_impact": "escalate",
+        "override_allowed": true,
+        "trace_required": true
+      },
+      {
+        "violation_type": "domain_contract_violation",
+        "detected_by": "domain validator",
+        "severity": "high",
+        "default_verdict_impact": "escalate",
+        "override_allowed": true,
+        "trace_required": true
+      }
+    ]
+  },
+  "determinism_contract": {
+    "same_policy_and_evidence_requires_same_verdict": true,
+    "reasoning_trace_may_vary": true,
+    "trace_variation_constraints": [
+      "must preserve the same cited evidence snapshot",
+      "must preserve the same cited policy snapshot",
+      "must preserve the same final verdict and violation classification"
+    ],
+    "reevaluation": {
+      "allowed": true,
+      "may_change_result_only_when": [
+        "evidence snapshot changes",
+        "policy snapshot changes",
+        "runtime version changes",
+        "explicit reviewer override trace is added"
+      ]
+    },
+    "evidence_snapshot_required": true,
+    "policy_snapshot_required": true,
+    "runtime_version_trace_required": true
+  },
+  "integration_boundary": {
+    "preserve_domain_assets": [
+      "contract.yaml",
+      "domain rules",
+      "validators",
+      "fixtures",
+      "domain documents"
+    ],
+    "rewire_integration_seams": [
+      "hook-stage-specific enforcement wiring",
+      "direct hard_stop_rules outcome escalation as the primary decision path",
+      "advisory versus blocking mapping outside the runtime",
+      "fixtures that depend on legacy hook ownership"
+    ],
+    "keep_out_of_domain_repos": [
+      "final verdict computation",
+      "global policy precedence resolution",
+      "cross-domain violation handling",
+      "runtime fallback policy"
+    ]
+  }
+}

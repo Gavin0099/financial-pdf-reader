@@ -1,0 +1,150 @@
+# test_exclusion_registry.yaml
+# Structured registry of pytest test exclusion rules.
+#
+# PURPOSE
+# -------
+# This file is the single source of truth for which tests are excluded from
+# the "filtered core suite" and WHY. It replaces hand-written -k strings in
+# CI scripts.
+#
+# ANTI-CORRUPTION RULE
+# ---------------------
+# Every exclusion MUST have:
+#   - a non-empty justification
+#   - an owner (who is responsible for re-evaluation)
+#   - an expiry date (when this entry must be re-validated or removed)
+#   - a revalidation_trigger (what would cause earlier re-evaluation)
+#
+# An exclusion with an expired date MUST be either renewed with a comment or
+# removed. It may NOT silently remain active.
+#
+# FAILURE DISPOSITION
+# -------------------
+# failure_kind maps to failure_disposition.py FailureKind enum.
+# This lets the exclusion registry double as calibration data for the
+# failure disposition classifier.
+#
+# SCHEMA VERSION: 1
+
+schema_version: "1"
+generated_hint: "Do not edit the filtered_suite_pytest_k field manually. Run exclusion_registry_tool.py --generate-filter to regenerate."
+
+exclusions:
+  - id: EX-001
+    pattern: "trust_signal"
+    scope: "test_name_contains"
+    failure_kind: "external_exclusion"
+    justification: >
+      Tests in this group depend on external repo publish infrastructure and
+      are not executable in local or standard CI environments without the
+      full release pipeline. They test the trust signal publication reader
+      which requires a pre-existing published bundle.
+    owner: "GavinWu"
+    added_at: "2026-04-01"
+    expiry: "2026-10-01"
+    revalidation_trigger: >
+      When release pipeline is available in CI, or when the trust signal
+      publication surface is refactored to support local fixtures.
+    active: true
+
+  - id: EX-002
+    pattern: "reviewer_handoff_summary"
+    scope: "test_name_contains"
+    failure_kind: "external_exclusion"
+    justification: >
+      Requires an external reviewer handoff snapshot that is not generated
+      in the local test run. Long-CI path; included in full suite only.
+    owner: "GavinWu"
+    added_at: "2026-04-01"
+    expiry: "2026-10-01"
+    revalidation_trigger: >
+      When reviewer handoff snapshot generation is automated in CI fixtures.
+    active: true
+
+  - id: EX-003
+    pattern: "reviewer_handoff_reader"
+    scope: "test_name_contains"
+    failure_kind: "external_exclusion"
+    justification: >
+      Same external snapshot dependency as EX-002.
+    owner: "GavinWu"
+    added_at: "2026-04-01"
+    expiry: "2026-10-01"
+    revalidation_trigger: "Same as EX-002"
+    active: true
+
+  - id: EX-004
+    pattern: "reviewer_handoff_snapshot"
+    scope: "test_name_contains"
+    failure_kind: "external_exclusion"
+    justification: >
+      Snapshot-write tests require write access to shared artifacts store.
+      Not safe to run in every local session.
+    owner: "GavinWu"
+    added_at: "2026-04-01"
+    expiry: "2026-10-01"
+    revalidation_trigger: "When artifact store isolation is available."
+    active: true
+
+  - id: EX-005
+    pattern: "session_start_can_load_domain_contract"
+    scope: "test_name_contains"
+    failure_kind: "external_exclusion"
+    justification: >
+      Requires an external domain contract repo to be checked out at a
+      sibling path. Not available in the framework repo's own test run.
+    owner: "GavinWu"
+    added_at: "2026-04-01"
+    expiry: "2026-10-01"
+    revalidation_trigger: "When a local fixture for external contracts is added."
+    active: true
+
+  - id: EX-006
+    pattern: "session_start_can_auto_discover"
+    scope: "test_name_contains"
+    failure_kind: "external_exclusion"
+    justification: "Same external contract dependency as EX-005."
+    owner: "GavinWu"
+    added_at: "2026-04-01"
+    expiry: "2026-10-01"
+    revalidation_trigger: "Same as EX-005"
+    active: true
+
+  - id: EX-007
+    pattern: "version_audit"
+    scope: "test_name_contains"
+    failure_kind: "external_exclusion"
+    justification: >
+      Version audit tests compare against live external repo state. Outcome
+      depends on external repo HEAD, making them non-deterministic locally.
+    owner: "GavinWu"
+    added_at: "2026-04-01"
+    expiry: "2026-10-01"
+    revalidation_trigger: "When version audit is pinned to a local fixture snapshot."
+    active: true
+
+  - id: EX-008
+    pattern: "governance_auditor"
+    scope: "test_name_contains"
+    failure_kind: "external_exclusion"
+    justification: >
+      Governance auditor tests require external repo checkout. Not available
+      in framework-only test runs.
+    owner: "GavinWu"
+    added_at: "2026-04-01"
+    expiry: "2026-10-01"
+    revalidation_trigger: "When auditor can run against local fixture repos."
+    active: true
+
+  - id: EX-009
+    pattern: "publication_reader"
+    scope: "test_name_contains"
+    failure_kind: "external_exclusion"
+    justification: >
+      Publication reader tests require a pre-published release bundle.
+      Must run after a real publish step in the release pipeline.
+    owner: "GavinWu"
+    added_at: "2026-04-01"
+    expiry: "2026-10-01"
+    revalidation_trigger: "When local mock bundles are available for publication reader."
+    active: true

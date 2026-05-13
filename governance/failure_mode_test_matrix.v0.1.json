@@ -1,0 +1,86 @@
+{
+  "version": "0.1",
+  "title": "Governance Runtime Failure Mode Test Matrix",
+  "status": "draft",
+  "purpose": "Define the first machine-readable break-test scenarios for runtime trust validation.",
+  "artifacts_under_test": [
+    "artifacts/runtime/verdicts/<session_id>.json",
+    "artifacts/runtime/traces/<session_id>.json"
+  ],
+  "scenarios": [
+    {
+      "id": "FM-001",
+      "category": "missing_required_evidence",
+      "description": "A required evidence input declared by policy or domain contract is absent at verdict time.",
+      "target_layer": "runtime evidence validation",
+      "fault_injection": "Omit a required evidence payload while keeping policy scope unchanged.",
+      "expected_detector": "runtime evidence validator",
+      "expected_verdict_impact": "escalate",
+      "expected_runtime_behavior": "Emit a constrained reviewable verdict and request the missing evidence instead of silently passing.",
+      "expected_artifacts": [
+        "runtime-verdict",
+        "runtime-trace"
+      ],
+      "determinism_assertion": "Given the same missing-evidence snapshot and policy snapshot, repeated evaluation must produce the same verdict impact."
+    },
+    {
+      "id": "FM-002",
+      "category": "invalid_evidence_schema",
+      "description": "An evidence payload exists but does not conform to the declared schema or provenance contract.",
+      "target_layer": "runtime evidence validation",
+      "fault_injection": "Provide an evidence payload with schema mismatch or invalid envelope metadata.",
+      "expected_detector": "runtime evidence validator",
+      "expected_verdict_impact": "stop",
+      "expected_runtime_behavior": "Reject the invalid evidence as non-conforming and fail closed for the affected decision.",
+      "expected_artifacts": [
+        "runtime-verdict",
+        "runtime-trace"
+      ],
+      "determinism_assertion": "Given the same invalid payload and policy snapshot, repeated evaluation must preserve the same violation classification and verdict."
+    },
+    {
+      "id": "FM-003",
+      "category": "policy_conflict",
+      "description": "Two policies claim precedence over the same decision boundary in a way the runtime must resolve.",
+      "target_layer": "policy precedence resolution",
+      "fault_injection": "Inject a domain-level or repo-local override that conflicts with runtime safety policy.",
+      "expected_detector": "policy precedence resolver",
+      "expected_verdict_impact": "escalate",
+      "expected_runtime_behavior": "Resolve according to precedence rules or escalate with trace when automatic resolution is not legal.",
+      "expected_artifacts": [
+        "runtime-verdict",
+        "runtime-trace"
+      ],
+      "determinism_assertion": "The same policy snapshot conflict must not alternate between pass and stop across repeated runs."
+    },
+    {
+      "id": "FM-004",
+      "category": "runtime_failure",
+      "description": "The runtime or an adapter fails during decision computation or artifact emission.",
+      "target_layer": "runtime execution wrapper",
+      "fault_injection": "Force a runtime exception during violation classification or artifact generation.",
+      "expected_detector": "runtime execution wrapper",
+      "expected_verdict_impact": "stop",
+      "expected_runtime_behavior": "Fail closed for protected domains or emit an explicit escalation record instead of returning an implicit success.",
+      "expected_artifacts": [
+        "runtime-trace"
+      ],
+      "determinism_assertion": "Equivalent runtime failures under the same runtime version and input snapshot must not downgrade into success on replay."
+    },
+    {
+      "id": "FM-005",
+      "category": "determinism_replay",
+      "description": "The same evidence snapshot and policy snapshot are replayed to verify stable verdict output.",
+      "target_layer": "runtime decision replay",
+      "fault_injection": "Replay the identical evidence, policy, and runtime version inputs across repeated evaluations.",
+      "expected_detector": "determinism harness",
+      "expected_verdict_impact": "unchanged",
+      "expected_runtime_behavior": "Produce the same verdict, preserve the same cited evidence and policy snapshots, and allow only trace-shape variation within declared limits.",
+      "expected_artifacts": [
+        "runtime-verdict",
+        "runtime-trace"
+      ],
+      "determinism_assertion": "The same input snapshot must produce the same verdict; only declared trace variation is allowed."
+    }
+  ]
+}

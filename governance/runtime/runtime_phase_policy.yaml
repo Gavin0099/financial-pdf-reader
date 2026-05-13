@@ -1,0 +1,69 @@
+schema_version: "0.1"
+
+rules:
+  sync_gate_blocks_execution: true
+  sync_advisory_hidden_gate_allowed: false
+  async_audit_can_retroactively_change_verdict: false
+
+phases:
+  sync_gate:
+    execution_effect: blocks_execution
+    description: "Synchronous blocking governance gate."
+  sync_advisory:
+    execution_effect: advisory_only
+    description: "Synchronous advisory that must remain non-blocking."
+  async_closeout:
+    execution_effect: deferred_closeout
+    description: "Deferred closeout work after execution."
+  async_audit:
+    execution_effect: deferred_audit
+    description: "Deferred audit work that cannot change the issued verdict."
+  manual_review_only:
+    execution_effect: human_authority_required
+    description: "Human-only authority path."
+
+actions:
+  precondition_gate:
+    phase: sync_gate
+    owner: pre_task_check
+    description: "Execution preconditions and missing-input gate."
+  forbidden_claims:
+    phase: sync_gate
+    owner: pre_task_check
+    description: "Forbidden claim / forbidden assertion gate."
+  invalid_evidence_schema:
+    phase: sync_gate
+    owner: post_task_check
+    description: "Malformed runtime evidence that cannot be trusted."
+  required_evidence_missing:
+    phase: sync_advisory
+    owner: post_task_check
+    description: "Required evidence is incomplete on the current decision surface."
+  assumption_check_missing:
+    phase: sync_advisory
+    owner: pre_task_check
+    description: "Assumption validation structure is incomplete."
+  canonical_closeout:
+    phase: async_closeout
+    owner: session_end
+    description: "Canonical closeout artifact emission."
+  daily_memory_append:
+    phase: async_closeout
+    owner: session_end
+    description: "Daily memory append after session closeout."
+  memory_candidate_snapshot:
+    phase: async_audit
+    owner: session_end
+    description: "Candidate memory snapshot for later curation or audit."
+  memory_promotion_candidate:
+    phase: async_audit
+    owner: session_end
+    description: "Memory promotion candidate surfacing."
+  cross_repo_drift_analysis:
+    phase: async_audit
+    owner: session_end
+    description: "Cross-repo or baseline drift review signal."
+  reviewer_promotion_decision:
+    phase: manual_review_only
+    owner: session_end
+    description: "Human reviewer promotion or acceptance decision."

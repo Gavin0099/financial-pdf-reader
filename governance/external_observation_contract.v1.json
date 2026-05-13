@@ -1,0 +1,70 @@
+{
+  "version": "1.0",
+  "name": "external_observation_contract",
+  "purpose": "Normalize untrusted external observations into canonical advisory-only envelope",
+  "authority_boundary": {
+    "external_can_provide": [
+      "evidence",
+      "observation",
+      "provenance"
+    ],
+    "external_cannot_provide": [
+      "verdict",
+      "closure",
+      "promotion_authority"
+    ]
+  },
+  "required_fields": [
+    "source.source_id",
+    "source.source_type",
+    "observation.misuse_evidence_status"
+  ],
+  "allowed_misuse_evidence_status": [
+    "observed",
+    "not_observed_in_window",
+    "not_tested"
+  ],
+  "legacy_aliases": {
+    "none_observed": "not_observed_in_window"
+  },
+  "forbidden_external_fields": [
+    "verdict",
+    "gate_verdict",
+    "current_state",
+    "closure_verified",
+    "promote_eligible",
+    "phase3_entry_allowed",
+    "closure_review_approved"
+  ],
+  "degrade_policy": {
+    "invalid_or_ambiguous_input": "degrade_to_advisory_only",
+    "invalid_status_default": "not_tested",
+    "forbidden_field_effect": "reject_authority_and_degrade"
+  },
+  "canonical_output": {
+    "ingest_status": [
+      "accepted",
+      "degraded"
+    ],
+    "source": {
+      "source_id": "string",
+      "source_type": "string",
+      "producer_version": "string|null"
+    },
+    "observation": {
+      "misuse_evidence_status": "observed|not_observed_in_window|not_tested",
+      "evidence_refs": "list[string]",
+      "confidence_level": "low|medium|high|unknown"
+    },
+    "advisory": {
+      "warnings": "list[string]",
+      "notes": "list[string]"
+    },
+    "decision_constraints": {
+      "external_authority": false,
+      "verdict_authority": false,
+      "promotion_authority": false
+    }
+  }
+}
+

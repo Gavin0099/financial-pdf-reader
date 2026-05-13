@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Review Sections Schema",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at_utc",
+    "advisory_only",
+    "projection_non_canonical",
+    "coverage_complete",
+    "omitted_sections_count",
+    "omitted_section_categories",
+    "sections"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^0\\.1$"
+    },
+    "generated_at_utc": {
+      "type": "string"
+    },
+    "advisory_only": {
+      "const": true
+    },
+    "projection_non_canonical": {
+      "const": true
+    },
+    "coverage_complete": {
+      "type": "boolean"
+    },
+    "omitted_sections_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "omitted_section_categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "severity",
+          "collapsed",
+          "epistemic_status",
+          "source_artifact",
+          "source_path"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "high",
+              "medium",
+              "low",
+              "info"
+            ]
+          },
+          "collapsed": {
+            "type": "boolean"
+          },
+          "epistemic_status": {
+            "enum": [
+              "VERIFIED",
+              "OBSERVED",
+              "INFERRED",
+              "UNVERIFIED",
+              "MISSING"
+            ]
+          },
+          "source_artifact": {
+            "type": "string"
+          },
+          "source_path": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

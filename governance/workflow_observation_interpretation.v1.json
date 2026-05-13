@@ -1,0 +1,196 @@
+{
+  "version": "1.0",
+  "title": "Workflow Observation Interpretation Contract",
+  "status": "draft",
+  "scope": {
+    "subject": "storage-backed workflow artifact recognition",
+    "describes": "whether contract-shaped workflow artifacts are observable at the expected storage location for the current task context",
+    "does_not_describe": [
+      "whether the internal workflow node was semantically completed",
+      "whether the workflow was intentionally bypassed",
+      "whether the task is compliant or non-compliant",
+      "whether a risk or gate verdict is justified"
+    ]
+  },
+  "metric": {
+    "name": "observation_coverage",
+    "kind": "coverage",
+    "description": "fraction of expected artifacts that are currently recognized under the entry-layer contract",
+    "not_a": [
+      "score",
+      "ranking",
+      "risk_threshold",
+      "compliance_proxy"
+    ],
+    "forbidden_uses": [
+      "threshold_gate",
+      "task_level_decision",
+      "risk_ranking",
+      "compliance_ordering"
+    ],
+    "forbidden_aliases": [
+      "workflow_score",
+      "compliance_score",
+      "risk_score"
+    ]
+  },
+  "consumer_defaults": {
+    "allowed_consequence_levels": [
+      "hint",
+      "advisory_note",
+      "reviewer_visible_banner"
+    ],
+    "forbidden_direct_consequences": [
+      "block",
+      "raise_minimum_task_level",
+      "force_extra_evidence",
+      "mark_non_compliant",
+      "mark_intentional_bypass"
+    ],
+    "forbidden_observation_only_conclusions": [
+      "compliance_judgment",
+      "non_compliance_judgment",
+      "intent_inference",
+      "policy_violation_judgment"
+    ],
+    "forbidden_recomposition_uses": [
+      "attention_priority",
+      "severity_label",
+      "action_escalation",
+      "review_queue_ordering",
+      "pseudo_policy_profile"
+    ],
+    "combination_rule": "observation lane must not, alone or via observation-only combination inference, produce compliance, intent, or policy-violation conclusions",
+    "recomposition_rule": "legal observation surfaces must not be recomposed into a pseudo-policy, attention-priority, severity, or escalation view"
+  },
+  "diagnostic_fields": {
+    "failure_source_class": {
+      "role": "diagnostic_aid",
+      "not_a": [
+        "consequence_key",
+        "policy_severity",
+        "compliance_proxy"
+      ],
+      "rule": "failure_source_class may explain why recognition failed, but it must not be used as a direct policy or enforcement switch"
+    }
+  },
+  "states": {
+    "recognized": {
+      "meaning": "a recognizable artifact was observed and matched the current contract context",
+      "failure_source_class": "none",
+      "allowed_interpretations": [
+        "observable artifact present",
+        "artifact metadata and payload are recognizable for this context"
+      ],
+      "forbidden_interpretations": [
+        "workflow certainly followed internally",
+        "task is compliant",
+        "task is lower risk"
+      ],
+      "allowed_consequences": [
+        "hint",
+        "advisory_note",
+        "reviewer_visible_banner"
+      ],
+      "forbidden_consequences": [
+        "skip_required_validation",
+        "downgrade_task_level",
+        "grant_compliance_verdict"
+      ]
+    },
+    "missing": {
+      "meaning": "no artifact was observed at the expected storage location",
+      "failure_source_class": "no_artifact_present",
+      "allowed_interpretations": [
+        "expected artifact not currently observable",
+        "storage-backed artifact trace absent"
+      ],
+      "forbidden_interpretations": [
+        "workflow was not done",
+        "task is non-compliant",
+        "intentional bypass occurred"
+      ],
+      "allowed_consequences": [
+        "hint",
+        "advisory_note",
+        "reviewer_visible_banner"
+      ],
+      "forbidden_consequences": [
+        "block",
+        "raise_minimum_task_level",
+        "force_extra_evidence",
+        "mark_non_compliant"
+      ]
+    },
+    "incomplete": {
+      "meaning": "an artifact was observed but the minimum envelope or payload fields are absent",
+      "failure_source_class": "artifact_present_but_fields_absent",
+      "allowed_interpretations": [
+        "artifact trace exists but recognition preconditions are incomplete",
+        "artifact storage alone is insufficient for recognition"
+      ],
+      "forbidden_interpretations": [
+        "workflow definitely invalid",
+        "artifact writer is malicious",
+        "task is non-compliant"
+      ],
+      "allowed_consequences": [
+        "hint",
+        "advisory_note",
+        "reviewer_visible_banner"
+      ],
+      "forbidden_consequences": [
+        "block",
+        "raise_minimum_task_level",
+        "force_extra_evidence"
+      ]
+    },
+    "stale": {
+      "meaning": "an artifact was observed but is outside the freshness window for the current task context",
+      "failure_source_class": "artifact_present_but_outside_task_window",
+      "allowed_interpretations": [
+        "artifact trace exists but freshness linkage is weak",
+        "artifact may describe older work rather than the current task"
+      ],
+      "forbidden_interpretations": [
+        "task is invalid",
+        "workflow certainly skipped now",
+        "task is higher risk"
+      ],
+      "allowed_consequences": [
+        "hint",
+        "advisory_note",
+        "reviewer_visible_banner"
+      ],
+      "forbidden_consequences": [
+        "block",
+        "raise_minimum_task_level",
+        "force_extra_evidence"
+      ]
+    },
+    "unverifiable": {
+      "meaning": "an artifact was observed but provenance, schema, scope, or time linkage does not justify recognition",
+      "failure_source_class": "artifact_present_but_trust_linkage_unavailable",
+      "allowed_interpretations": [
+        "artifact trace exists but trust linkage is insufficient",
+        "recognition cannot safely rely on the observed artifact"
+      ],
+      "forbidden_interpretations": [
+        "intentional bypass occurred",
+        "artifact is deceptive",
+        "task is non-compliant"
+      ],
+      "allowed_consequences": [
+        "hint",
+        "advisory_note",
+        "reviewer_visible_banner"
+      ],
+      "forbidden_consequences": [
+        "block",
+        "raise_minimum_task_level",
+        "force_extra_evidence",
+        "mark_intentional_bypass"
+      ]
+    }
+  }
+}
