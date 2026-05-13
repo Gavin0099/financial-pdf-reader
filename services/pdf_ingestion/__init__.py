@@ -18,6 +18,7 @@ import pdfplumber
 
 from config.config import StorageConfig
 from models.documents import PDFDocument, PDFChunk
+from services.classification import classify_chunk
 
 
 def save_uploaded_file(file_bytes: bytes, file_name: str) -> str:
@@ -97,12 +98,15 @@ def ingest_pdf(document_id: str) -> dict:
             raw_text = page_data["text"]
 
             for chunk_data in chunk_page(page_num, raw_text):
+                # Phase 3: rule-based 分類（不呼叫 LLM，保持 ingest 速度）
+                section, _ = classify_chunk(chunk_data["text"], use_llm_fallback=False)
                 chunk = PDFChunk(
                     chunk_id=str(uuid.uuid4()),
                     document_id=document_id,
                     stock_id=doc.stock_id,
                     period=doc.period,
                     page=chunk_data["page"],
+                    section=section,
                     text=chunk_data["text"],
                     char_count=len(chunk_data["text"]),
                 )

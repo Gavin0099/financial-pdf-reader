@@ -15,6 +15,9 @@
    → 呼叫 Claude API，產生 evidence-bound 摘要
    → 回傳 claims（每條附 page + quoted_text）
 
+3b. POST /api/v1/documents/{document_id}/classify  ← Phase 3 新增（LLM 重新分類）
+    → 回傳 section_distribution（各段落 chunk 數量）
+
 4. GET /api/v1/documents/{document_id}/chunks?page=12
    → 查詢特定頁碼的 chunks
 

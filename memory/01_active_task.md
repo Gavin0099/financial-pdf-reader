@@ -21,10 +21,17 @@
 - 投資建議詞彙偵測 → `investment_advice_detected` flag
 - POST /{id}/summary, GET /{id}/summary/{report_id}
 
-## 下一步：Phase 3 — Financial Section Classification
+### Phase 3 ✅
+- 20 個財務段落的 keyword mapping（rule-based）
+- Claude Haiku LLM fallback（rule 無法判斷時）
+- ingest 時自動 rule-based 分類（不呼叫 LLM，保持速度）
+- POST /{id}/classify（可單獨觸發，支援 LLM fallback）
+- PATCH /chunks/section（人工修正）
+- GET /sections（列出合法分類）
 
-**目標**: 將 PDFChunk 分類到 20 個財務段落
-- rule-based keyword matching（快速）
-- LLM-assisted fallback（不確定時）
-- 結果存入 `PDFChunk.section`
-- 分類失敗不中斷 ingestion（section = "unknown"）
+## 下一步：Phase 4 — Two-PDF Diff Report
+
+**目標**: 比較兩份財報，找出新增/消失說法與語氣變化
+- 同公司不同期間的 section-level comparison
+- 新增說法 / 消失說法 / 語氣變化
+- 每個 diff item 都有兩邊來源頁碼

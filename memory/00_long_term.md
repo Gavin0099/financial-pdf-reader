@@ -23,6 +23,7 @@
 - Phase 0: Repo Bootstrap（MongoDB Atlas + /health）
 - Phase 1: PDF Ingestion MVP（page-aware chunks）
 - Phase 2: Evidence-Bound Summary（Claude API + governance guards）
+- Phase 3: Financial Section Classification（rule-based + Claude Haiku fallback）
 
 ## 重要設計決策
 
