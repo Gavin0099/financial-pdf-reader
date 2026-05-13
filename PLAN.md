@@ -149,17 +149,19 @@
 
 ---
 
-## Phase 8: Tests + Cleanup（規劃中 ⏳）
+## Phase 8: Tests + Cleanup（進行中 🔄）
 
 **目標**: 補齊測試、清理未使用依賴
 
-**候選任務**:
-- [ ] `tests/` — R1-R7 unit tests（pytest + mongomock，已在 requirements.txt）
+**完成項目**:
+- [x] `tests/test_governance.py` — R1-R7 unit tests，44 tests，44 passed，0.09s
+
+**待完成**:
 - [ ] `requirements.txt` 清理（移除未使用：chromadb、langchain、sentence-transformers 等）
-- [ ] DiffReport R6 audit endpoint（`GET /api/v1/reports/diff/{id}/audit`）
+- [ ] DiffReport R6 audit endpoint（選做）
 
 **Gate 條件**:
-- [ ] `pytest tests/` 全綠
+- [x] `pytest tests/` 全綠（44 passed）
 - [ ] `requirements.txt` 只保留實際使用的依賴
 
 ---
@@ -184,3 +186,4 @@
 | 日期 | 變更內容 |
 |------|---------|
 | 2026-05-13 | 專案啟動，Phase 0~7 完成，PLAN.md 補齊至真實進度 |
+| 2026-05-13 | Phase 8: tests/test_governance.py 44 tests 全綠 |

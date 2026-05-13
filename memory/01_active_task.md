@@ -64,8 +64,10 @@
 - `AGENTS.md` 部署到根目錄，修復 memory 更新遺漏問題
 - `memory/2026-05-13.md` daily log 建立
 
-## 下一步：Phase 8 候選（尚未規劃）
+### Phase 8（進行中 🔄）
+- `tests/test_governance.py`：R1-R7 unit tests，44 tests passed，純 Python 無外部依賴
 
-- DiffReport R6 audit：驗證 tone_shift items 是否正確標記 tone_only
-- Batch audit：同時稽核多份 document
-- Audit history：存入 MongoDB 追蹤 governance 趨勢
+## 下一步：Phase 8 剩餘
+
+- `requirements.txt` 清理（chromadb、langchain 等未使用套件）
+- DiffReport R6 audit endpoint（選做）
