@@ -37,3 +37,7 @@ async def health():
 # Phase 1: document ingestion
 from apis.v1.routers.documents import router as DocumentsRouter
 app.include_router(DocumentsRouter, tags=["Documents"], prefix="/api/v1/documents")
+
+# Phase 2: evidence-bound summary
+from apis.v1.routers.summary import router as SummaryRouter
+app.include_router(SummaryRouter, tags=["Summary"], prefix="/api/v1/documents")
