@@ -125,6 +125,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Advisory-only daily memory guard.")
     parser.add_argument("--project-root", default=".")
     parser.add_argument("--format", choices=("human", "json"), default="human")
+    parser.add_argument(
+        "--enforce",
+        action="store_true",
+        help="Fail closed when daily memory warning is detected.",
+    )
     args = parser.parse_args()
 
     result = evaluate_daily_memory_warning(Path(args.project_root).resolve())
@@ -134,6 +139,8 @@ def main() -> int:
         output = format_human(result)
         if output:
             print(output)
+    if args.enforce and result["warn"]:
+        return 1
     return 0
 
 
