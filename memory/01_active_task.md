@@ -1,7 +1,7 @@
 # Active Task
 
-**最後更新**: 2026-05-13
-**當前 Phase**: Phase 6 完成，準備進 Phase 7（Governance Layer）
+**最後更新**: 2026-05-13（Phase 7 完成）
+**當前 Phase**: Phase 7 完成
 
 ## 已完成
 
@@ -56,10 +56,16 @@
 - GET /{stock_id}/crosscheck（PDF 數字 vs 外部資料）
 - GET /{stock_id}/external-data（快取查詢）
 
-## 下一步：Phase 7 — Governance Layer
+### Phase 7 ✅
+- `core/governance.py`：GovernanceViolation / GovernanceAuditResult dataclass
+- R1-R7 完整實作（R1 evidence required, R2 numeric source, R3 auto-downgrade, R4 investment advice, R5 cross-doc, R7 trend language）
+- `services/audit/__init__.py`：run_audit() 執行稽核
+- `apis/v1/routers/audit.py`：GET /{document_id}/audit
+- `AGENTS.md` 部署到根目錄，修復 memory 更新遺漏問題
+- `memory/2026-05-13.md` daily log 建立
 
-**目標**: 導入完整 evidence discipline
-- 每個 claim 都有 claim_level 與 evidence 狀態
-- 無 evidence claim 自動降級
-- Claim audit report 輸出
-- R1-R7 governance rules 實作
+## 下一步：Phase 8 候選（尚未規劃）
+
+- DiffReport R6 audit：驗證 tone_shift items 是否正確標記 tone_only
+- Batch audit：同時稽核多份 document
+- Audit history：存入 MongoDB 追蹤 governance 趨勢

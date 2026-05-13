@@ -1,6 +1,6 @@
 # Workflow
 
-**最後更新**: 2026-05-13（Phase 6 完成）
+**最後更新**: 2026-05-13（Phase 7 完成）
 
 ## 完整 API 使用流程
 
@@ -68,6 +68,15 @@ GET /api/v1/stocks/{stock_id}/crosscheck?period=2026Q1&metric=revenue&pdf_value=
 
 GET /api/v1/stocks/{stock_id}/external-data  ← Phase 6
    → 列出已快取的外部資料記錄
+
+=== Governance 稽核（Phase 7）===
+
+GET /api/v1/documents/{document_id}/audit  ← Phase 7
+   → 對最新 AIReport 執行 R1-R7 稽核
+   → 回傳 violations（errors）+ warnings + passed（bool）+ summary
+
+GET /api/v1/documents/{document_id}/audit?report_id=<uuid>  ← Phase 7
+   → 對指定 report_id 執行稽核
 ```
 
 ## 建議標準操作流程（SOP）
@@ -78,6 +87,7 @@ GET /api/v1/stocks/{stock_id}/external-data  ← Phase 6
 5. 若需精準分類：classify（LLM）
 6. 若需比較兩季：diff
 7. 若需外部驗證：fetch-financials → crosscheck
+8. 若需 governance 稽核：audit
 ```
 
 ## 啟動指令

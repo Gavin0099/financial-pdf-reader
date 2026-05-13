@@ -27,6 +27,7 @@
 - Phase 4: Two-PDF Diff Report（section-level，tone_only flag，evidence required）
 - Phase 5: Table Extraction（pdfplumber，markdown，numeric cross-check）
 - Phase 6: Taiwan Data Source（FinMind API，auxiliary only，cross-check）
+- Phase 7: Governance Layer（R1-R7 audit engine，GovernanceViolation，/audit endpoint）
 
 ## 重要設計決策
 
@@ -41,3 +42,6 @@
 - extraction_quality=low → requires_human_review=True（自動）
 - ExternalDataRecord.is_auxiliary 永遠=True，禁止作為主要 evidence
 - FinMind cross-check 只輸出 consistent/needs_review/not_comparable，不輸出投資判斷
+- `core/governance.py` 是 R1-R7 的唯一真實來源，不得在其他地方重複定義規則
+- AGENTS.md 部署到專案根目錄才能讓 Claude Code 在 session 啟動時讀取記憶更新協議
+- R3 auto-fix（summarization 已自動降級）標記為 warning 而非 error，避免 false positive

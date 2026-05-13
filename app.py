@@ -57,3 +57,7 @@ app.include_router(TablesRouter, tags=["Tables"], prefix="/api/v1/documents")
 # Phase 6: Taiwan data source integration
 from apis.v1.routers.data_source import router as DataSourceRouter
 app.include_router(DataSourceRouter, tags=["DataSource"], prefix="/api/v1/stocks")
+
+# Phase 7: Governance Layer — R1-R7 claim audit
+from apis.v1.routers.audit import router as AuditRouter
+app.include_router(AuditRouter, tags=["Audit"], prefix="/api/v1/documents")

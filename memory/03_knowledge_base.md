@@ -1,6 +1,6 @@
 # Knowledge Base
 
-**最後更新**: 2026-05-13（Phase 6 完成）
+**最後更新**: 2026-05-13（Phase 7 完成）
 
 ## Data Models 總覽
 
@@ -114,17 +114,30 @@
 
 ---
 
-## Governance Rules（R1-R7，Phase 7 將系統化）
+## Governance Rules（R1-R7，Phase 7 已系統化）
 
-| Rule | 說明 |
+實作位置：`core/governance.py`、稽核服務：`services/audit/`
+
+| Rule | 說明 | 嚴重度 | 實作 |
+|------|------|--------|------|
+| R1 | 每個 claim 必須有 evidence | error | check_r1() |
+| R2 | 數字 claim（derived_metric）必須有 quoted_text | error | check_r2() |
+| R3 | 沒有 evidence 時降級為 hypothesis 或 insufficient_evidence | warning（auto-fixed）| check_r3() |
+| R4 | 不允許 investment recommendation | error | check_r4_report() + check_r4_claim() |
+| R5 | 不允許跨文件推論未標示來源 | warning | check_r5() |
+| R6 | 不允許把語氣變化直接說成財務惡化（tone_only flag）| 由 DiffItem.tone_only 保障 | Phase 4 |
+| R7 | 不允許用單季資料推論長期趨勢（關鍵詞掃描）| warning | check_r7_claim() |
+
+### GovernanceAuditResult 欄位
+
+| 欄位 | 說明 |
 |------|------|
-| R1 | 每個 claim 必須有 evidence |
-| R2 | 數字 claim 必須有 source table 或 source text |
-| R3 | 沒有 evidence 時降級為 hypothesis 或 insufficient_evidence |
-| R4 | 不允許 investment recommendation |
-| R5 | 不允許跨文件推論未標示來源 |
-| R6 | 不允許把語氣變化直接說成財務惡化（tone_only flag）|
-| R7 | 不允許用單季資料推論長期趨勢 |
+| passed | True = 0 violations（warning 不影響）|
+| violation_count | error 數量 |
+| warning_count | warning 數量 |
+| violations | list[GovernanceViolation] |
+| warnings | list[GovernanceViolation] |
+| summary | 人類可讀一句話摘要 |
 
 ---
 
