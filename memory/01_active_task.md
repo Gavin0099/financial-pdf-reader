@@ -64,10 +64,12 @@
 - `AGENTS.md` 部署到根目錄，修復 memory 更新遺漏問題
 - `memory/2026-05-13.md` daily log 建立
 
-### Phase 8（進行中 🔄）
+### Phase 8 ✅
 - `tests/test_governance.py`：R1-R7 unit tests，44 tests passed，純 Python 無外部依賴
+- `requirements.txt` 清理：移除 chromadb、langchain\*、sentence-transformers、huggingface-hub、beanie、motor；補上 python-dotenv
 
-## 下一步：Phase 8 剩餘
+## 下一步：Phase 9 候選（尚未規劃）
 
-- `requirements.txt` 清理（chromadb、langchain 等未使用套件）
 - DiffReport R6 audit endpoint（選做）
+- Auth wiring（auth/ 已有骨架但未接入 router）
+- Audit history 存 MongoDB
