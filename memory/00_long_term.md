@@ -24,6 +24,7 @@
 - Phase 1: PDF Ingestion MVP（page-aware chunks）
 - Phase 2: Evidence-Bound Summary（Claude API + governance guards）
 - Phase 3: Financial Section Classification（rule-based + Claude Haiku fallback）
+- Phase 4: Two-PDF Diff Report（section-level，tone_only flag，evidence required）
 
 ## 重要設計決策
 
@@ -31,3 +32,6 @@
 - `AIClaim.claim_level` 沒有 evidence 時強制降級為 `insufficient_evidence`
 - `AIReport.investment_advice_detected` 是 governance audit flag
 - chunk max_chars = 1500，max_chunks per summary = 60
+- diff: max 8 chunks per section per document 送給 Claude
+- DiffItem 無頁碼來源 → 自動跳過，不存入報告
+- tone_shift 強制標記 tone_only=True，禁止直接等同財務惡化

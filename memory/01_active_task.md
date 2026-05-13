@@ -29,9 +29,18 @@
 - PATCH /chunks/section（人工修正）
 - GET /sections（列出合法分類）
 
-## 下一步：Phase 4 — Two-PDF Diff Report
+### Phase 4 ✅
+- `DiffReport` / `DiffItem` / `DiffEvidence` models
+- Section-level comparison（共同段落 + only_current + only_previous）
+- 6 種 diff_type：new_language / removed_language / tone_shift / numeric_change / new_risk / removed_risk
+- Governance: tone_shift 標記 tone_only=True，禁止等同財務惡化
+- 每個 diff item 至少一個來源頁碼，無來源自動跳過
+- POST /api/v1/reports/diff，GET /api/v1/reports/diff/{id}
 
-**目標**: 比較兩份財報，找出新增/消失說法與語氣變化
-- 同公司不同期間的 section-level comparison
-- 新增說法 / 消失說法 / 語氣變化
-- 每個 diff item 都有兩邊來源頁碼
+## 下一步：Phase 5 — Table Extraction & Numeric Cross-Check
+
+**目標**: 抽出財務表格，對 AI summary 中的數字做 evidence check
+- pdfplumber table extraction
+- 表格轉 markdown
+- 數字型 claim 連回表格來源
+- 表格解析失敗時提示人工確認

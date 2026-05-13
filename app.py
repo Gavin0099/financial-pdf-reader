@@ -45,3 +45,7 @@ app.include_router(SummaryRouter, tags=["Summary"], prefix="/api/v1/documents")
 # Phase 3: financial section classification
 from apis.v1.routers.classification import router as ClassificationRouter
 app.include_router(ClassificationRouter, tags=["Classification"], prefix="/api/v1/documents")
+
+# Phase 4: two-PDF diff report
+from apis.v1.routers.diff import router as DiffRouter
+app.include_router(DiffRouter, tags=["Diff"], prefix="/api/v1/reports")

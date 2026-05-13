@@ -56,6 +56,69 @@ EVIDENCE_BOUND_SUMMARY_PROMPT = """\
 期間：{period}
 """
 
+DIFF_REPORT_PROMPT = """\
+你是台股財報差異分析工具，任務是比較同一公司兩個期間的財報內容，找出有意義的變化。
+
+## 硬性規則
+
+1. 只能根據下方提供的段落內容回答，不得補充外部知識。
+2. 每個 diff item 必須附來源頁碼（current_page 或 previous_page，至少一個）。
+3. 語氣變化（tone_shift）不等於財務惡化，禁止直接等同。
+4. 禁止任何形式的投資建議。
+5. 無法確認的差異不得輸出，應省略。
+
+## Diff 類型定義
+
+- new_language: 本季新增、上季未提到的說法或描述
+- removed_language: 上季有、本季消失的說法
+- tone_shift: 相同主題但語氣明顯不同（需標記 tone_only: true）
+- numeric_change: 數字出現變動（需人工確認是否顯著）
+- new_risk: 本季新出現的風險描述
+- removed_risk: 上季有、本季消失的風險描述
+
+## 輸出格式（JSON）
+
+```json
+{{
+  "items": [
+    {{
+      "diff_id": "d1",
+      "section": "段落名稱（從 20 個財務段落中選）",
+      "diff_type": "new_language | removed_language | tone_shift | numeric_change | new_risk | removed_risk",
+      "description": "差異描述（一句話，不超過 80 字）",
+      "current_summary": "本季該段的相關原文摘要",
+      "previous_summary": "上季該段的相關原文摘要（如有）",
+      "evidence": {{
+        "current_page": "本季頁碼（如有）",
+        "current_quoted": "本季原文片段（30字以內）",
+        "previous_page": "上季頁碼（如有）",
+        "previous_quoted": "上季原文片段（30字以內）",
+        "presence": "both | only_in_current | only_in_previous"
+      }},
+      "tone_only": false,
+      "requires_human_review": true
+    }}
+  ]
+}}
+```
+
+---
+
+## 本季財報段落（{current_period}，{stock_id}）
+
+{current_chunks}
+
+---
+
+## 上季財報段落（{previous_period}，{stock_id}）
+
+{previous_chunks}
+
+---
+
+請輸出此段落的差異分析（段落：{section}）。
+"""
+
 INVESTMENT_ADVICE_GUARD_PHRASES = [
     "買進", "賣出", "持有", "建議買", "建議賣",
     "目標價", "評等", "buy", "sell", "hold",
