@@ -15,25 +15,25 @@ EVIDENCE_BOUND_SUMMARY_PROMPT = """\
 請輸出嚴格的 JSON，格式如下：
 
 ```json
-{
+{{
   "claims": [
-    {
+    {{
       "claim_id": "c1",
       "claim": "觀察或結論的簡短描述",
       "claim_type": "financial_observation | management_tone | risk_factor | accounting_note | numeric_cross_check",
       "claim_level": "observed_fact | derived_metric | interpretation | hypothesis | insufficient_evidence",
       "evidence": [
-        {
+        {{
           "page": "頁碼字串",
           "section": "段落名稱（如有）",
           "quoted_text": "原文引用片段（50字以內）"
-        }
+        }}
       ],
       "confidence": "high | medium | low",
       "requires_human_review": true | false
-    }
+    }}
   ]
-}
+}}
 ```
 
 ## 注意事項
