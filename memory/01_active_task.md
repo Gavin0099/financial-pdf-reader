@@ -1,7 +1,7 @@
 # Active Task
 
-**最後更新**: 2026-05-13（Phase 7 完成）
-**當前 Phase**: Phase 7 完成
+**最後更新**: 2026-05-14（Phase 9E 完成）
+**當前 Phase**: Phase 9E 完成 — 三條 pipeline 齊備
 
 ## 已完成
 
@@ -68,8 +68,37 @@
 - `tests/test_governance.py`：R1-R7 unit tests，44 tests passed，純 Python 無外部依賴
 - `requirements.txt` 清理：移除 chromadb、langchain\*、sentence-transformers、huggingface-hub、beanie、motor；補上 python-dotenv
 
-## 下一步：Phase 9 候選（尚未規劃）
+### Phase 9B ✅
+- HTML UI 全面重設計：Key Findings grid、section tabs、collapsible evidence
+- Claim-level badge 改為中性色系（觀察類型，不是情緒）
+- 一次性項目 badge 改為中性灰
 
+### Phase 9C ✅
+- `PDFDocument.industry_type` field（general / cdmo / semiconductor）
+- 上傳表單加入產業別下拉選單
+- `INDUSTRY_SUPPLEMENTS` dict — extraction hint（非 authority grant）
+- **Governance fix**: supplement 改為 evidence-first，不自動升 tier_a
+- Executive Summary 禁用因果歸因語言
+
+### Phase 9D ✅
+- 14 項法定揭露稽核（台灣第 12、17 條 + IFRS）
+- `models/disclosures/`、`services/disclosure_coverage/`、`apis/v1/routers/disclosures.py`
+- 使用 claude-haiku-4-5（成本低）；缺失 key 自動填補 ambiguous
+- `tests/test_disclosure_coverage.py`：10 tests 通過
+- UI Step 4：14 項 coverage matrix
+
+### Phase 9E ✅
+- 6 個財報警示 pattern（純 Python，不呼叫 Claude）
+- `reasoning_patterns/`：schemas + 6 pattern 定義
+- `services/reasoning_patterns/`：evidence_resolver + engine + run_pattern_analysis()
+- `models/patterns/`：PatternRunResult + PatternRunReport
+- `apis/v1/routers/patterns.py`：POST /{id}/patterns/run
+- UI Step 5：pattern 結果 + source claims accordion
+- Guards hardcoded：CLAIM_LEVEL=interpretation、REQUIRES_REVIEW=True、IN_KEY_FINDINGS=False
+- `tests/test_reasoning_patterns.py`：14 tests 通過
+
+## 下一步候選
+
+- Phase 10: Railway 部署同步（Phase 9C/D/E 尚未 redeploy）
 - DiffReport R6 audit endpoint（選做）
 - Auth wiring（auth/ 已有骨架但未接入 router）
-- Audit history 存 MongoDB

@@ -28,6 +28,11 @@
 - Phase 5: Table Extraction（pdfplumber，markdown，numeric cross-check）
 - Phase 6: Taiwan Data Source（FinMind API，auxiliary only，cross-check）
 - Phase 7: Governance Layer（R1-R7 audit engine，GovernanceViolation，/audit endpoint）
+- Phase 8: Tests + Cleanup（44 tests，requirements.txt 清理）
+- Phase 9B: UI Redesign（Key Findings grid，中性色碼）
+- Phase 9C: Industry Type + CDMO Supplement（evidence-first governance fix）
+- Phase 9D: Disclosure Coverage Engine（14 items，Haiku，10 tests）
+- Phase 9E: Pattern Registry（6 patterns，純 Python，14 tests）
 
 ## 重要設計決策
 
@@ -45,3 +50,17 @@
 - `core/governance.py` 是 R1-R7 的唯一真實來源，不得在其他地方重複定義規則
 - AGENTS.md 部署到專案根目錄才能讓 Claude Code 在 session 啟動時讀取記憶更新協議
 - R3 auto-fix（summarization 已自動降級）標記為 warning 而非 error，避免 false positive
+- Industry supplement = extraction hint only，不是 authority grant — 有頁碼才能 tier_a
+- Pattern 結果永遠是 interpretation + requires_review=True，不進 Key Findings（hardcoded）
+- FX 損益不自動標為一次性（fx_driven_profit pattern 無 recurring filter）
+- Disclosure Coverage Engine 只判斷「揭露是否存在」，not_applicable 不計入 not_found
+
+## Memory 漏記根本原因（2026-05-14 分析）
+
+**規則存在但沒有強制執行機制**：
+1. AGENTS.md session start 協議只是文字規則，沒有工具層強制
+2. `scripts/closeout.ps1`（AGENTS.md 引用）不存在 → DoD 無法 fail-closed
+3. Session context 壓縮後重啟，AI 不知道 memory 沒更新
+4. 沒有 git pre-push hook 檢查 memory 是否同步
+
+**修正方向**：建立 `scripts/closeout.ps1` + git pre-push hook

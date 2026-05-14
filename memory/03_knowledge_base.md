@@ -1,6 +1,6 @@
 # Knowledge Base
 
-**最後更新**: 2026-05-13（Phase 7 完成）
+**最後更新**: 2026-05-14（Phase 9E 完成）
 
 ## Data Models 總覽
 
@@ -78,6 +78,44 @@
 | tone_only | bool | tone_shift 時=True，禁止等同財務惡化 |
 | evidence.presence | str | both / only_in_current / only_in_previous |
 | requires_human_review | bool | 預設=True |
+
+### PDFDocument.industry_type（Phase 9C）
+| 值 | 說明 |
+|----|------|
+| general | 一般產業（預設）|
+| cdmo | 委託開發製造（Backlog/LOI/Milestone）|
+| semiconductor | 半導體（稼動率/ASP/先進製程）|
+
+### DisclosureCoverageReport（collection: disclosure_coverage_reports）Phase 9D
+| 欄位 | 型別 | 說明 |
+|------|------|------|
+| coverage_id | str | UUID |
+| document_id | str | 對應 PDFDocument |
+| items | list[DisclosureCoverageItem] | 14 條 |
+| found_count | int | status=found 數量 |
+| not_found_count | int | status=not_found 數量（不含 not_applicable）|
+| not_applicable_count | int | status=not_applicable 數量 |
+| total_count | int | 永遠=14 |
+
+### PatternRunReport（collection: pattern_run_reports）Phase 9E
+| 欄位 | 型別 | 說明 |
+|------|------|------|
+| run_id | str | UUID |
+| document_id | str | 對應 PDFDocument |
+| results | list[PatternRunResult] | 6 條（對應 6 個 pattern）|
+| triggered_count | int | status=triggered 數量 |
+| insufficient_count | int | status=insufficient_evidence 數量 |
+
+### PatternRunResult（embedded in PatternRunReport）
+| 欄位 | 型別 | 說明 |
+|------|------|------|
+| pattern_id | str | e.g. "debt_maturity_risk" |
+| status | str | triggered / not_triggered / insufficient_evidence |
+| generated_observation | str | observation_template 原文（只在 triggered 時有值）|
+| source_claim_ids | list[str] | 觸發的 claim IDs |
+| requires_review | bool | triggered 時=True，其餘=False |
+| claim_level | str | **永遠 = interpretation**（guard）|
+| in_key_findings | bool | **永遠 = False**（guard）|
 
 ### ExternalDataRecord（collection: external_data）Phase 6
 | 欄位 | 型別 | 說明 |

@@ -1,6 +1,6 @@
 # Workflow
 
-**最後更新**: 2026-05-13（Phase 7 完成）
+**最後更新**: 2026-05-14（Phase 9E 完成）
 
 ## 完整 API 使用流程
 
@@ -77,17 +77,32 @@ GET /api/v1/documents/{document_id}/audit  ← Phase 7
 
 GET /api/v1/documents/{document_id}/audit?report_id=<uuid>  ← Phase 7
    → 對指定 report_id 執行稽核
+
+=== 法定揭露稽核（Phase 9D）===
+
+POST /api/v1/documents/{document_id}/disclosure-coverage  ← Phase 9D
+   → 呼叫 claude-haiku-4-5，檢查 14 項法定揭露
+   → 回傳 items（14 條）+ found_count + not_found_count + not_applicable_count
+
+=== 財報檢查模式（Phase 9E）===
+
+POST /api/v1/documents/{document_id}/patterns/run  ← Phase 9E
+   → 純 Python，不呼叫 Claude，掃描現有 claims 屬性
+   → 回傳 results（6 條）+ triggered_count + insufficient_count
+   → 每個 result 含 source_claims + missing_evidence_keys
 ```
 
 ## 建議標準操作流程（SOP）
 
 ```
-1. upload → 2. ingest → 3. extract-tables → 4. summary
+1. upload（含 industry_type）→ 2. ingest → 3. extract-tables → 4. summary
    ↓
 5. 若需精準分類：classify（LLM）
 6. 若需比較兩季：diff
 7. 若需外部驗證：fetch-financials → crosscheck
 8. 若需 governance 稽核：audit
+9. 若需法定揭露稽核：disclosure-coverage（Haiku，~10-20s）
+10. 若需財報警示 pattern：patterns/run（純 Python，<1s）
 ```
 
 ## 啟動指令
