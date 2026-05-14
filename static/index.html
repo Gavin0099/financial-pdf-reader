@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>台股財報 PDF 閱讀器</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f7fa; color: #222; min-height: 100vh; }
+
+  header { background: #1a1a2e; color: #fff; padding: 18px 32px; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 1.2rem; font-weight: 600; }
+  header span { font-size: 0.75rem; color: #aaa; border: 1px solid #444; border-radius: 4px; padding: 2px 8px; }
+
+  .container { max-width: 860px; margin: 32px auto; padding: 0 16px; }
+
+  .card { background: #fff; border-radius: 10px; border: 1px solid #e4e8ee; margin-bottom: 20px; overflow: hidden; }
+  .card-header { padding: 16px 20px; background: #f8f9fb; border-bottom: 1px solid #e4e8ee; display: flex; align-items: center; gap: 10px; }
+  .step-badge { background: #1a1a2e; color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+  .step-badge.done { background: #22c55e; }
+  .card-header h2 { font-size: 0.95rem; font-weight: 600; }
+  .card-body { padding: 20px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  label { font-size: 0.8rem; color: #555; font-weight: 500; }
+  input, select { border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 10px; font-size: 0.9rem; outline: none; transition: border-color 0.15s; }
+  input:focus, select:focus { border-color: #4f46e5; }
+  input[type="file"] { padding: 6px; cursor: pointer; }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-primary { background: #4f46e5; color: #fff; }
+  .btn-primary:hover { background: #4338ca; }
+  .btn-primary:disabled { background: #a5b4fc; cursor: not-allowed; }
+  .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+  .btn-secondary:hover { background: #e5e7eb; }
+
+  .alert { border-radius: 6px; padding: 10px 14px; font-size: 0.85rem; margin-top: 12px; }
+  .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+  .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+  .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+
+  .meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .badge { font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-green { background: #dcfce7; color: #15803d; }
+  .badge-yellow { background: #fef9c3; color: #a16207; }
+  .badge-red { background: #fee2e2; color: #b91c1c; }
+  .badge-gray { background: #f3f4f6; color: #4b5563; }
+
+  .claim-card { border: 1px solid #e4e8ee; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+  .claim-card.review { border-color: #fca5a5; background: #fff7f7; }
+  .claim-text { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+  .evidence-list { margin-top: 8px; }
+  .evidence-item { font-size: 0.78rem; color: #555; background: #f8f9fb; border-radius: 4px; padding: 6px 10px; margin-top: 4px; display: flex; gap: 8px; }
+  .page-tag { color: #4f46e5; font-weight: 700; flex-shrink: 0; }
+  .quoted { color: #374151; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .hidden { display: none !important; }
+  .summary-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .summary-header h3 { font-size: 0.95rem; font-weight: 600; }
+  .divider { border: none; border-top: 1px solid #e4e8ee; margin: 16px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>台股財報 PDF 閱讀器</h1>
+  <span>Evidence-Bound</span>
+</header>
+
+<div class="container">
+
+  <!-- STEP 1: Upload -->
+  <div class="card" id="step1-card">
+    <div class="card-header">
+      <div class="step-badge" id="badge1">1</div>
+      <h2>上傳財報 PDF</h2>
+    </div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>股票代號 *</label>
+          <input type="text" id="stock_id" placeholder="例：2330" maxlength="10">
+        </div>
+        <div class="form-group">
+          <label>公司名稱 *</label>
+          <input type="text" id="company_name" placeholder="例：台積電">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>季度 *</label>
+          <input type="text" id="period" placeholder="例：2026Q1">
+        </div>
+        <div class="form-group">
+          <label>報告類型</label>
+          <select id="document_type">
+            <option value="quarterly_report">季報</option>
+            <option value="annual_report">年報</option>
+            <option value="earnings_release">法說會</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>PDF 檔案 *</label>
+        <input type="file" id="pdf_file" accept=".pdf">
+      </div>
+      <button class="btn btn-primary" onclick="uploadPDF()" id="upload-btn">上傳</button>
+      <div id="upload-result"></div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Ingest -->
+  <div class="card hidden" id="step2-card">
+    <div class="card-header">
+      <div class="step-badge" id="badge2">2</div>
+      <h2>解析文件</h2>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-success" id="upload-success-msg"></div>
+      <br>
+      <button class="btn btn-primary" onclick="ingestDoc()" id="ingest-btn">開始解析</button>
+      <div id="ingest-result"></div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Summary -->
+  <div class="card hidden" id="step3-card">
+    <div class="card-header">
+      <div class="step-badge" id="badge3">3</div>
+      <h2>產生 AI 摘要</h2>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-success" id="ingest-success-msg"></div>
+      <br>
+      <button class="btn btn-primary" onclick="generateSummary()" id="summary-btn">產生摘要</button>
+      <p style="font-size:0.78rem;color:#888;margin-top:8px;">摘要需呼叫 Claude API，通常需要 30-90 秒</p>
+      <div id="summary-result"></div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="card hidden" id="results-card">
+    <div class="card-header">
+      <div class="step-badge done">✓</div>
+      <h2>摘要結果</h2>
+    </div>
+    <div class="card-body" id="results-body"></div>
+  </div>
+
+</div>
+
+<script>
+let documentId = null;
+
+async function uploadPDF() {
+  const stockId = document.getElementById('stock_id').value.trim();
+  const companyName = document.getElementById('company_name').value.trim();
+  const period = document.getElementById('period').value.trim();
+  const docType = document.getElementById('document_type').value;
+  const fileInput = document.getElementById('pdf_file');
+
+  if (!stockId || !companyName || !period || !fileInput.files[0]) {
+    setResult('upload-result', 'error', '請填寫所有必填欄位並選擇 PDF 檔案');
+    return;
+  }
+
+  const btn = document.getElementById('upload-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 上傳中...';
+  setResult('upload-result', '', '');
+
+  const fd = new FormData();
+  fd.append('file', fileInput.files[0]);
+  fd.append('stock_id', stockId);
+  fd.append('company_name', companyName);
+  fd.append('period', period);
+  fd.append('document_type', docType);
+
+  try {
+    const res = await fetch('/api/v1/documents/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
+
+    documentId = data.document_id;
+    document.getElementById('badge1').textContent = '✓';
+    document.getElementById('badge1').classList.add('done');
+    document.getElementById('upload-success-msg').textContent =
+      `✅ 上傳成功  document_id: ${documentId}`;
+    document.getElementById('step2-card').classList.remove('hidden');
+    document.getElementById('step2-card').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    setResult('upload-result', 'error', '上傳失敗：' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '上傳';
+  }
+}
+
+async function ingestDoc() {
+  const btn = document.getElementById('ingest-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 解析中...';
+  setResult('ingest-result', '', '');
+
+  try {
+    const res = await fetch(`/api/v1/documents/${documentId}/ingest`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
+
+    document.getElementById('badge2').textContent = '✓';
+    document.getElementById('badge2').classList.add('done');
+    document.getElementById('ingest-success-msg').textContent =
+      `✅ 解析完成  ${data.pages_extracted} 頁 / ${data.chunks_created} 個 chunks`;
+    document.getElementById('step3-card').classList.remove('hidden');
+    document.getElementById('step3-card').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    setResult('ingest-result', 'error', '解析失敗：' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '開始解析';
+  }
+}
+
+async function generateSummary() {
+  const btn = document.getElementById('summary-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Claude 分析中，請稍候...';
+  setResult('summary-result', '', '');
+
+  try {
+    const res = await fetch(`/api/v1/documents/${documentId}/summary`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
+
+    document.getElementById('badge3').textContent = '✓';
+    document.getElementById('badge3').classList.add('done');
+    renderResults(data);
+    document.getElementById('results-card').classList.remove('hidden');
+    document.getElementById('results-card').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    setResult('summary-result', 'error', '摘要失敗：' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '產生摘要';
+  }
+}
+
+function renderResults(data) {
+  const body = document.getElementById('results-body');
+  const claims = data.claims || [];
+  const reviewCount = claims.filter(c => c.requires_human_review).length;
+
+  const statusBadge = data.investment_advice_detected
+    ? `<span class="badge badge-red">⚠ 偵測到投資建議語言</span>`
+    : `<span class="badge badge-green">✓ 無投資建議</span>`;
+
+  const evidenceBadge = {
+    complete: `<span class="badge badge-green">evidence 完整</span>`,
+    partial: `<span class="badge badge-yellow">evidence 部分</span>`,
+    insufficient: `<span class="badge badge-red">evidence 不足</span>`,
+  }[data.evidence_status] || `<span class="badge badge-gray">${data.evidence_status}</span>`;
+
+  let html = `
+    <div class="summary-header">
+      <h3>${data.stock_id || ''} ${data.period || ''} — ${claims.length} 條觀察</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${evidenceBadge}
+        ${statusBadge}
+        ${reviewCount > 0 ? `<span class="badge badge-yellow">⚠ ${reviewCount} 條需人工審查</span>` : ''}
+      </div>
+    </div>
+    <hr class="divider">
+  `;
+
+  if (claims.length === 0) {
+    html += `<div class="alert alert-info">未產生任何觀察。可能 PDF 內容不足或需要重新解析。</div>`;
+  }
+
+  claims.forEach((c, i) => {
+    const levelColor = { observed_fact: 'badge-green', derived_metric: 'badge-blue', interpretation: 'badge-blue', hypothesis: 'badge-yellow', insufficient_evidence: 'badge-red' }[c.claim_level] || 'badge-gray';
+    const evidenceHtml = (c.evidence || []).map(e =>
+      `<div class="evidence-item"><span class="page-tag">P.${e.page}</span><span class="quoted">${e.quoted_text || e.section || ''}</span></div>`
+    ).join('');
+
+    html += `
+      <div class="claim-card ${c.requires_human_review ? 'review' : ''}">
+        <div class="meta-row" style="margin-bottom:6px;">
+          <span class="badge badge-gray">#${i+1}</span>
+          <span class="badge ${levelColor}">${c.claim_level}</span>
+          <span class="badge badge-gray">${c.claim_type || ''}</span>
+          ${c.requires_human_review ? '<span class="badge badge-red">需人工審查</span>' : ''}
+        </div>
+        <div class="claim-text">${c.claim}</div>
+        ${evidenceHtml ? `<div class="evidence-list">${evidenceHtml}</div>` : ''}
+      </div>
+    `;
+  });
+
+  body.innerHTML = html;
+}
+
+function setResult(id, type, msg) {
+  const el = document.getElementById(id);
+  if (!msg) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="alert alert-${type === 'error' ? 'error' : 'info'}">${msg}</div>`;
+}
+</script>
+</body>
+</html>

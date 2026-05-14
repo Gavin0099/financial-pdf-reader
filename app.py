@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from database.mongo.client import connect_mongodb
 
@@ -61,3 +63,10 @@ app.include_router(DataSourceRouter, tags=["DataSource"], prefix="/api/v1/stocks
 # Phase 7: Governance Layer — R1-R7 claim audit
 from apis.v1.routers.audit import router as AuditRouter
 app.include_router(AuditRouter, tags=["Audit"], prefix="/api/v1/documents")
+
+# Phase 9: Simple HTML UI
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/ui", include_in_schema=False)
+async def serve_ui():
+    return FileResponse("static/index.html")
