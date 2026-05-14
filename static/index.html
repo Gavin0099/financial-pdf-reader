@@ -351,7 +351,9 @@ function renderResults(data) {
   const claims = data.claims || [];
   const cleanClaims = claims.filter(c => !c.contaminated);
   const contaminatedClaims = claims.filter(c => c.contaminated);
+  // KEY FINDINGS: tier_a + fact/metric only — interpretations excluded
   const tierA = cleanClaims.filter(c => c.materiality === 'tier_a');
+  const keyFindings = tierA.filter(c => c.claim_level === 'observed_fact' || c.claim_level === 'derived_metric');
   const reviewCount = cleanClaims.filter(c => c.requires_human_review).length;
 
   /* ── Governance badges ── */
@@ -392,18 +394,31 @@ function renderResults(data) {
 
   /* ── Executive Summary ── */
   if (data.executive_summary) {
+    const claimMix = [
+      byLv.observed_fact   ? `${byLv.observed_fact} 條直接事實`   : '',
+      byLv.derived_metric  ? `${byLv.derived_metric} 條衍生指標`  : '',
+      byLv.interpretation  ? `${byLv.interpretation} 條詮釋`      : '',
+    ].filter(Boolean).join('、');
+    const reviewNote = reviewCount > 0 ? `其中 <b>${reviewCount} 條</b>需人工審查。` : '';
     html += `<div class="exec-card">
       <div class="ec-label">Executive Summary</div>
       <div class="ec-text">${data.executive_summary}</div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid #334155;font-size:.75rem;color:#64748b;line-height:1.6;">
+        本摘要基於 <b style="color:#94a3b8">${claimMix}</b>。${reviewNote}
+      </div>
     </div>`;
   }
 
-  /* ── Key Findings (tier_a only) ── */
-  if (tierA.length > 0) {
+  /* ── Key Findings (tier_a + fact/metric only, no interpretations) ── */
+  if (keyFindings.length > 0) {
+    const interpExcluded = tierA.length - keyFindings.length;
     html += `<div class="kf-section">
-      <div class="kf-label">⚡ Key Findings <span style="font-weight:400;color:#9ca3af;">（Tier A 核心觀察）</span></div>
+      <div class="kf-label">⚡ Key Findings
+        <span style="font-weight:400;color:#9ca3af;">（Tier A · 直接事實 + 衍生指標）</span>
+        ${interpExcluded>0?`<span style="font-weight:400;color:#f59e0b;font-size:.65rem;margin-left:4px;">${interpExcluded} 條詮釋已移至分頁</span>`:''}
+      </div>
       <div class="kf-grid">`;
-    tierA.slice(0, 6).forEach(c => {
+    keyFindings.slice(0, 6).forEach(c => {
       const kfc = KF_CLASS[c.claim_level] || 'kf-derived';
       const pages = (c.evidence||[]).map(e=>`P.${e.page}`).join(' ');
       html += `<div class="kf-card ${kfc}">
@@ -420,6 +435,7 @@ function renderResults(data) {
   }
 
   /* ── Group claims by section ── */
+
   const grouped = {};
   SECTION_ORDER.forEach(k => grouped[k]=[]);
   cleanClaims.forEach(c => {
