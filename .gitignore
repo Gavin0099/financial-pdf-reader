@@ -36,3 +36,7 @@ ai-governance-framework/
 
 # Claude Code local settings
 .claude/
+
+# Governance backups (timestamped, auto-generated)
+governance_backup_*/
+AGENTS_backup_*.md
