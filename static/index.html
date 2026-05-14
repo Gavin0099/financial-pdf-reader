@@ -12,7 +12,7 @@
   header h1 { font-size: 1.2rem; font-weight: 600; }
   header span { font-size: 0.75rem; color: #aaa; border: 1px solid #444; border-radius: 4px; padding: 2px 8px; }
 
-  .container { max-width: 860px; margin: 32px auto; padding: 0 16px; }
+  .container { max-width: 900px; margin: 32px auto; padding: 0 16px; }
 
   .card { background: #fff; border-radius: 10px; border: 1px solid #e4e8ee; margin-bottom: 20px; overflow: hidden; }
   .card-header { padding: 16px 20px; background: #f8f9fb; border-bottom: 1px solid #e4e8ee; display: flex; align-items: center; gap: 10px; }
@@ -32,37 +32,65 @@
   .btn-primary { background: #4f46e5; color: #fff; }
   .btn-primary:hover { background: #4338ca; }
   .btn-primary:disabled { background: #a5b4fc; cursor: not-allowed; }
-  .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
-  .btn-secondary:hover { background: #e5e7eb; }
 
   .alert { border-radius: 6px; padding: 10px 14px; font-size: 0.85rem; margin-top: 12px; }
   .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
   .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
   .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
 
-  .meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
   .badge { font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
-  .badge-blue { background: #dbeafe; color: #1d4ed8; }
-  .badge-green { background: #dcfce7; color: #15803d; }
+  .badge-blue   { background: #dbeafe; color: #1d4ed8; }
+  .badge-green  { background: #dcfce7; color: #15803d; }
   .badge-yellow { background: #fef9c3; color: #a16207; }
-  .badge-red { background: #fee2e2; color: #b91c1c; }
-  .badge-gray { background: #f3f4f6; color: #4b5563; }
+  .badge-red    { background: #fee2e2; color: #b91c1c; }
+  .badge-gray   { background: #f3f4f6; color: #4b5563; }
+  .badge-purple { background: #ede9fe; color: #6d28d9; }
+  .badge-orange { background: #ffedd5; color: #c2410c; }
 
-  .claim-card { border: 1px solid #e4e8ee; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+  /* Executive Summary */
+  .exec-summary { background: #1a1a2e; color: #e2e8f0; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; line-height: 1.7; font-size: 0.9rem; }
+  .exec-summary .summary-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 8px; font-weight: 600; }
+
+  /* Temporal warning */
+  .temporal-warning { background: #fffbeb; border: 2px solid #f59e0b; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.85rem; color: #92400e; }
+  .temporal-warning strong { display: block; margin-bottom: 4px; }
+
+  /* Section grouping */
+  .section-group { margin-bottom: 24px; }
+  .section-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; padding: 8px 0 10px; border-bottom: 2px solid #e4e8ee; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+  /* Materiality left border */
+  .tier-a-border { border-left: 3px solid #4f46e5; }
+  .tier-b-border { border-left: 3px solid #94a3b8; }
+  .tier-c-border { border-left: 3px solid #e5e7eb; }
+
+  .claim-card { border: 1px solid #e4e8ee; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
   .claim-card.review { border-color: #fca5a5; background: #fff7f7; }
+  .claim-card.contaminated { opacity: 0.5; background: #f9fafb; }
   .claim-text { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+  .claim-text.strike { text-decoration: line-through; color: #9ca3af; }
+  .contaminated-note { font-size: 0.75rem; color: #b45309; background: #fef3c7; border-radius: 4px; padding: 2px 8px; margin-bottom: 6px; display: inline-block; }
+
+  .meta-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; align-items: center; }
+  .non-recurring-tag { font-size: 0.68rem; background: #ffedd5; color: #c2410c; border-radius: 3px; padding: 1px 6px; font-weight: 600; }
+
   .evidence-list { margin-top: 8px; }
   .evidence-item { font-size: 0.78rem; color: #555; background: #f8f9fb; border-radius: 4px; padding: 6px 10px; margin-top: 4px; display: flex; gap: 8px; }
   .page-tag { color: #4f46e5; font-weight: 700; flex-shrink: 0; }
   .quoted { color: #374151; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+  /* Stats bar */
+  .stats-bar { display: flex; gap: 20px; flex-wrap: wrap; padding: 12px 16px; background: #f8f9fb; border-radius: 8px; margin-bottom: 16px; }
+  .stat-item .stat-num { font-size: 1.4rem; font-weight: 700; color: #1a1a2e; line-height: 1; }
+  .stat-item .stat-label { font-size: 0.68rem; color: #6b7280; margin-top: 2px; }
+
   .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .hidden { display: none !important; }
-  .summary-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .summary-header h3 { font-size: 0.95rem; font-weight: 600; }
   .divider { border: none; border-top: 1px solid #e4e8ee; margin: 16px 0; }
+  .summary-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+  .summary-header h3 { font-size: 0.95rem; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -74,7 +102,7 @@
 
 <div class="container">
 
-  <!-- STEP 1: Upload -->
+  <!-- STEP 1 -->
   <div class="card" id="step1-card">
     <div class="card-header">
       <div class="step-badge" id="badge1">1</div>
@@ -94,7 +122,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>季度 *</label>
-          <input type="text" id="period" placeholder="例：2026Q1">
+          <input type="text" id="period" placeholder="例：2025Q1">
         </div>
         <div class="form-group">
           <label>報告類型</label>
@@ -114,7 +142,7 @@
     </div>
   </div>
 
-  <!-- STEP 2: Ingest -->
+  <!-- STEP 2 -->
   <div class="card hidden" id="step2-card">
     <div class="card-header">
       <div class="step-badge" id="badge2">2</div>
@@ -128,7 +156,7 @@
     </div>
   </div>
 
-  <!-- STEP 3: Summary -->
+  <!-- STEP 3 -->
   <div class="card hidden" id="step3-card">
     <div class="card-header">
       <div class="step-badge" id="badge3">3</div>
@@ -147,7 +175,7 @@
   <div class="card hidden" id="results-card">
     <div class="card-header">
       <div class="step-badge done">✓</div>
-      <h2>摘要結果</h2>
+      <h2>分析結果</h2>
     </div>
     <div class="card-body" id="results-body"></div>
   </div>
@@ -156,6 +184,24 @@
 
 <script>
 let documentId = null;
+
+const SECTION_META = {
+  key_financials:         { label: '核心財務',        icon: '📊' },
+  accounting_adjustments: { label: '會計調整／一次性', icon: '🔧' },
+  liquidity:              { label: '流動性與資本結構',  icon: '💧' },
+  risk_register:          { label: '風險登錄',         icon: '⚠️' },
+  evidence_gaps:          { label: '證據不足',          icon: '❓' },
+};
+const TIER_META = {
+  tier_a: { label: 'Tier A', cls: 'badge-purple', border: 'tier-a-border' },
+  tier_b: { label: 'Tier B', cls: 'badge-blue',   border: 'tier-b-border' },
+  tier_c: { label: 'Tier C', cls: 'badge-gray',   border: 'tier-c-border' },
+};
+const LEVEL_COLOR = {
+  observed_fact: 'badge-green', derived_metric: 'badge-blue',
+  interpretation: 'badge-blue', hypothesis: 'badge-yellow',
+  insufficient_evidence: 'badge-red',
+};
 
 async function parseResponse(res) {
   const text = await res.text();
@@ -171,139 +217,147 @@ async function uploadPDF() {
   const period = document.getElementById('period').value.trim();
   const docType = document.getElementById('document_type').value;
   const fileInput = document.getElementById('pdf_file');
-
   if (!stockId || !companyName || !period || !fileInput.files[0]) {
-    setResult('upload-result', 'error', '請填寫所有必填欄位並選擇 PDF 檔案');
-    return;
+    setResult('upload-result', 'error', '請填寫所有必填欄位並選擇 PDF 檔案'); return;
   }
-
   const btn = document.getElementById('upload-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> 上傳中...';
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 上傳中...';
   setResult('upload-result', '', '');
-
   const fd = new FormData();
-  fd.append('file', fileInput.files[0]);
-  fd.append('stock_id', stockId);
-  fd.append('company_name', companyName);
-  fd.append('period', period);
+  fd.append('file', fileInput.files[0]); fd.append('stock_id', stockId);
+  fd.append('company_name', companyName); fd.append('period', period);
   fd.append('document_type', docType);
-
   try {
-    const res = await fetch('/api/v1/documents/upload', { method: 'POST', body: fd });
-    const data = await parseResponse(res);
-
+    const data = await parseResponse(await fetch('/api/v1/documents/upload', { method: 'POST', body: fd }));
     documentId = data.document_id;
     document.getElementById('badge1').textContent = '✓';
     document.getElementById('badge1').classList.add('done');
-    document.getElementById('upload-success-msg').textContent =
-      `✅ 上傳成功  document_id: ${documentId}`;
+    document.getElementById('upload-success-msg').textContent = `✅ 上傳成功  document_id: ${documentId}`;
     document.getElementById('step2-card').classList.remove('hidden');
     document.getElementById('step2-card').scrollIntoView({ behavior: 'smooth' });
-  } catch (e) {
-    setResult('upload-result', 'error', '上傳失敗：' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '上傳';
-  }
+  } catch(e) { setResult('upload-result', 'error', '上傳失敗：' + e.message); }
+  finally { btn.disabled = false; btn.innerHTML = '上傳'; }
 }
 
 async function ingestDoc() {
   const btn = document.getElementById('ingest-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> 解析中...';
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 解析中...';
   setResult('ingest-result', '', '');
-
   try {
-    const res = await fetch(`/api/v1/documents/${documentId}/ingest`, { method: 'POST' });
-    const data = await parseResponse(res);
-
+    const data = await parseResponse(await fetch(`/api/v1/documents/${documentId}/ingest`, { method: 'POST' }));
     document.getElementById('badge2').textContent = '✓';
     document.getElementById('badge2').classList.add('done');
     document.getElementById('ingest-success-msg').textContent =
       `✅ 解析完成  ${data.pages_extracted} 頁 / ${data.chunks_created} 個 chunks`;
     document.getElementById('step3-card').classList.remove('hidden');
     document.getElementById('step3-card').scrollIntoView({ behavior: 'smooth' });
-  } catch (e) {
-    setResult('ingest-result', 'error', '解析失敗：' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '開始解析';
-  }
+  } catch(e) { setResult('ingest-result', 'error', '解析失敗：' + e.message); }
+  finally { btn.disabled = false; btn.innerHTML = '開始解析'; }
 }
 
 async function generateSummary() {
   const btn = document.getElementById('summary-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Claude 分析中，請稍候...';
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Claude 分析中，請稍候...';
   setResult('summary-result', '', '');
-
   try {
-    const res = await fetch(`/api/v1/documents/${documentId}/summary`, { method: 'POST' });
-    const data = await parseResponse(res);
-
+    const data = await parseResponse(await fetch(`/api/v1/documents/${documentId}/summary`, { method: 'POST' }));
     document.getElementById('badge3').textContent = '✓';
     document.getElementById('badge3').classList.add('done');
     renderResults(data);
     document.getElementById('results-card').classList.remove('hidden');
     document.getElementById('results-card').scrollIntoView({ behavior: 'smooth' });
-  } catch (e) {
-    setResult('summary-result', 'error', '摘要失敗：' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '產生摘要';
-  }
+  } catch(e) { setResult('summary-result', 'error', '摘要失敗：' + e.message); }
+  finally { btn.disabled = false; btn.innerHTML = '產生摘要'; }
 }
 
 function renderResults(data) {
   const body = document.getElementById('results-body');
   const claims = data.claims || [];
-  const reviewCount = claims.filter(c => c.requires_human_review).length;
+  const reviewCount = claims.filter(c => c.requires_human_review && !c.contaminated).length;
+  const contaminatedCount = data.contaminated_count || 0;
+  const tierA = claims.filter(c => c.materiality === 'tier_a' && !c.contaminated).length;
 
-  const statusBadge = data.investment_advice_detected
+  const evidenceBadge = { complete: `<span class="badge badge-green">evidence 完整</span>`,
+    partial: `<span class="badge badge-yellow">evidence 部分</span>`,
+    insufficient: `<span class="badge badge-red">evidence 不足</span>` }[data.evidence_status]
+    || `<span class="badge badge-gray">${data.evidence_status}</span>`;
+  const adviceBadge = data.investment_advice_detected
     ? `<span class="badge badge-red">⚠ 偵測到投資建議語言</span>`
     : `<span class="badge badge-green">✓ 無投資建議</span>`;
 
-  const evidenceBadge = {
-    complete: `<span class="badge badge-green">evidence 完整</span>`,
-    partial: `<span class="badge badge-yellow">evidence 部分</span>`,
-    insufficient: `<span class="badge badge-red">evidence 不足</span>`,
-  }[data.evidence_status] || `<span class="badge badge-gray">${data.evidence_status}</span>`;
-
   let html = `
     <div class="summary-header">
-      <h3>${data.stock_id || ''} ${data.period || ''} — ${claims.length} 條觀察</h3>
+      <h3>${data.stock_id || ''} ${data.period || ''}</h3>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        ${evidenceBadge}
-        ${statusBadge}
+        ${evidenceBadge} ${adviceBadge}
         ${reviewCount > 0 ? `<span class="badge badge-yellow">⚠ ${reviewCount} 條需人工審查</span>` : ''}
       </div>
-    </div>
-    <hr class="divider">
-  `;
+    </div>`;
 
-  if (claims.length === 0) {
-    html += `<div class="alert alert-info">未產生任何觀察。可能 PDF 內容不足或需要重新解析。</div>`;
+  // Temporal warning
+  if (!data.temporal_consistent) {
+    html += `<div class="temporal-warning">
+      <strong>⚠️ 時間軸不一致 — 分析結果部分可能無效</strong>
+      要求期間：<b>${data.requested_period}</b> ／ 文件實際期間：<b>${data.document_period}</b><br>
+      ${data.temporal_note ? data.temporal_note + '<br>' : ''}
+      <span style="font-size:0.78rem;">${contaminatedCount} 條 derived_metric / interpretation / hypothesis 已標記為 contaminated</span>
+    </div>`;
   }
 
-  claims.forEach((c, i) => {
-    const levelColor = { observed_fact: 'badge-green', derived_metric: 'badge-blue', interpretation: 'badge-blue', hypothesis: 'badge-yellow', insufficient_evidence: 'badge-red' }[c.claim_level] || 'badge-gray';
-    const evidenceHtml = (c.evidence || []).map(e =>
-      `<div class="evidence-item"><span class="page-tag">P.${e.page}</span><span class="quoted">${e.quoted_text || e.section || ''}</span></div>`
-    ).join('');
+  // Stats
+  const byLevel = {};
+  claims.forEach(c => { byLevel[c.claim_level] = (byLevel[c.claim_level]||0)+1; });
+  html += `<div class="stats-bar">
+    <div class="stat-item"><div class="stat-num">${claims.length}</div><div class="stat-label">總觀察數</div></div>
+    <div class="stat-item"><div class="stat-num">${tierA}</div><div class="stat-label">Tier A 核心</div></div>
+    <div class="stat-item"><div class="stat-num">${byLevel['observed_fact']||0}</div><div class="stat-label">直接事實</div></div>
+    <div class="stat-item"><div class="stat-num">${byLevel['derived_metric']||0}</div><div class="stat-label">衍生指標</div></div>
+    <div class="stat-item"><div class="stat-num">${byLevel['interpretation']||0}</div><div class="stat-label">詮釋</div></div>
+    ${contaminatedCount>0 ? `<div class="stat-item"><div class="stat-num" style="color:#b45309;">${contaminatedCount}</div><div class="stat-label">contaminated</div></div>` : ''}
+  </div>`;
 
-    html += `
-      <div class="claim-card ${c.requires_human_review ? 'review' : ''}">
-        <div class="meta-row" style="margin-bottom:6px;">
-          <span class="badge badge-gray">#${i+1}</span>
-          <span class="badge ${levelColor}">${c.claim_level}</span>
-          <span class="badge badge-gray">${c.claim_type || ''}</span>
-          ${c.requires_human_review ? '<span class="badge badge-red">需人工審查</span>' : ''}
+  // Executive Summary
+  if (data.executive_summary) {
+    html += `<div class="exec-summary"><div class="summary-label">Executive Summary</div>${data.executive_summary}</div>`;
+  }
+
+  html += `<hr class="divider">`;
+
+  // Grouped sections
+  const sectionOrder = ['key_financials','accounting_adjustments','liquidity','risk_register','evidence_gaps'];
+  const tierOrder = { tier_a:0, tier_b:1, tier_c:2 };
+  const grouped = {};
+  sectionOrder.forEach(k => grouped[k]=[]);
+  claims.forEach(c => { const k = c.section_key||'key_financials'; if(!grouped[k]) grouped[k]=[]; grouped[k].push(c); });
+  sectionOrder.forEach(k => grouped[k].sort((a,b)=>(tierOrder[a.materiality]||1)-(tierOrder[b.materiality]||1)));
+
+  sectionOrder.forEach(key => {
+    if (!grouped[key] || grouped[key].length === 0) return;
+    const meta = SECTION_META[key] || { label: key, icon: '📋' };
+    html += `<div class="section-group">
+      <div class="section-title">${meta.icon} ${meta.label} <span class="badge badge-gray">${grouped[key].length}</span></div>`;
+
+    grouped[key].forEach(c => {
+      const tm = TIER_META[c.materiality] || { label: c.materiality, cls:'badge-gray', border:'tier-b-border' };
+      const lc = LEVEL_COLOR[c.claim_level] || 'badge-gray';
+      const ev = (c.evidence||[]).map(e =>
+        `<div class="evidence-item"><span class="page-tag">P.${e.page}</span><span class="quoted">${e.quoted_text||e.section||''}</span></div>`
+      ).join('');
+      html += `<div class="claim-card ${tm.border} ${c.contaminated?'contaminated':''} ${(!c.contaminated&&c.requires_human_review)?'review':''}">
+        <div class="meta-row">
+          <span class="badge ${tm.cls}">${tm.label}</span>
+          <span class="badge ${lc}">${c.claim_level}</span>
+          <span class="badge badge-gray">${c.claim_type}</span>
+          ${!c.recurring ? '<span class="non-recurring-tag">一次性</span>' : ''}
+          ${c.contaminated ? '<span class="badge badge-orange">contaminated</span>' : ''}
+          ${(!c.contaminated&&c.requires_human_review) ? '<span class="badge badge-red">需人工審查</span>' : ''}
         </div>
-        <div class="claim-text">${c.claim}</div>
-        ${evidenceHtml ? `<div class="evidence-list">${evidenceHtml}</div>` : ''}
-      </div>
-    `;
+        ${c.contaminated ? '<span class="contaminated-note">⚠ 時間軸不一致，此觀察可能無效</span>' : ''}
+        <div class="claim-text ${c.contaminated?'strike':''}">${c.claim}</div>
+        ${ev ? `<div class="evidence-list">${ev}</div>` : ''}
+      </div>`;
+    });
+    html += `</div>`;
   });
 
   body.innerHTML = html;
@@ -312,7 +366,7 @@ function renderResults(data) {
 function setResult(id, type, msg) {
   const el = document.getElementById(id);
   if (!msg) { el.innerHTML = ''; return; }
-  el.innerHTML = `<div class="alert alert-${type === 'error' ? 'error' : 'info'}">${msg}</div>`;
+  el.innerHTML = `<div class="alert alert-${type==='error'?'error':'info'}">${msg}</div>`;
 }
 </script>
 </body>

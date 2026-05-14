@@ -7,6 +7,7 @@ from mongoengine import (
     EmbeddedDocument,
     EmbeddedDocumentField,
     FloatField,
+    DictField,
 )
 from datetime import datetime, timezone
 
@@ -22,7 +23,12 @@ class ClaimEvidence(EmbeddedDocument):
 class AIClaim(EmbeddedDocument):
     """
     AI 產出的每一個觀察或結論。
-    claim_level 決定 AI 確信程度；沒有 evidence 時強制降級為 insufficient_evidence。
+
+    Hierarchy:
+    - claim_level:  observed_fact > derived_metric > interpretation > hypothesis > insufficient_evidence
+    - materiality:  tier_a (核心) > tier_b (輔助) > tier_c (背景)
+    - section_key:  觀察所屬的報告章節
+    - contaminated: 若時間軸不一致，derived/interpretation/hypothesis 標記為 contaminated
     """
     claim_id = StringField(required=True)
     claim = StringField(required=True)
@@ -38,14 +44,30 @@ class AIClaim(EmbeddedDocument):
     )
     claim_level = StringField(
         choices=[
-            "observed_fact",        # 直接引自 PDF 原文
-            "derived_metric",       # 由原文數字計算
-            "interpretation",       # AI 詮釋，有 evidence
-            "hypothesis",           # AI 推測，evidence 不足
-            "insufficient_evidence",# 無法從 PDF 中確認
+            "observed_fact",         # 直接引自 PDF 原文
+            "derived_metric",        # 由原文數字計算（deterministic transform）
+            "interpretation",        # AI 詮釋，有 evidence 支撐
+            "hypothesis",            # AI 推測，evidence 不足
+            "insufficient_evidence", # 無法從 PDF 中確認
         ],
         default="interpretation",
     )
+    materiality = StringField(
+        choices=["tier_a", "tier_b", "tier_c"],
+        default="tier_b",
+    )
+    section_key = StringField(
+        choices=[
+            "key_financials",        # 營收、毛利、EPS 等核心財務
+            "accounting_adjustments",# 一次性項目、會計調整
+            "liquidity",             # 現金流、流動性、負債
+            "risk_register",         # 風險因素
+            "evidence_gaps",         # 無法確認的項目
+        ],
+        default="key_financials",
+    )
+    recurring = BooleanField(default=True)   # False = 一次性、非常態項目
+    contaminated = BooleanField(default=False)  # 時間軸不一致時標記
     evidence = ListField(EmbeddedDocumentField(ClaimEvidence))
     confidence = StringField(
         choices=["high", "medium", "low"],
@@ -84,11 +106,10 @@ class DiffItem(EmbeddedDocument):
         required=True,
     )
     description = StringField(required=True)
-    current_summary = StringField(default="")   # 本季該段摘要
-    previous_summary = StringField(default="")  # 上季該段摘要
+    current_summary = StringField(default="")
+    previous_summary = StringField(default="")
     evidence = EmbeddedDocumentField(DiffEvidence)
     requires_human_review = BooleanField(default=True)
-    # Governance: 語氣變化不等於財務惡化
     tone_only = BooleanField(default=False)
 
 
@@ -123,12 +144,18 @@ class AIReport(Document):
         choices=["single_summary", "diff_report"],
         default="single_summary",
     )
+    # Temporal validation layer
+    temporal_consistent = BooleanField(default=True)
+    temporal_note = StringField(default="")   # mismatch 描述
+    # Narrative synthesis
+    executive_summary = StringField(default="")
+    # Claims
     claims = ListField(EmbeddedDocumentField(AIClaim))
     evidence_status = StringField(
         choices=["complete", "partial", "insufficient"],
         default="partial",
     )
-    investment_advice_detected = BooleanField(default=False)  # governance guard
+    investment_advice_detected = BooleanField(default=False)
     created_at = DateTimeField(default=lambda: datetime.now(timezone.utc))
 
     meta = {
