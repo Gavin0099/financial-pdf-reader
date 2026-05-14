@@ -110,6 +110,8 @@ EVIDENCE_BOUND_SUMMARY_PROMPT = """\
 請針對以下財報產出分層分析：
 公司：{company_name}（{stock_id}）
 使用者指定期間：{period}
+
+⚠️ 輸出限制：claims 總數不得超過 25 條。請優先選取 tier_a，再選 tier_b，tier_c 全部省略。每條 evidence 的 quoted_text 限 30 字以內。
 """
 
 DIFF_REPORT_PROMPT = """\
