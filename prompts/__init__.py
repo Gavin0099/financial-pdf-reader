@@ -66,8 +66,13 @@ EVIDENCE_BOUND_SUMMARY_PROMPT = """\
 每一條 claim 需指定：
 
 **claim_level（認識論層級）**
-- observed_fact：直接引自 PDF 原文，最高可信
-- derived_metric：由原文數字確定性計算（成長率、比率等），非 interpretation
+- observed_fact：直接引自 PDF 原文，最高可信。
+  ⚠️ 禁止：claim 文字中不得包含 AI 自行計算的比率或百分比。
+  若原文未直接寫出某比率（例如「佔營收 210%」），但該數字係 AI 由原文兩個數字相除得出，則必須改標為 derived_metric 並附公式。
+  observed_fact 只能引用 PDF 中已明確呈現的數字或比率，不得自行運算。
+- derived_metric：由原文數字確定性計算（成長率、比率等），非 interpretation。
+  ⚠️ 必填公式：claim 文字必須包含計算說明，格式為「[指標名] = [分子] / [分母] = [結果]（計算自 p.XX）」。
+  不得只寫結果而省略公式；無公式的比率計算視為輸出錯誤。
 - interpretation：AI 詮釋，需 evidence 支撐
 - hypothesis：推測，evidence 不足
 - insufficient_evidence：無法從 PDF 確認

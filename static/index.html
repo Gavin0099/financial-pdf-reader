@@ -534,7 +534,9 @@ function renderResults(data) {
         ${interpExcluded>0?`<span style="font-weight:400;color:#f59e0b;font-size:.65rem;margin-left:4px;">${interpExcluded} 條詮釋已移至分頁</span>`:''}
       </div>
       <div class="kf-grid">`;
-    keyFindings.slice(0, 6).forEach(c => {
+    const KF_MAX = 4;
+    const kfHidden = keyFindings.length - KF_MAX;
+    keyFindings.slice(0, KF_MAX).forEach(c => {
       const kfc = KF_CLASS[c.claim_level] || 'kf-derived';
       const pages = (c.evidence||[]).map(e=>`P.${e.page}`).join(' ');
       html += `<div class="kf-card ${kfc}">
@@ -547,6 +549,9 @@ function renderResults(data) {
         </div>
       </div>`;
     });
+    if (kfHidden > 0) {
+      html += `<div style="font-size:.72rem;color:#64748b;padding:4px 2px;">+${kfHidden} 條請見下方分頁</div>`;
+    }
     html += `</div></div>`;
   }
 

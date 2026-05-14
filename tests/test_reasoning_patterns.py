@@ -130,7 +130,7 @@ def test_triggered_requires_review_true():
     claims = [
         _claim(
             claim_id="c5",
-            claim="非常態業外利益 tier_a",
+            claim="非常態業外利益增加 EPS 0.5 元",  # contains amount keyword
             section_key="key_financials",
             materiality="tier_a",
             recurring=False,
@@ -248,6 +248,50 @@ def test_trigger_result_claim_level_guard():
     assert GUARD_CLAIM_LEVEL == "interpretation"
     assert GUARD_REQUIRES_REVIEW is True
     assert GUARD_IN_KEY_FINDINGS is False
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Test 11: non_recurring_eps requires quantified amount (Phase 9F precision)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_non_recurring_eps_insufficient_without_amount():
+    """tier_a + recurring=False but NO amount keyword → insufficient_evidence."""
+    from reasoning_patterns.patterns.non_recurring_eps import PATTERN
+    claims = [
+        _claim(
+            claim_id="c11",
+            claim="本期有非常態業外項目，性質屬一次性，尚未確定影響規模",
+            section_key="key_financials",
+            materiality="tier_a",
+            recurring=False,
+        )
+    ]
+    result = evaluate_pattern(PATTERN, claims)
+    assert result.status == "insufficient_evidence", (
+        "non_recurring_eps must not trigger without a quantified amount in the claim"
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Test 12: fx_driven_profit requires quantified amount (Phase 9F precision)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def test_fx_driven_profit_insufficient_without_amount():
+    """FX keyword present but NO quantified amount → insufficient_evidence."""
+    from reasoning_patterns.patterns.fx_driven_profit import PATTERN
+    claims = [
+        _claim(
+            claim_id="c12",
+            claim="本公司業務涉及外幣交易，主要為美元，存在匯兌風險",
+            section_key="risk_register",
+            materiality="tier_b",
+            recurring=True,
+        )
+    ]
+    result = evaluate_pattern(PATTERN, claims)
+    assert result.status == "insufficient_evidence", (
+        "fx_driven_profit must not trigger on bare FX risk disclosure without a quantified amount"
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
