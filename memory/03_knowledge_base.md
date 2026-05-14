@@ -1,6 +1,6 @@
 # Knowledge Base
 
-**最後更新**: 2026-05-14（Phase 9E 完成）
+**最後更新**: 2026-05-14（Phase 10D 完成）
 
 ## Data Models 總覽
 
@@ -40,7 +40,7 @@
 | extraction_quality | str | high / medium / low / failed |
 | requires_human_review | bool | low quality 時自動=True |
 
-### AIReport（collection: ai_reports）Phase 2
+### AIReport（collection: ai_reports）Phase 2 + 10B + 10C
 | 欄位 | 型別 | 說明 |
 |------|------|------|
 | report_id | str | UUID |
@@ -48,6 +48,9 @@
 | claims | list[AIClaim] | AI 觀察列表 |
 | evidence_status | str | complete / partial / insufficient |
 | investment_advice_detected | bool | Governance guard flag |
+| narrative_density_score | float | 0.0–1.0：strategic/management claim 數佔比（10B）|
+| narrative_density_weighted_score | float | 0.0–1.0：文字長度加權佔比（10C）|
+| narrative_flag | bool | count > 0.6 OR weighted > 0.6 時 True（10B/10C）|
 
 ### AIClaim（embedded in AIReport）
 | 欄位 | 型別 | 說明 |
@@ -55,9 +58,14 @@
 | claim_id | str | UUID |
 | claim | str | 觀察描述 |
 | claim_type | str | financial_observation / management_tone / risk_factor / accounting_note / numeric_cross_check |
-| claim_level | str | 見下表 |
+| claim_level | str | 見下表（HOW confident）|
+| source_type | str | financial_evidence / operational_evidence / strategic_narrative / management_expectation（10B，WHAT TYPE）|
+| forward_looking | bool | True = 未來預期/計畫；服務層 auto-detect（10B/10D）|
+| rhetorical_risk_flag | bool | strategic/management claims 含高確信語氣詞（10C）|
+| rhetorical_risk_terms | list[str] | 命中的語氣詞（10C）|
+| section_key | str | key_financials / accounting_adjustments / liquidity / risk_register / pipeline / evidence_gaps |
 | evidence | list[ClaimEvidence] | 來源列表（必須有頁碼）|
-| requires_human_review | bool | 數字異常 / 語氣重大變化 / 附註 |
+| requires_human_review | bool | 數字異常 / 語氣重大變化 / forward_looking 時自動 True |
 
 ### DiffReport（collection: diff_reports）Phase 4
 | 欄位 | 型別 | 說明 |
@@ -126,6 +134,39 @@
 | data_source | str | e.g. "FinMind/TaiwanStockMonthRevenue" |
 | payload | dict | FinMind 原始資料 |
 | is_auxiliary | bool | **永遠=True**，不得作為主要 evidence |
+
+---
+
+## Source Type 定義（Phase 10B）
+
+| source_type | 說明 | 可為 observed_fact? | confidence 上限 |
+|-------------|------|:-------------------:|:---------------:|
+| financial_evidence | 財報數字、報表附注、會計政策 | ✓ | high |
+| operational_evidence | 業務章節具體事實（廠房、產能、認證）| ✓ | high |
+| strategic_narrative | 管理層/公司戰略說法 | ✗（→ interpretation）| high |
+| management_expectation | 明確展望/指引 | ✗（→ interpretation）| medium |
+
+## 服務層 Governance Guards 執行順序（`_parse_claims()`）
+
+```
+1. no evidence → force insufficient_evidence
+2. temporal inconsistency → contaminated=True
+3. strategic/management + observed_fact → downgrade to interpretation
+4. management_expectation + confidence=high → cap at medium
+5. forward_looking=True (Claude) → requires_human_review=True
+6. narrative type + FORWARD_LOOKING_INDICATOR_PHRASES → auto-set forward_looking=True
+7. narrative type + RHETORICAL_RISK_PHRASES → rhetorical_risk_flag=True + terms
+```
+
+所有 guard 只能降級/標記，不能提升 claim 可信度（fail-closed）。
+
+## 詞彙列表位置
+
+| 常數 | 檔案 | 說明 |
+|------|------|------|
+| INVESTMENT_ADVICE_GUARD_PHRASES | prompts/__init__.py | 投資建議偵測，掃全文 |
+| RHETORICAL_RISK_PHRASES | prompts/__init__.py | 高確信語氣，只掃 narrative claims |
+| FORWARD_LOOKING_INDICATOR_PHRASES | prompts/__init__.py | 前瞻指示詞，只掃 narrative claims |
 
 ---
 

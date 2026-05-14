@@ -33,6 +33,11 @@
 - Phase 9C: Industry Type + CDMO Supplement（evidence-first governance fix）
 - Phase 9D: Disclosure Coverage Engine（14 items，Haiku，10 tests）
 - Phase 9E: Pattern Registry（6 patterns，純 Python，14 tests）
+- Phase 9F: Pattern Trigger Precision（amount keyword filter；observed_fact 禁止 AI 自算比率；derived_metric 必填公式；KF 上限降為 4）
+- Phase 10A: Interpretation Isolation（interpretation/hypothesis 預設折疊；ed-label；「可能需要檢查：」前綴）
+- Phase 10B: Source Type Layer（source_type 4 types；forward_looking；narrative_density_score；pipeline section_key）
+- Phase 10C: Rhetorical Risk Classifier（RHETORICAL_RISK_PHRASES；narrative_density_weighted_score；雙軸 banner）
+- Phase 10D: Forward-Looking Implication Guard（FORWARD_LOOKING_INDICATOR_PHRASES；auto-detect implicit forward-looking）
 
 ## 重要設計決策
 
@@ -54,6 +59,14 @@
 - Pattern 結果永遠是 interpretation + requires_review=True，不進 Key Findings（hardcoded）
 - FX 損益不自動標為一次性（fx_driven_profit pattern 無 recurring filter）
 - Disclosure Coverage Engine 只判斷「揭露是否存在」，not_applicable 不計入 not_found
+- non_recurring_eps：bare "元" 保留（EPS 格式 "0.5 元"）；fx_driven_profit：排除 bare "元"（避免匹配「美元」）
+- observed_fact 禁止含 AI 自算比率；derived_metric 必填計算公式
+- claim_level（HOW confident）與 source_type（WHAT TYPE）是兩個正交維度
+- strategic_narrative / management_expectation 不得為 observed_fact（服務層 fail-closed 降級）
+- management_expectation confidence 上限 = medium（服務層 cap）
+- Rhetorical scan 只掃 narrative 類型；financial_evidence 不受影響（避免「營收大幅增加」誤傷）
+- narrative_flag = count density > 0.6 OR weighted density > 0.6（任一超標觸發）
+- Forward-looking guard 只掃 strategic_narrative / management_expectation；auto-override Claude 的 forward_looking=False
 
 ## Memory 漏記根本原因（2026-05-14 分析）
 

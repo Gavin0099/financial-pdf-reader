@@ -1,7 +1,7 @@
 # Active Task
 
-**最後更新**: 2026-05-14（Phase 9E 完成）
-**當前 Phase**: Phase 9E 完成 — 三條 pipeline 齊備
+**最後更新**: 2026-05-14（Phase 10D 完成）
+**當前 Phase**: Phase 10D 完成 — Governance Layer 完整（10A–10D）
 
 ## 已完成
 
@@ -97,8 +97,56 @@
 - Guards hardcoded：CLAIM_LEVEL=interpretation、REQUIRES_REVIEW=True、IN_KEY_FINDINGS=False
 - `tests/test_reasoning_patterns.py`：14 tests 通過
 
+### Phase 9F ✅
+- `non_recurring_eps`：加 `_AMOUNT_KEYWORDS` filter（bare qualitative → insufficient_evidence）
+- `fx_driven_profit`：加第二個 filter 要求量化金額；排除 bare "元" 避免「美元」誤觸發
+- `prompts/__init__.py`：observed_fact 禁止 AI 自算比率；derived_metric 必填公式
+- UI：Key Findings 上限 4 條（原 6），超出顯示「+N 條請見分頁」
+- `tests/test_reasoning_patterns.py`：新增 test 11/12；共 16 tests 通過
+
+### Phase 10A ✅
+- UI 詮釋隔離：interpretation/hypothesis 預設折疊（`.interp-section`）
+- `EVIDENCE_DISTANCE` 常數 + `.ed-label` badge（5 個層級）
+- `renderClaim()` 加 ed-label；interpretation 前綴「可能需要檢查：」
+- `.interp-disclaimer` 警告橫幅；`toggleInterp()` 展開收起
+
+### Phase 10B ✅
+- `AIClaim`：加 `source_type`（4 choices）+ `forward_looking: bool`
+- `AIReport`：加 `narrative_density_score: float` + `narrative_flag: bool`
+- `prompts/__init__.py`：加 `pipeline` section_key；加 source_type/forward_looking 定義 + governance 規則；CDMO supplement 擴充
+- `services/summarization/_parse_claims()`：3 條 governance 規則（observed_fact 降級/confidence cap/forward_looking）
+- `generate_summary()`：計算 narrative_density_score + narrative_flag（score > 0.6 觸發）
+- UI：`SOURCE_TYPE_BADGE`；pipeline 🔬 tab；narrative banner；fwd-tag
+- `tests/test_source_type_governance.py`：9 tests；共 25 tests 通過
+
+### Phase 10C ✅
+- `prompts/__init__.py`：加 `RHETORICAL_RISK_PHRASES`（16 個語氣詞）
+- `AIClaim`：加 `rhetorical_risk_flag: bool` + `rhetorical_risk_terms: list[str]`
+- `AIReport`：加 `narrative_density_weighted_score: float`（文字長度加權）
+- `_parse_claims()`：語氣掃描（只掃 narrative types）
+- `generate_summary()`：加權密度；narrative_flag = count > 0.6 OR weighted > 0.6
+- UI：banner 顯示雙指標；`.rhet-tag`（hover 顯示命中詞）
+- `tests/test_rhetorical_governance.py`：8 tests；共 33 tests 通過
+
+### Phase 10D ✅
+- `prompts/__init__.py`：加 `FORWARD_LOOKING_INDICATOR_PHRASES`（14 個詞）
+- `_parse_claims()`：auto-detect forward_looking（only strategic/management，覆蓋 Claude 的 False）
+- 自動設 requires_human_review=True
+- `tests/test_forward_looking_guard.py`：9 tests；共 42 tests 通過
+
+## 測試總覽
+
+| 測試檔案 | Tests | 說明 |
+|---------|-------|------|
+| test_reasoning_patterns.py | 16 | Pattern engine（9E + 9F）|
+| test_source_type_governance.py | 9 | Source type governance（10B）|
+| test_rhetorical_governance.py | 8 | Rhetorical risk + weighted density（10C）|
+| test_forward_looking_guard.py | 9 | Forward-looking auto-detect（10D）|
+| **合計** | **42** | **全部通過** |
+
 ## 下一步候選
 
-- Phase 10: Railway 部署同步（Phase 9C/D/E 尚未 redeploy）
+- Railway redeploy（9C/D/E/9F/10A-10D 尚未部署）
+- Phase 10E：Quotation-layer（「公司宣稱 X」≠「X 成立」）
 - DiffReport R6 audit endpoint（選做）
 - Auth wiring（auth/ 已有骨架但未接入 router）
