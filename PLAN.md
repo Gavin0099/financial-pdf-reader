@@ -4,7 +4,7 @@
 > **技術棧**: Python / FastAPI / MongoDB Atlas / Claude API / pdfplumber
 > **複雜度**: L2
 > **Owner**: User
-> **最後更新**: 2026-05-13
+> **最後更新**: 2026-05-14
 > **Freshness**: Sprint (7d)
 > **Planning Window**: 2026-05 ~ 2026-08
 
@@ -39,10 +39,14 @@
 ├─ [✅] Phase 5: Table Extraction & Numeric Cross-Check
 ├─ [✅] Phase 6: Taiwan Data Source Integration
 ├─ [✅] Phase 7: Governance Layer（R1-R7）
-└─ [⏳] Phase 8: Tests + Cleanup（規劃中）
+├─ [✅] Phase 8: Tests + Cleanup
+├─ [✅] Phase 9B: UI Redesign（Key Findings grid, tabs, collapsible evidence）
+├─ [✅] Phase 9C: Industry Type Field + CDMO/半導體 Prompt Supplement
+├─ [✅] Phase 9D: Disclosure Coverage Engine（14 項法定揭露稽核）
+└─ [✅] Phase 9E: Financial Review Pattern Registry（6 個財報檢查模式）
 ```
 
-**當前 Phase**: **Phase 7 完成 — 準備 Phase 8**
+**當前 Phase**: **Phase 9E 完成 — 三條 pipeline 齊備**
 
 ---
 
@@ -163,6 +167,85 @@
 
 ---
 
+## Phase 9B: UI Redesign ✅
+
+**目標**: 重建 HTML UI — Key Findings grid、tabs、collapsible evidence、claim-level 色碼（中性）
+
+**完成項目**:
+- Key Findings grid（tier_a + observed_fact/derived_metric only）
+- 各 section tabs（核心財務 / 會計調整 / 流動性 / 風險 / 不足）
+- Collapsible evidence per claim
+- Claim-level badge 改為中性色系（不用情緒色）
+- 一次性項目 badge 改為中性灰（非橙色）
+
+---
+
+## Phase 9C: Industry Type + Prompt Supplement ✅
+
+**目標**: 上傳時可標記產業別（一般/CDMO/半導體），依產業注入 extraction hint
+
+**完成項目**:
+- `PDFDocument.industry_type` field（choices: general/cdmo/semiconductor）
+- 上傳表單新增產業別下拉選單
+- `INDUSTRY_SUPPLEMENTS` dict（general/cdmo/semiconductor）
+- CDMO supplement：Backlog、LOI、Milestone payment 提取提示
+- **Governance fix**: supplement 改為 evidence-first 規則，非 authority grant
+  - 有頁碼佐證 → claim_level=observed_fact，materiality 獨立判斷
+  - 僅描述性提及 → interpretation + tier_b + requires_human_review=True
+  - PDF 中不存在 → 完全不產生 claim
+- Executive Summary prompt 新增禁用因果歸因語言（"主要受⋯驅動"）
+
+---
+
+## Phase 9D: Disclosure Coverage Engine ✅
+
+**目標**: 獨立第二條 pipeline，系統化檢查 14 項法定揭露是否出現於財報
+
+**完成項目**:
+- `DISCLOSURE_REGISTRY`：14 項（台灣第 12、17 條 + IFRS）
+- `STATUS_CHOICES`：found / found_incomplete / not_found / ambiguous / not_applicable
+- `models/disclosures/`：DisclosureCoverageItem + DisclosureCoverageReport
+- `services/disclosure_coverage/`：check_disclosure_coverage()
+  - 使用 claude-haiku-4-5（成本約為 Sonnet 1/10）
+  - Claude 漏回的 key 自動填補為 ambiguous（guarantee 14 keys）
+- `apis/v1/routers/disclosures.py`：POST /{id}/disclosure-coverage
+- UI Step 4：14 項 coverage matrix 顯示
+- `tests/test_disclosure_coverage.py`：10 tests 全通過
+
+**Guard**:
+- 只判斷「揭露是否存在」，不代表財報品質或投資建議
+- not_applicable 不計入 not_found_count
+
+---
+
+## Phase 9E: Financial Review Pattern Registry ✅
+
+**目標**: 第三條 pipeline，6 個財報警示 pattern，純 Python claim 屬性掃描，不呼叫 Claude
+
+**完成項目**:
+- `reasoning_patterns/schemas.py`：ClaimPropertyFilter / PatternDefinition / TriggerResult
+- 6 個 pattern（獨立檔案）：
+  1. `operating_vs_net_income`：營業損益與稅後損益方向差異
+  2. `non_recurring_eps`：非常態項目影響 EPS
+  3. `fx_driven_profit`：匯兌損益影響損益
+  4. `expense_ratio_offset`：獲利趨勢與營收趨勢不一致
+  5. `debt_maturity_risk`：短期債務/可轉債到期壓力
+  6. `customer_concentration`：客戶集中度風險
+- `services/reasoning_patterns/`：evidence_resolver + engine + 主服務
+- `models/patterns/`：PatternRunResult + PatternRunReport
+- `apis/v1/routers/patterns.py`：POST /{id}/patterns/run
+- UI Step 5：pattern 結果 + source claims accordion
+- `tests/test_reasoning_patterns.py`：14 tests 全通過
+
+**Guard（hardcoded）**:
+- CLAIM_LEVEL = "interpretation"（永遠不升級）
+- REQUIRES_REVIEW = True（永遠需人工確認）
+- IN_KEY_FINDINGS = False（不進 Key Findings）
+- contaminated claims 排除於 pattern 分析
+- FX 損益不自動標為一次性
+
+---
+
 ## AI 協作規則
 
 **AI 在實作任何功能前，必須確認**:
@@ -185,4 +268,7 @@
 | 2026-05-13 | 專案啟動，Phase 0~7 完成，PLAN.md 補齊至真實進度 |
 | 2026-05-13 | Phase 8: tests/test_governance.py 44 tests 全綠 |
 | 2026-05-13 | Phase 8 ✅: requirements.txt 清理，移除 chromadb/langchain 等 8 個未使用套件 |
-ㄏㄠ
+| 2026-05-14 | Phase 9B ✅: UI 重設計 — Key Findings grid、tabs、中性色碼 |
+| 2026-05-14 | Phase 9C ✅: industry_type field + CDMO/半導體 prompt supplement（evidence-first governance fix）|
+| 2026-05-14 | Phase 9D ✅: Disclosure Coverage Engine — 14 項法定揭露，10 tests 通過 |
+| 2026-05-14 | Phase 9E ✅: Pattern Registry — 6 patterns，純 Python 不呼叫 Claude，14 tests 通過 |

@@ -64,6 +64,14 @@ app.include_router(DataSourceRouter, tags=["DataSource"], prefix="/api/v1/stocks
 from apis.v1.routers.audit import router as AuditRouter
 app.include_router(AuditRouter, tags=["Audit"], prefix="/api/v1/documents")
 
+# Phase 9D: Disclosure Coverage Engine — 14 項法定揭露稽核
+from apis.v1.routers.disclosures import router as DisclosureRouter
+app.include_router(DisclosureRouter, tags=["Disclosures"], prefix="/api/v1/documents")
+
+# Phase 9E: Reasoning Pattern Registry — 6 財報檢查模式（純 Python，不呼叫 Claude）
+from apis.v1.routers.patterns import router as PatternsRouter
+app.include_router(PatternsRouter, tags=["Patterns"], prefix="/api/v1/documents")
+
 # Phase 9: Simple HTML UI
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

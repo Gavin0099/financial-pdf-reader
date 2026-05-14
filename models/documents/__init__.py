@@ -23,6 +23,10 @@ class PDFDocument(Document):
         choices=["quarterly_report", "annual_report", "earnings_release"],
         default="quarterly_report",
     )
+    industry_type = StringField(
+        choices=["general", "cdmo", "semiconductor"],
+        default="general",
+    )
     file_name = StringField(required=True)
     file_path = StringField(required=True)         # 本地儲存路徑
     file_size_bytes = IntField(default=0)

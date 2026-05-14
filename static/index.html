@@ -85,14 +85,16 @@ input[type="file"] { padding: 6px; cursor: pointer; }
 .kf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
 .kf-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; position: relative; overflow: hidden; }
 .kf-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
-.kf-card.kf-fact   ::before, .kf-card.kf-fact   { --lc: #22c55e; }
-.kf-card.kf-derived::before, .kf-card.kf-derived { --lc: #3b82f6; }
-.kf-card.kf-interp ::before, .kf-card.kf-interp  { --lc: #f59e0b; }
+/* 與 claim-row 同一中性色系：fact=石板灰, derived=靛青, interp=琥珀 */
+.kf-card.kf-fact   { --lc: #64748b; }
+.kf-card.kf-derived { --lc: #4338ca; }
+.kf-card.kf-interp  { --lc: #d97706; }
 .kf-card::before { background: var(--lc, #e2e8f0); }
 .kf-card .kf-text { font-size: 0.85rem; line-height: 1.5; color: #1e293b; margin-bottom: 8px; }
 .kf-card .kf-meta { display: flex; gap: 5px; flex-wrap: wrap; }
 .kf-card .kf-page { font-size: 0.7rem; color: #6366f1; font-weight: 700; }
-.kf-nonrecurring { position: absolute; top: 10px; right: 10px; font-size: 0.62rem; background: #ffedd5; color: #c2410c; border-radius: 3px; padding: 1px 5px; font-weight: 700; }
+/* 一次性標籤：中性灰，不帶情緒正負 */
+.kf-nonrecurring { position: absolute; top: 10px; right: 10px; font-size: 0.62rem; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 3px; padding: 1px 5px; font-weight: 600; }
 
 /* Tabs */
 .tabs { display: flex; gap: 2px; border-bottom: 2px solid #e2e8f0; margin-bottom: 16px; flex-wrap: wrap; }
@@ -102,35 +104,28 @@ input[type="file"] { padding: 6px; cursor: pointer; }
 .tab .tab-count { font-size: 0.65rem; background: #e2e8f0; color: #64748b; border-radius: 999px; padding: 1px 5px; margin-left: 4px; }
 .tab.active .tab-count { background: #c7d2fe; color: #4338ca; }
 
-/* Claim cards */
+/* Claim cards
+   顏色代表「認識論類型」，非情緒好壞：
+   fact=石板灰  derived=靛青  interpretation=琥珀（AI判斷，需注意）  insuf=淺灰 */
 .claims-pane { display: none; }
 .claims-pane.active { display: block; }
 
 .claim-row { border-radius: 8px; padding: 13px 15px; margin-bottom: 8px; border: 1px solid transparent; position: relative; padding-left: 18px; }
-.claim-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 8px 0 0 8px; }
+.claim-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 8px 0 0 8px; background: var(--border-c, #cbd5e1); }
 
-.claim-row.lv-fact    { background: #f0fdf4; border-color: #bbf7d0; }
-.claim-row.lv-fact    ::before { background: #22c55e; }
-.claim-row.lv-derived { background: #eff6ff; border-color: #bfdbfe; }
-.claim-row.lv-derived ::before { background: #3b82f6; }
-.claim-row.lv-interp  { background: #fffbeb; border-color: #fde68a; }
-.claim-row.lv-interp  ::before { background: #f59e0b; }
-.claim-row.lv-insuf   { background: #f8fafc; border-color: #e2e8f0; opacity: .75; }
-.claim-row.lv-insuf   ::before { background: #94a3b8; }
-
-.claim-row.lv-fact    ::before,
-.claim-row.lv-derived ::before,
-.claim-row.lv-interp  ::before,
-.claim-row.lv-insuf   ::before { background: var(--border-c); }
-.claim-row.lv-fact    { --border-c: #22c55e; }
-.claim-row.lv-derived { --border-c: #3b82f6; }
-.claim-row.lv-interp  { --border-c: #f59e0b; }
-.claim-row.lv-insuf   { --border-c: #94a3b8; }
+/* observed_fact: 石板灰，中性權威感 */
+.claim-row.lv-fact    { background: #f8fafc; border-color: #e2e8f0; --border-c: #64748b; }
+/* derived_metric: 靛青，計算/數學感 */
+.claim-row.lv-derived { background: #eef2ff; border-color: #c7d2fe; --border-c: #4338ca; }
+/* interpretation: 琥珀，AI判斷需注意（非正負評價） */
+.claim-row.lv-interp  { background: #fffbeb; border-color: #fde68a; --border-c: #d97706; }
+/* insufficient/hypothesis: 淺灰，低可信 */
+.claim-row.lv-insuf   { background: #f8fafc; border-color: #e2e8f0; opacity: .72; --border-c: #94a3b8; }
 
 .claim-meta { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-bottom: 5px; }
 .claim-text { font-size: 0.88rem; line-height: 1.6; color: #1e293b; }
 .claim-text.interp-warn::before { content: '⚠ 詮釋：'; color: #92400e; font-size: 0.75rem; font-weight: 700; margin-right: 4px; }
-.non-rec { font-size: 0.65rem; background: #ffedd5; color: #c2410c; border-radius: 3px; padding: 1px 5px; font-weight: 700; }
+.non-rec { font-size: 0.65rem; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 3px; padding: 1px 5px; font-weight: 600; }
 
 /* Evidence toggle */
 .ev-toggle { margin-top: 8px; }
@@ -155,6 +150,56 @@ input[type="file"] { padding: 6px; cursor: pointer; }
 .mini-stats { display: flex; gap: 16px; padding: 10px 0 14px; flex-wrap: wrap; }
 .ms-item .ms-n { font-size: 1.3rem; font-weight: 800; color: #1a1a2e; line-height: 1; }
 .ms-item .ms-l { font-size: 0.65rem; color: #94a3b8; margin-top: 1px; text-transform: uppercase; letter-spacing: .04em; }
+
+/* ════════════════════════════════════════
+   COVERAGE MATRIX
+════════════════════════════════════════ */
+.cov-header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; margin-bottom: 14px; }
+.cov-title { font-size: 1.05rem; font-weight: 700; }
+.cov-disclaimer { font-size: 0.72rem; color: #94a3b8; margin-top: 4px; }
+.cov-stats { display: flex; gap: 14px; padding: 8px 0 14px; flex-wrap: wrap; }
+.cov-stat .cs-n { font-size: 1.2rem; font-weight: 800; line-height: 1; }
+.cov-stat .cs-l { font-size: 0.62rem; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; margin-top: 1px; }
+.cov-stat.cs-found    .cs-n { color: #15803d; }
+.cov-stat.cs-partial  .cs-n { color: #92400e; }
+.cov-stat.cs-missing  .cs-n { color: #64748b; }
+.cov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+.cov-item { border-radius: 7px; padding: 10px 13px; display: flex; align-items: flex-start; gap: 10px; border: 1px solid transparent; }
+.cov-item.cv-found    { background: #f0fdf4; border-color: #bbf7d0; }
+.cov-item.cv-partial  { background: #fffbeb; border-color: #fde68a; }
+.cov-item.cv-missing  { background: #f8fafc; border-color: #e2e8f0; }
+.cov-item.cv-ambig    { background: #f8fafc; border-color: #e2e8f0; opacity: .75; }
+.cov-item.cv-na       { background: #f8fafc; border-color: #e2e8f0; opacity: .6; }
+.cov-icon { font-size: 0.95rem; flex-shrink: 0; margin-top: 1px; }
+.cov-body .cov-label { font-size: 0.83rem; font-weight: 600; color: #1e293b; }
+.cov-body .cov-note  { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
+.cov-body .cov-pages { font-size: 0.68rem; color: #6366f1; font-weight: 700; margin-top: 2px; }
+
+/* ── Pattern Results ── */
+.pat-title { font-size: 1.05rem; font-weight: 700; }
+.pat-disclaimer { font-size: 0.72rem; color: #94a3b8; margin-top: 4px; }
+.pat-stats { display: flex; gap: 14px; padding: 8px 0 14px; flex-wrap: wrap; }
+.pat-stat .ps-n { font-size: 1.2rem; font-weight: 800; line-height: 1; }
+.pat-stat .ps-l { font-size: 0.62rem; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; margin-top: 1px; }
+.pat-stat.ps-triggered .ps-n { color: #92400e; }
+.pat-stat.ps-insuf .ps-n { color: #64748b; }
+.pat-list { display: flex; flex-direction: column; gap: 10px; }
+.pat-item { border-radius: 8px; padding: 12px 15px; border: 1px solid transparent; }
+.pat-item.pi-triggered   { background: #fffbeb; border-color: #fde68a; }
+.pat-item.pi-insufficient { background: #f8fafc; border-color: #e2e8f0; opacity: .8; }
+.pat-item.pi-not_triggered { background: #f8fafc; border-color: #e2e8f0; opacity: .65; }
+.pat-item-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.pat-name { font-size: 0.88rem; font-weight: 700; color: #1e293b; }
+.pat-obs { font-size: 0.78rem; color: #334155; margin: 6px 0 4px; line-height: 1.5; }
+.pat-guard { font-size: 0.68rem; color: #94a3b8; font-style: italic; margin-top: 4px; }
+.pat-missing { font-size: 0.72rem; color: #64748b; margin-top: 4px; }
+.pat-claims-toggle { font-size: 0.72rem; color: #4338ca; cursor: pointer; margin-top: 6px; user-select: none; }
+.pat-claims-toggle:hover { text-decoration: underline; }
+.pat-claims-body { margin-top: 6px; display: none; }
+.pat-claims-body.open { display: block; }
+.pat-claim-row { font-size: 0.72rem; color: #475569; border-left: 2px solid #cbd5e1; padding: 3px 8px; margin-bottom: 4px; }
+.pat-claim-row .pcr-id { font-weight: 700; color: #64748b; font-size: 0.65rem; }
+.pat-claim-row .pcr-sec { font-size: 0.65rem; color: #94a3b8; margin-left: 6px; }
 </style>
 </head>
 <body>
@@ -196,6 +241,17 @@ input[type="file"] { padding: 6px; cursor: pointer; }
             <option value="earnings_release">法說會</option>
           </select>
         </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>產業別</label>
+          <select id="industry_type">
+            <option value="general">一般</option>
+            <option value="cdmo">生技 CDMO</option>
+            <option value="semiconductor">半導體</option>
+          </select>
+        </div>
+        <div class="form-group"></div>
       </div>
       <div class="form-group" style="margin-bottom:14px;">
         <label>PDF 檔案 *</label>
@@ -240,6 +296,48 @@ input[type="file"] { padding: 6px; cursor: pointer; }
     <div id="results-body"></div>
   </div>
 
+  <!-- STEP 4 -->
+  <div class="card hidden" id="step4-card">
+    <div class="card-header">
+      <div class="step-badge" id="badge4">4</div>
+      <h2>揭露完整性稽核</h2>
+    </div>
+    <div class="card-body">
+      <p style="font-size:.8rem;color:#64748b;margin-bottom:12px;">
+        逐一檢查 14 項法定揭露事項（第 12、17 條 + IFRS）是否出現於財報中
+      </p>
+      <button class="btn btn-primary" onclick="runCoverage()" id="coverage-btn">執行稽核</button>
+      <p style="font-size:.76rem;color:#94a3b8;margin-top:6px;">使用 Haiku 模型，約 10–20 秒</p>
+      <div id="coverage-result"></div>
+    </div>
+  </div>
+
+  <!-- Coverage Matrix -->
+  <div class="hidden" id="coverage-area">
+    <div id="coverage-body"></div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="card hidden" id="step5-card">
+    <div class="card-header">
+      <div class="step-badge" id="badge5">5</div>
+      <h2>財報檢查模式</h2>
+    </div>
+    <div class="card-body">
+      <p style="font-size:.8rem;color:#64748b;margin-bottom:12px;">
+        6 個常見財報警示模式，基於現有 claims 屬性掃描，不呼叫 AI
+      </p>
+      <button class="btn btn-primary" onclick="runPatterns()" id="patterns-btn">執行財報檢查</button>
+      <p style="font-size:.76rem;color:#94a3b8;margin-top:6px;">純本地邏輯，不呼叫 Claude API，通常 &lt;1 秒完成</p>
+      <div id="patterns-result"></div>
+    </div>
+  </div>
+
+  <!-- Pattern Results -->
+  <div class="hidden" id="patterns-area">
+    <div id="patterns-body"></div>
+  </div>
+
 </div>
 
 <script>
@@ -252,11 +350,11 @@ const LEVEL_CLASS = {
   insufficient_evidence: 'lv-insuf',
 };
 const LEVEL_BADGE = {
-  observed_fact:       ['b-green',  '直接事實'],
-  derived_metric:      ['b-blue',   '衍生指標'],
-  interpretation:      ['b-amber',  '詮釋'],
-  hypothesis:          ['b-gray',   '假設'],
-  insufficient_evidence:['b-red',   '證據不足'],
+  observed_fact:        ['b-gray',   '直接事實'],   // 石板灰：中性事實
+  derived_metric:       ['b-blue',   '衍生指標'],   // 靛青：計算結果
+  interpretation:       ['b-amber',  '詮釋'],       // 琥珀：AI判斷
+  hypothesis:           ['b-gray',   '假設'],
+  insufficient_evidence:['b-gray',   '證據不足'],
 };
 const KF_CLASS = {
   observed_fact: 'kf-fact', derived_metric: 'kf-derived',
@@ -300,9 +398,10 @@ async function uploadPDF() {
   const btn=document.getElementById('upload-btn');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> 上傳中...';
   const fd=new FormData();
+  const industryType=document.getElementById('industry_type').value;
   fd.append('file',fileInput.files[0]); fd.append('stock_id',stockId);
   fd.append('company_name',companyName); fd.append('period',period);
-  fd.append('document_type',docType);
+  fd.append('document_type',docType); fd.append('industry_type',industryType);
   try {
     const data=await parseResponse(await fetch('/api/v1/documents/upload',{method:'POST',body:fd}));
     documentId=data.document_id;
@@ -340,8 +439,25 @@ async function generateSummary() {
     renderResults(data);
     document.getElementById('results-area').classList.remove('hidden');
     document.getElementById('results-area').scrollIntoView({behavior:'smooth'});
+    // Show Step 4 + Step 5 after summary completes
+    document.getElementById('step4-card').classList.remove('hidden');
+    document.getElementById('step5-card').classList.remove('hidden');
   } catch(e) { setResult('summary-result','error','摘要失敗：'+e.message); }
   finally { btn.disabled=false; btn.innerHTML='產生分析'; }
+}
+
+async function runCoverage() {
+  const btn=document.getElementById('coverage-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Haiku 稽核中...';
+  try {
+    const data=await parseResponse(await fetch(`/api/v1/documents/${documentId}/disclosure-coverage`,{method:'POST'}));
+    document.getElementById('badge4').textContent='✓';
+    document.getElementById('badge4').classList.add('done');
+    renderCoverage(data);
+    document.getElementById('coverage-area').classList.remove('hidden');
+    document.getElementById('coverage-area').scrollIntoView({behavior:'smooth'});
+  } catch(e) { setResult('coverage-result','error','稽核失敗：'+e.message); }
+  finally { btn.disabled=false; btn.innerHTML='執行稽核'; }
 }
 
 /* ══════════════════════════════════════════
@@ -532,6 +648,141 @@ function toggleContam(id) {
   btn.textContent = el.classList.contains('open')
     ? '▲ 隱藏已污染觀察'
     : `▶ 顯示 ${el.querySelectorAll('.claim-row').length} 條已污染觀察（時間軸不一致）`;
+}
+
+/* ══════════════════════════════════════════
+   RENDER COVERAGE MATRIX
+══════════════════════════════════════════ */
+const COV_STATUS = {
+  found:            { cls: 'cv-found',   icon: '✓', label: '已揭露' },
+  found_incomplete: { cls: 'cv-partial', icon: '△', label: '揭露不完整' },
+  not_found:        { cls: 'cv-missing', icon: '✕', label: '未找到' },
+  ambiguous:        { cls: 'cv-ambig',   icon: '?', label: '無法判斷' },
+  not_applicable:   { cls: 'cv-na',      icon: '—', label: '不適用' },
+};
+
+async function runPatterns() {
+  const btn=document.getElementById('patterns-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> 分析中...';
+  try {
+    const data=await parseResponse(await fetch(`/api/v1/documents/${documentId}/patterns/run`,{method:'POST'}));
+    document.getElementById('badge5').textContent='✓';
+    document.getElementById('badge5').classList.add('done');
+    renderPatterns(data);
+    document.getElementById('patterns-area').classList.remove('hidden');
+    document.getElementById('patterns-area').scrollIntoView({behavior:'smooth'});
+  } catch(e) { setResult('patterns-result','error','檢查失敗：'+e.message); }
+  finally { btn.disabled=false; btn.innerHTML='執行財報檢查'; }
+}
+
+const PAT_STATUS = {
+  triggered:            { cls:'pi-triggered',    icon:'⚠', label:'觸發' },
+  insufficient_evidence:{ cls:'pi-insufficient', icon:'—', label:'證據不足' },
+  not_triggered:        { cls:'pi-not_triggered', icon:'✓', label:'未觸發' },
+};
+
+function renderPatterns(data) {
+  const results = data.results || [];
+  let html = `
+    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:2px solid #e2e8f0;margin-bottom:14px;">
+      <span class="pat-title">${data.stock_id||''} ${data.period||''} — 財報檢查模式</span>
+    </div>
+    <p class="pat-disclaimer">⚠ 此觀察為 AI 推論，非確定事實。所有 pattern 結果均為詮釋層級，需人工確認，不進入 Key Findings。</p>
+    <div class="pat-stats">
+      <div class="pat-stat ps-triggered">
+        <div class="ps-n">${data.triggered_count}</div><div class="ps-l">觸發</div>
+      </div>
+      <div class="pat-stat ps-insuf">
+        <div class="ps-n">${data.insufficient_count}</div><div class="ps-l">證據不足</div>
+      </div>
+      <div class="pat-stat">
+        <div class="ps-n" style="color:#64748b;">${data.not_triggered_count}</div><div class="ps-l">未觸發</div>
+      </div>
+    </div>
+    <div class="pat-list">`;
+
+  results.forEach((r, idx) => {
+    const s = PAT_STATUS[r.status] || PAT_STATUS.insufficient_evidence;
+    const claimsId = `pat-claims-${idx}`;
+    html += `<div class="pat-item ${s.cls}">
+      <div class="pat-item-header">
+        ${badge(r.status==='triggered'?'b-amber':'b-gray', s.icon+' '+s.label)}
+        <span class="pat-name">${r.name_zh}</span>
+      </div>`;
+
+    if (r.status === 'triggered') {
+      html += `<div class="pat-obs">${r.generated_observation}</div>`;
+      if (r.source_claims && r.source_claims.length) {
+        html += `<div class="pat-claims-toggle" onclick="togglePatClaims('${claimsId}')">
+          ▶ 觸發來源 (${r.source_claims.length} 條 claims)
+        </div>
+        <div class="pat-claims-body" id="${claimsId}">`;
+        r.source_claims.forEach(c => {
+          html += `<div class="pat-claim-row">
+            <span class="pcr-id">${c.claim_id}</span>
+            <span class="pcr-sec">[${c.section_key||''} / ${c.materiality||''}]</span><br>
+            ${c.claim||''}
+          </div>`;
+        });
+        html += `</div>`;
+      }
+      html += `<div class="pat-guard">⚠ 詮釋，需人工確認 · 此觀察為 AI 推論，非確定事實</div>`;
+    } else if (r.status === 'insufficient_evidence' && r.missing_evidence_keys && r.missing_evidence_keys.length) {
+      html += `<div class="pat-missing">缺少必要 evidence：${r.missing_evidence_keys.join('；')}</div>`;
+    }
+
+    html += `</div>`;
+  });
+
+  html += `</div>`;
+  document.getElementById('patterns-body').innerHTML = html;
+}
+
+function togglePatClaims(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('open');
+  const toggle = el.previousElementSibling;
+  if (toggle) toggle.textContent = toggle.textContent.replace(/^[▶▼]/, el.classList.contains('open') ? '▼' : '▶');
+}
+
+function renderCoverage(data) {
+  const items = data.items || [];
+  let html = `
+    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:2px solid #e2e8f0;margin-bottom:14px;">
+      <span class="cov-title">${data.stock_id||''} ${data.period||''} — 揭露完整性稽核</span>
+    </div>
+    <p class="cov-disclaimer">⚠ 此稽核只判斷揭露是否出現於財報中，不代表財報品質、法遵評等或任何投資建議。</p>
+    <div class="cov-stats">
+      <div class="cov-stat cs-found">
+        <div class="cs-n">${data.found_count}</div><div class="cs-l">已揭露</div>
+      </div>
+      <div class="cov-stat cs-partial">
+        <div class="cs-n">${data.found_incomplete_count}</div><div class="cs-l">不完整</div>
+      </div>
+      <div class="cov-stat cs-missing">
+        <div class="cs-n">${data.not_found_count}</div><div class="cs-l">未找到</div>
+      </div>
+      <div class="cov-stat">
+        <div class="cs-n" style="color:#64748b;">${data.total_count}</div><div class="cs-l">總項目</div>
+      </div>
+    </div>
+    <div class="cov-grid">`;
+
+  items.forEach(item => {
+    const s = COV_STATUS[item.status] || COV_STATUS.ambiguous;
+    const pages = (item.evidence_pages||[]).map(p=>`p.${p}`).join(' ');
+    html += `<div class="cov-item ${s.cls}">
+      <span class="cov-icon">${s.icon}</span>
+      <div class="cov-body">
+        <div class="cov-label">${item.label_zh}</div>
+        ${item.note?`<div class="cov-note">${item.note}</div>`:''}
+        ${pages?`<div class="cov-pages">${pages}</div>`:''}
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('coverage-body').innerHTML = html;
 }
 </script>
 </body>

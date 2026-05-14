@@ -21,7 +21,7 @@ import anthropic
 from config.config import AnthropicConfig
 from models.documents import PDFDocument, PDFChunk
 from models.reports import AIReport, AIClaim, ClaimEvidence
-from prompts import EVIDENCE_BOUND_SUMMARY_PROMPT, INVESTMENT_ADVICE_GUARD_PHRASES
+from prompts import EVIDENCE_BOUND_SUMMARY_PROMPT, INVESTMENT_ADVICE_GUARD_PHRASES, INDUSTRY_SUPPLEMENTS
 
 _client = None
 
@@ -111,11 +111,14 @@ def generate_summary(document_id: str) -> dict:
         raise ValueError("No chunks found. Run /ingest first.")
 
     chunks_text = _build_chunks_text(chunks)
+    industry_type = getattr(doc, 'industry_type', 'general') or 'general'
+    supplement = INDUSTRY_SUPPLEMENTS.get(industry_type, "")
     prompt = EVIDENCE_BOUND_SUMMARY_PROMPT.format(
         chunks_text=chunks_text,
         company_name=doc.company_name,
         stock_id=doc.stock_id,
         period=doc.period,
+        industry_supplement=supplement,
     )
 
     client = _get_client()

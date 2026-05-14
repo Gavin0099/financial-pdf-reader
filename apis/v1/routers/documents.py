@@ -40,6 +40,7 @@ async def upload_document(
     company_name: str = Form(...),
     period: str = Form(...),
     document_type: str = Form("quarterly_report"),
+    industry_type: str = Form("general"),
 ):
     """
     上傳台股財報 PDF。
@@ -59,6 +60,7 @@ async def upload_document(
         company_name=company_name,
         period=period,
         document_type=document_type,
+        industry_type=industry_type,
         file_name=file.filename,
         file_path=file_path,
         file_size_bytes=len(file_bytes),

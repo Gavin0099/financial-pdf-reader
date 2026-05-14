@@ -1,3 +1,43 @@
+INDUSTRY_SUPPLEMENTS = {
+    "general": "",
+    "cdmo": """\
+## 產業特定指引（CDMO 生技業）
+
+此公司為 CDMO（合約開發製造）。請優先在 PDF 中尋找以下項目，但嚴格遵守 evidence 規則：
+
+抽取清單（extraction hints，不是權威提升）：
+- 訂單 backlog / 在手訂單金額或數量
+- 未來客戶訂單量、預期收入承諾或框架合約金額
+- 里程碑付款（milestone payment）時間表與金額
+- 主要客戶名稱及訂單集中度百分比
+- 新客戶簽約、LOI（意向書）或 NDA 簽署狀態
+
+Evidence 判定規則（必須嚴格執行）：
+- 有明確頁碼 + 原文數字 → claim_level=observed_fact，materiality 依重要性自行判斷（tier_a/b）
+- 只有敘述性說明、無具體數字 → claim_level=interpretation，materiality=tier_b，requires_human_review=true
+- PDF 未揭露 → 不得產出此 claim（完全省略，不要填充 insufficient_evidence 佔位）
+- LOI/NDA/backlog 若無原文佐證，禁止產出，不得推測
+
+""",
+    "semiconductor": """\
+## 產業特定指引（半導體業）
+
+此公司為半導體製造或設計公司。請優先在 PDF 中尋找以下項目，但嚴格遵守 evidence 規則：
+
+抽取清單（extraction hints，不是權威提升）：
+- 產能利用率（utilization rate）與產能擴充計畫
+- 節點技術世代進展（如 advanced node 比重）
+- 庫存水位與去化進度（inventory days）
+- 主要客戶終端市場（AI / 手機 / 車用）比重
+
+Evidence 判定規則（必須嚴格執行）：
+- 有明確頁碼 + 原文數字 → claim_level=observed_fact，materiality 依重要性自行判斷（tier_a/b）
+- 只有敘述性說明、無具體數字 → claim_level=interpretation，materiality=tier_b，requires_human_review=true
+- PDF 未揭露 → 不得產出此 claim（完全省略）
+
+""",
+}
+
 EVIDENCE_BOUND_SUMMARY_PROMPT = """\
 你是一個台股財報分析引擎，任務是對財報 PDF 進行結構化、分層的 evidence-bound 分析。
 
@@ -61,6 +101,8 @@ EVIDENCE_BOUND_SUMMARY_PROMPT = """\
 - 若時間軸不一致，第一句標明 ⚠️
 - 禁止投資建議
 - 只能根據 observed_fact 和 derived_metric 生成
+- 禁止因果歸因語言：不得使用「主要受⋯驅動」「反映⋯增加」「由於⋯導致」「因此⋯」等推論句式
+- 只陳述數字變化事實，不解釋原因
 
 ---
 
@@ -99,7 +141,7 @@ EVIDENCE_BOUND_SUMMARY_PROMPT = """\
 }}
 ```
 
----
+{industry_supplement}---
 
 ## PDF 段落（以下為本次分析材料）
 
@@ -175,6 +217,69 @@ DIFF_REPORT_PROMPT = """\
 ---
 
 請輸出此段落的差異分析（段落：{section}）。
+"""
+
+DISCLOSURE_COVERAGE_PROMPT = """\
+你是台股財報揭露完整性稽核引擎。任務是逐一檢查以下 14 項是否出現於財報中。
+
+## 硬性規則
+1. 只能根據下方 PDF 段落判斷，不得使用外部知識。
+2. 每一項必須輸出 status，不得省略任何 key。
+3. 禁止任何投資建議、買賣持有評等。
+4. not_applicable：只適用於明確確認公司不涉及該事項（如確認無轉換公司債流通）。
+5. note 限 15 字以內，說明判斷依據。
+
+## Status 定義
+- found：PDF 有明確揭露，有頁碼佐證
+- found_incomplete：有提及但揭露不完整
+- not_found：PDF 段落中未發現相關揭露
+- ambiguous：無法判斷（段落不足或語意不清）
+- not_applicable：明確確認公司不涉及此事項
+
+## 14 項稽核清單
+
+1. related_party_transactions（關係人交易：名稱、性質、金額）
+2. commitments_and_contingencies（承諾事項、或有負債、訴訟案）
+3. subsequent_events（資產負債表日後重大事項）
+4. business_combination（企業合併、商譽、無形資產）
+5. major_customers（主要客戶名稱及集中度百分比）
+6. segment_information（部門資訊揭露）
+7. financial_risk_fx（外幣匯率風險敏感度分析）
+8. financial_risk_credit（信用風險管理政策與最大曝險）
+9. financial_risk_liquidity（流動性風險分析、到期日分析）
+10. key_accounting_estimates（關鍵會計估計與假設）
+11. inventory_valuation（存貨評價方法與可實現淨值）
+12. income_tax（所得稅費用、有效稅率、遞延所得稅）
+13. convertible_bonds（可轉換公司債：條件、餘額、轉換情況）
+14. dividends（股利政策、每股股利、董事會決議）
+
+## 輸出格式（嚴格 JSON，不輸出其他文字）
+
+```json
+{{
+  "items": [
+    {{
+      "key": "related_party_transactions",
+      "label_zh": "關係人交易",
+      "status": "found | found_incomplete | not_found | ambiguous | not_applicable",
+      "evidence_pages": ["12", "13"],
+      "note": "p.12 揭露關係企業交易金額"
+    }}
+  ]
+}}
+```
+
+---
+
+## PDF 段落
+
+{chunks_text}
+
+---
+
+公司：{company_name}（{stock_id}）　期間：{period}
+
+請對以上 14 項逐一輸出結果，不得省略任何 key。
 """
 
 INVESTMENT_ADVICE_GUARD_PHRASES = [
