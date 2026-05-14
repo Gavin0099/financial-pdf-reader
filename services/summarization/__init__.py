@@ -77,6 +77,24 @@ def _parse_claims(raw_json: dict, document_id: str, temporal_consistent: bool) -
         if not temporal_consistent and claim_level in ("derived_metric", "interpretation", "hypothesis"):
             contaminated = True
 
+        # Source type governance
+        source_type = item.get("source_type", "financial_evidence")
+        forward_looking = item.get("forward_looking", False)
+        confidence = item.get("confidence", "medium")
+        requires_human_review = item.get("requires_human_review", False)
+
+        # Governance: narrative source types 不得為 observed_fact → 強制降為 interpretation
+        if source_type in ("strategic_narrative", "management_expectation") and claim_level == "observed_fact":
+            claim_level = "interpretation"
+
+        # Governance: management_expectation confidence 上限 = medium
+        if source_type == "management_expectation" and confidence == "high":
+            confidence = "medium"
+
+        # Governance: forward_looking → requires_human_review
+        if forward_looking:
+            requires_human_review = True
+
         claims.append(
             AIClaim(
                 claim_id=item.get("claim_id", str(uuid.uuid4())),
@@ -87,9 +105,11 @@ def _parse_claims(raw_json: dict, document_id: str, temporal_consistent: bool) -
                 section_key=item.get("section_key", "key_financials"),
                 recurring=item.get("recurring", True),
                 contaminated=contaminated,
+                source_type=source_type,
+                forward_looking=forward_looking,
                 evidence=evidence_list,
-                confidence=item.get("confidence", "medium"),
-                requires_human_review=item.get("requires_human_review", False),
+                confidence=confidence,
+                requires_human_review=requires_human_review,
             )
         )
     return claims
@@ -165,6 +185,13 @@ def generate_summary(document_id: str) -> dict:
     else:
         evidence_status = "insufficient"
 
+    # Narrative density governance
+    _narrative_types = {"strategic_narrative", "management_expectation"}
+    narrative_count = sum(1 for c in clean_claims if c.source_type in _narrative_types)
+    total_non_gap = sum(1 for c in clean_claims if c.claim_level != "insufficient_evidence")
+    narrative_density_score = round(narrative_count / total_non_gap, 2) if total_non_gap else 0.0
+    narrative_flag = narrative_density_score > 0.6
+
     investment_advice_detected = _check_investment_advice(raw_text)
 
     report = AIReport(
@@ -176,6 +203,8 @@ def generate_summary(document_id: str) -> dict:
         temporal_consistent=temporal_consistent,
         temporal_note=temporal_note,
         executive_summary=executive_summary,
+        narrative_density_score=narrative_density_score,
+        narrative_flag=narrative_flag,
         claims=claims,
         evidence_status=evidence_status,
         investment_advice_detected=investment_advice_detected,
@@ -200,6 +229,8 @@ def generate_summary(document_id: str) -> dict:
         "insufficient_evidence_count": insufficient,
         "evidence_status": evidence_status,
         "investment_advice_detected": investment_advice_detected,
+        "narrative_density_score": narrative_density_score,
+        "narrative_flag": narrative_flag,
         "claims": [
             {
                 "claim_id": c.claim_id,
@@ -210,6 +241,8 @@ def generate_summary(document_id: str) -> dict:
                 "section_key": c.section_key,
                 "recurring": c.recurring,
                 "contaminated": c.contaminated,
+                "source_type": c.source_type,
+                "forward_looking": c.forward_looking,
                 "confidence": c.confidence,
                 "requires_human_review": c.requires_human_review,
                 "evidence": [

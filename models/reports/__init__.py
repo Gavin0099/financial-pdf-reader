@@ -68,6 +68,16 @@ class AIClaim(EmbeddedDocument):
     )
     recurring = BooleanField(default=True)   # False = 一次性、非常態項目
     contaminated = BooleanField(default=False)  # 時間軸不一致時標記
+    source_type = StringField(
+        choices=[
+            "financial_evidence",      # 財報數字 / 報表附注
+            "operational_evidence",    # 業務運營具體事實（廠房、產能、認證）
+            "strategic_narrative",     # 管理層/公司戰略說法（不得為 observed_fact）
+            "management_expectation",  # 明確展望/指引（不得為 observed_fact，confidence≤medium）
+        ],
+        default="financial_evidence",
+    )
+    forward_looking = BooleanField(default=False)  # True = 描述未來預期/計畫（自動 requires_human_review）
     evidence = ListField(EmbeddedDocumentField(ClaimEvidence))
     confidence = StringField(
         choices=["high", "medium", "low"],
@@ -149,6 +159,9 @@ class AIReport(Document):
     temporal_note = StringField(default="")   # mismatch 描述
     # Narrative synthesis
     executive_summary = StringField(default="")
+    # Narrative density governance
+    narrative_density_score = FloatField(default=0.0)   # 0.0–1.0：strategic_narrative + management_expectation 佔比
+    narrative_flag = BooleanField(default=False)         # True when score > 0.6
     # Claims
     claims = ListField(EmbeddedDocumentField(AIClaim))
     evidence_status = StringField(

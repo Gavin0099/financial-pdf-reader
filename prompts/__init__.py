@@ -18,6 +18,21 @@ Evidence 判定規則（必須嚴格執行）：
 - PDF 未揭露 → 不得產出此 claim（完全省略，不要填充 insufficient_evidence 佔位）
 - LOI/NDA/backlog 若無原文佐證，禁止產出，不得推測
 
+## Source Type 指引（CDMO/Biologics）
+
+source_type=operational_evidence 適用於：
+- FDA 認證廠房狀態、cGMP 認證、查廠通過（有頁碼）
+- 產能（公升數）與利用率（若有揭露）
+- Commercial manufacturing 客戶數與產品數
+
+source_type=strategic_narrative 適用於：
+- 全球布局、美國供應鏈韌性、end-to-end platform 說法
+- 必須 claim_level=interpretation，不得標為 observed_fact
+
+source_type=management_expectation 適用於：
+- 管理層指引、展望、milestone 預期
+- requires_human_review=true，forward_looking=true，confidence 最高=medium
+
 """,
     "semiconductor": """\
 ## 產業特定指引（半導體業）
@@ -87,6 +102,7 @@ EVIDENCE_BOUND_SUMMARY_PROMPT = """\
 - accounting_adjustments：一次性項目、非常態、會計政策
 - liquidity：現金流、流動性、負債、資本結構
 - risk_register：客戶集中、匯率、商品、法律、市場風險
+- pipeline：藥物/產品 pipeline、臨床階段、FDA 申請、commercialization 進度（生技/CDMO 專用）
 - evidence_gaps：insufficient_evidence 類項目
 
 **recurring**
@@ -96,6 +112,16 @@ EVIDENCE_BOUND_SUMMARY_PROMPT = """\
 **contaminated**
 - 時間軸不一致時，derived_metric / interpretation / hypothesis → true
 - observed_fact 若有明確頁碼 evidence 則維持 false
+
+**source_type（資訊來源性質）**
+- financial_evidence：財報數字、報表附注、會計政策（最高可信）
+- operational_evidence：業務章節的具體事實（廠房、產能、認證狀態）
+- strategic_narrative：管理層/公司的戰略說法、敘事定性（不得標為 observed_fact）
+- management_expectation：明確展望/指引/預期（不得標為 observed_fact，confidence 最高 = medium）
+
+**forward_looking**
+- false：描述已發生事實或已確認狀態
+- true：描述未來預期、計畫、申請中事項（自動 requires_human_review=true）
 
 ---
 
@@ -129,9 +155,11 @@ EVIDENCE_BOUND_SUMMARY_PROMPT = """\
       "claim_type": "financial_observation | management_tone | risk_factor | accounting_note | numeric_cross_check",
       "claim_level": "observed_fact | derived_metric | interpretation | hypothesis | insufficient_evidence",
       "materiality": "tier_a | tier_b | tier_c",
-      "section_key": "key_financials | accounting_adjustments | liquidity | risk_register | evidence_gaps",
+      "section_key": "key_financials | accounting_adjustments | liquidity | risk_register | pipeline | evidence_gaps",
       "recurring": true,
       "contaminated": false,
+      "source_type": "financial_evidence | operational_evidence | strategic_narrative | management_expectation",
+      "forward_looking": false,
       "evidence": [
         {{
           "page": "頁碼",
