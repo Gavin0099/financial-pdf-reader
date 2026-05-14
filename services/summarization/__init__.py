@@ -21,7 +21,10 @@ import anthropic
 from config.config import AnthropicConfig
 from models.documents import PDFDocument, PDFChunk
 from models.reports import AIReport, AIClaim, ClaimEvidence
-from prompts import EVIDENCE_BOUND_SUMMARY_PROMPT, INVESTMENT_ADVICE_GUARD_PHRASES, INDUSTRY_SUPPLEMENTS, RHETORICAL_RISK_PHRASES
+from prompts import (
+    EVIDENCE_BOUND_SUMMARY_PROMPT, INVESTMENT_ADVICE_GUARD_PHRASES,
+    INDUSTRY_SUPPLEMENTS, RHETORICAL_RISK_PHRASES, FORWARD_LOOKING_INDICATOR_PHRASES,
+)
 
 _client = None
 
@@ -94,6 +97,14 @@ def _parse_claims(raw_json: dict, document_id: str, temporal_consistent: bool) -
         # Governance: forward_looking → requires_human_review
         if forward_looking:
             requires_human_review = True
+
+        # Forward-looking implication guard: auto-detect on narrative types
+        # Overrides Claude's forward_looking=False if indicator words are found.
+        if not forward_looking and source_type in ("strategic_narrative", "management_expectation"):
+            claim_text = item.get("claim", "")
+            if any(p in claim_text for p in FORWARD_LOOKING_INDICATOR_PHRASES):
+                forward_looking = True
+                requires_human_review = True
 
         # Rhetorical risk scan: only for narrative source types
         rhetorical_risk_flag = False

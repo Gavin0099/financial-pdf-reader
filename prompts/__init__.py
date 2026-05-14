@@ -337,3 +337,18 @@ RHETORICAL_RISK_PHRASES = [
     # Momentum language
     "持續強勁", "加速成長", "快速擴張",
 ]
+
+# Forward-looking indicator phrases — only scanned on strategic_narrative / management_expectation.
+# If any hit, claim auto-gets forward_looking=True + requires_human_review=True,
+# overriding Claude's output (implicit forward-looking may not be self-reported).
+# Scope guard (narrative types only) prevents over-triggering on financial data.
+FORWARD_LOOKING_INDICATOR_PHRASES = [
+    # Explicit expectation
+    "預計", "預期", "展望",
+    # Possibility / potential
+    "可望", "有望", "有機會", "可能",
+    # Future orientation
+    "未來", "將", "計畫", "規劃",
+    # Goal / target language
+    "目標", "力拚", "希望達",
+]
