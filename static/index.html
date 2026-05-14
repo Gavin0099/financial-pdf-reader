@@ -143,6 +143,21 @@ input[type="file"] { padding: 6px; cursor: pointer; }
 .contaminated-section { display: none; margin-top: 8px; padding: 10px; background: #fffbeb; border: 1px dashed #fde68a; border-radius: 6px; }
 .contaminated-section.open { display: block; }
 
+/* AI Interpretations section — collapsed by default (Phase 10A) */
+.interp-toggle { font-size: 0.78rem; color: #92400e; background: none; border: none; cursor: pointer; padding: 8px 0 0; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+.interp-toggle:hover { text-decoration: underline; }
+.interp-section { display: none; margin-top: 8px; padding: 10px; background: #fffbeb; border: 1px dashed #fcd34d; border-radius: 6px; }
+.interp-section.open { display: block; }
+.interp-disclaimer { font-size: 0.72rem; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; border-radius: 4px; padding: 6px 10px; margin-bottom: 8px; line-height: 1.5; }
+
+/* Evidence distance label — right-aligned in claim-meta */
+.ed-label { font-size: 0.62rem; font-style: italic; margin-left: auto; padding-right: 2px; }
+.ed-fact    { color: #64748b; }
+.ed-derived { color: #4338ca; }
+.ed-interp  { color: #92400e; font-weight: 600; }
+.ed-hypo    { color: #94a3b8; }
+.ed-insuf   { color: #94a3b8; }
+
 /* Review flag */
 .claim-row.review-flag { border-color: #fca5a5 !important; }
 
@@ -359,6 +374,13 @@ const LEVEL_BADGE = {
 const KF_CLASS = {
   observed_fact: 'kf-fact', derived_metric: 'kf-derived',
   interpretation: 'kf-interp',
+};
+const EVIDENCE_DISTANCE = {
+  observed_fact:         { label: '財報直接揭露',    cls: 'ed-fact' },
+  derived_metric:        { label: '由財報數字計算',  cls: 'ed-derived' },
+  interpretation:        { label: 'AI 假設·需確認', cls: 'ed-interp' },
+  hypothesis:            { label: 'AI 推測·低確信', cls: 'ed-hypo' },
+  insufficient_evidence: { label: '缺少足夠證據',    cls: 'ed-insuf' },
 };
 const SECTION_META = {
   key_financials:         { icon: '📊', label: '核心財務' },
@@ -584,8 +606,34 @@ function renderResults(data) {
     const sectionContam = contaminatedClaims.filter(c=>c.section_key===k);
     if (sectionClaims.length===0 && sectionContam.length===0) return;
 
+    /* Phase 10A: separate primary evidence from AI interpretations */
+    const factClaims = sectionClaims.filter(c =>
+      c.claim_level === 'observed_fact' ||
+      c.claim_level === 'derived_metric' ||
+      c.claim_level === 'insufficient_evidence'
+    );
+    const interpClaims = sectionClaims.filter(c =>
+      c.claim_level === 'interpretation' || c.claim_level === 'hypothesis'
+    );
+
     html += `<div class="claims-pane${i===0?' active':''}" id="pane-${k}">`;
-    sectionClaims.forEach(c => { html += renderClaim(c); });
+
+    /* Primary: direct evidence only */
+    factClaims.forEach(c => { html += renderClaim(c); });
+    if (factClaims.length === 0 && interpClaims.length > 0) {
+      html += `<div style="font-size:.8rem;color:#94a3b8;padding:8px 4px;font-style:italic;">本節無直接事實揭露</div>`;
+    }
+
+    /* AI interpretations: collapsed by default */
+    if (interpClaims.length > 0) {
+      html += `<button class="interp-toggle" onclick="toggleInterp('interp-${k}')">
+        🧠 AI 假設與詮釋（${interpClaims.length} 條）— 展開確認
+      </button>
+      <div class="interp-section" id="interp-${k}">
+        <div class="interp-disclaimer">以下為 AI 詮釋，非財報直接事實。請結合原文查證後使用，不得單獨引用。</div>`;
+      interpClaims.forEach(c => { html += renderClaim(c); });
+      html += `</div>`;
+    }
 
     /* Contaminated section (collapsed by default) */
     if (sectionContam.length > 0) {
@@ -609,12 +657,15 @@ function renderResults(data) {
 function renderClaim(c, isContaminated=false) {
   const lvCls = isContaminated ? 'lv-insuf' : (LEVEL_CLASS[c.claim_level]||'lv-insuf');
   const [bCls, bLabel] = LEVEL_BADGE[c.claim_level] || ['b-gray', c.claim_level];
-  const isInterp = c.claim_level === 'interpretation';
+  const isInterp = c.claim_level === 'interpretation' || c.claim_level === 'hypothesis';
   const reviewCls = (!isContaminated && c.requires_human_review) ? ' review-flag' : '';
   const evHtml = (c.evidence||[]).map(e =>
     `<div class="ev-item"><span class="ev-page">P.${e.page}</span><span class="ev-quote">${e.quoted_text||e.section||''}</span></div>`
   ).join('');
   const evId = 'ev-'+c.claim_id;
+  const edInfo = EVIDENCE_DISTANCE[c.claim_level] || { label: c.claim_level, cls: 'ed-insuf' };
+  // Lower rhetorical confidence for interpretation/hypothesis
+  const claimText = isInterp ? `可能需要檢查：${c.claim}` : c.claim;
 
   return `<div class="claim-row ${lvCls}${reviewCls}">
     <div class="claim-meta">
@@ -623,8 +674,9 @@ function renderClaim(c, isContaminated=false) {
       ${!c.recurring?'<span class="non-rec">一次性</span>':''}
       ${isContaminated?badge('b-orange','contaminated'):''}
       ${(!isContaminated&&c.requires_human_review)?badge('b-red','需人工審查'):''}
+      <span class="ed-label ${edInfo.cls}">${edInfo.label}</span>
     </div>
-    <div class="claim-text${isInterp?' interp-warn':''}">${c.claim}</div>
+    <div class="claim-text${isInterp?' interp-warn':''}">${claimText}</div>
     ${evHtml?`<div class="ev-toggle">
       <button class="ev-btn" onclick="toggleEv('${evId}')">▶ 查看來源</button>
       <div class="ev-list" id="${evId}">${evHtml}</div>
@@ -653,6 +705,15 @@ function toggleContam(id) {
   btn.textContent = el.classList.contains('open')
     ? '▲ 隱藏已污染觀察'
     : `▶ 顯示 ${el.querySelectorAll('.claim-row').length} 條已污染觀察（時間軸不一致）`;
+}
+function toggleInterp(id) {
+  const el = document.getElementById(id);
+  const btn = el.previousElementSibling;
+  el.classList.toggle('open');
+  const cnt = el.querySelectorAll('.claim-row').length;
+  btn.textContent = el.classList.contains('open')
+    ? '▲ 收起 AI 假設與詮釋'
+    : `🧠 AI 假設與詮釋（${cnt} 條）— 展開確認`;
 }
 
 /* ══════════════════════════════════════════
