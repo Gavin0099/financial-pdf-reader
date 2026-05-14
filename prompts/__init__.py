@@ -321,3 +321,19 @@ INVESTMENT_ADVICE_GUARD_PHRASES = [
     "strong buy", "outperform", "underperform",
     "推薦", "投資建議",
 ]
+
+# Rhetorical risk phrases — only scanned on strategic_narrative / management_expectation claims.
+# These are high-certainty rhetorical modifiers that can make narrative claims sound like evidence.
+# NOT applied to financial_evidence to avoid flagging legitimate descriptions like「營收大幅增加」.
+RHETORICAL_RISK_PHRASES = [
+    # High-certainty modifiers
+    "明顯", "大幅", "強勁", "顯著", "大幅度",
+    # Outcome assertions
+    "已形成", "已確立", "已奠定", "已成為",
+    # Future benefit language
+    "將受惠", "可望", "有望", "預計受惠", "將顯著",
+    # Competitive advantage claims
+    "競爭優勢", "領先地位", "核心競爭力",
+    # Momentum language
+    "持續強勁", "加速成長", "快速擴張",
+]

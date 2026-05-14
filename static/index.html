@@ -152,6 +152,8 @@ input[type="file"] { padding: 6px; cursor: pointer; }
 
 /* Forward-looking tag */
 .fwd-tag { font-size: 0.62rem; font-weight: 600; color: #fff; background: #f97316; border-radius: 3px; padding: 1px 5px; }
+/* Rhetorical risk tag */
+.rhet-tag { font-size: 0.62rem; font-weight: 600; color: #7c2d12; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 3px; padding: 1px 5px; cursor: help; }
 
 /* Source-type badge colours */
 .b-amber  { background:#fef3c7; color:#92400e; }
@@ -551,11 +553,12 @@ function renderResults(data) {
 
   /* ── Narrative Density Banner ── */
   if (data.narrative_flag) {
-    const pct = Math.round((data.narrative_density_score||0) * 100);
+    const cntPct  = Math.round((data.narrative_density_score||0) * 100);
+    const textPct = Math.round((data.narrative_density_weighted_score||0) * 100);
     html += `<div class="narrative-banner">
       <span class="narrative-banner-icon">⚠️</span>
       <div>
-        <strong>戰略敘事密度高（${pct}%）</strong><br>
+        <strong>戰略敘事密度高：claim 數 ${cntPct}%，文字占比 ${textPct}%</strong><br>
         <span>本報告中戰略敘事與管理展望類 claims 佔比超過 60%，直接財務 evidence 相對不足。建議對比財報數字後再使用 AI 分析結論。</span>
       </div>
     </div>`;
@@ -701,6 +704,9 @@ function renderClaim(c, isContaminated=false) {
     ? badge(SOURCE_TYPE_BADGE[c.source_type][0], SOURCE_TYPE_BADGE[c.source_type][1])
     : '';
   const fwdTag = c.forward_looking ? '<span class="fwd-tag">前瞻</span>' : '';
+  const rhetTag = c.rhetorical_risk_flag
+    ? `<span class="rhet-tag" title="敘事語氣偏強：${(c.rhetorical_risk_terms||[]).join('、')}">敘事語氣偏強</span>`
+    : '';
 
   return `<div class="claim-row ${lvCls}${reviewCls}">
     <div class="claim-meta">
@@ -708,6 +714,7 @@ function renderClaim(c, isContaminated=false) {
       ${c.claim_type?badge('b-gray',c.claim_type):''}
       ${stBadge}
       ${fwdTag}
+      ${rhetTag}
       ${!c.recurring?'<span class="non-rec">一次性</span>':''}
       ${isContaminated?badge('b-orange','contaminated'):''}
       ${(!isContaminated&&c.requires_human_review)?badge('b-red','需人工審查'):''}

@@ -21,7 +21,7 @@ import anthropic
 from config.config import AnthropicConfig
 from models.documents import PDFDocument, PDFChunk
 from models.reports import AIReport, AIClaim, ClaimEvidence
-from prompts import EVIDENCE_BOUND_SUMMARY_PROMPT, INVESTMENT_ADVICE_GUARD_PHRASES, INDUSTRY_SUPPLEMENTS
+from prompts import EVIDENCE_BOUND_SUMMARY_PROMPT, INVESTMENT_ADVICE_GUARD_PHRASES, INDUSTRY_SUPPLEMENTS, RHETORICAL_RISK_PHRASES
 
 _client = None
 
@@ -95,6 +95,16 @@ def _parse_claims(raw_json: dict, document_id: str, temporal_consistent: bool) -
         if forward_looking:
             requires_human_review = True
 
+        # Rhetorical risk scan: only for narrative source types
+        rhetorical_risk_flag = False
+        rhetorical_risk_terms = []
+        if source_type in ("strategic_narrative", "management_expectation"):
+            claim_text = item.get("claim", "")
+            hits = [phrase for phrase in RHETORICAL_RISK_PHRASES if phrase in claim_text]
+            if hits:
+                rhetorical_risk_flag = True
+                rhetorical_risk_terms = hits
+
         claims.append(
             AIClaim(
                 claim_id=item.get("claim_id", str(uuid.uuid4())),
@@ -107,6 +117,8 @@ def _parse_claims(raw_json: dict, document_id: str, temporal_consistent: bool) -
                 contaminated=contaminated,
                 source_type=source_type,
                 forward_looking=forward_looking,
+                rhetorical_risk_flag=rhetorical_risk_flag,
+                rhetorical_risk_terms=rhetorical_risk_terms,
                 evidence=evidence_list,
                 confidence=confidence,
                 requires_human_review=requires_human_review,
@@ -187,10 +199,17 @@ def generate_summary(document_id: str) -> dict:
 
     # Narrative density governance
     _narrative_types = {"strategic_narrative", "management_expectation"}
-    narrative_count = sum(1 for c in clean_claims if c.source_type in _narrative_types)
-    total_non_gap = sum(1 for c in clean_claims if c.claim_level != "insufficient_evidence")
+    _non_gap = [c for c in clean_claims if c.claim_level != "insufficient_evidence"]
+    narrative_count = sum(1 for c in _non_gap if c.source_type in _narrative_types)
+    total_non_gap = len(_non_gap)
     narrative_density_score = round(narrative_count / total_non_gap, 2) if total_non_gap else 0.0
-    narrative_flag = narrative_density_score > 0.6
+
+    # Text-length weighted density
+    narrative_text_len = sum(len(c.claim) for c in _non_gap if c.source_type in _narrative_types)
+    total_text_len = sum(len(c.claim) for c in _non_gap)
+    narrative_density_weighted_score = round(narrative_text_len / total_text_len, 2) if total_text_len else 0.0
+
+    narrative_flag = narrative_density_score > 0.6 or narrative_density_weighted_score > 0.6
 
     investment_advice_detected = _check_investment_advice(raw_text)
 
@@ -204,6 +223,7 @@ def generate_summary(document_id: str) -> dict:
         temporal_note=temporal_note,
         executive_summary=executive_summary,
         narrative_density_score=narrative_density_score,
+        narrative_density_weighted_score=narrative_density_weighted_score,
         narrative_flag=narrative_flag,
         claims=claims,
         evidence_status=evidence_status,
@@ -230,6 +250,7 @@ def generate_summary(document_id: str) -> dict:
         "evidence_status": evidence_status,
         "investment_advice_detected": investment_advice_detected,
         "narrative_density_score": narrative_density_score,
+        "narrative_density_weighted_score": narrative_density_weighted_score,
         "narrative_flag": narrative_flag,
         "claims": [
             {
@@ -243,6 +264,8 @@ def generate_summary(document_id: str) -> dict:
                 "contaminated": c.contaminated,
                 "source_type": c.source_type,
                 "forward_looking": c.forward_looking,
+                "rhetorical_risk_flag": c.rhetorical_risk_flag,
+                "rhetorical_risk_terms": list(c.rhetorical_risk_terms),
                 "confidence": c.confidence,
                 "requires_human_review": c.requires_human_review,
                 "evidence": [

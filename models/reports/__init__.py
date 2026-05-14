@@ -78,6 +78,8 @@ class AIClaim(EmbeddedDocument):
         default="financial_evidence",
     )
     forward_looking = BooleanField(default=False)  # True = 描述未來預期/計畫（自動 requires_human_review）
+    rhetorical_risk_flag = BooleanField(default=False)   # strategic/management claims 含高確信語氣詞
+    rhetorical_risk_terms = ListField(StringField())     # 命中的語氣詞列表
     evidence = ListField(EmbeddedDocumentField(ClaimEvidence))
     confidence = StringField(
         choices=["high", "medium", "low"],
@@ -160,8 +162,9 @@ class AIReport(Document):
     # Narrative synthesis
     executive_summary = StringField(default="")
     # Narrative density governance
-    narrative_density_score = FloatField(default=0.0)   # 0.0–1.0：strategic_narrative + management_expectation 佔比
-    narrative_flag = BooleanField(default=False)         # True when score > 0.6
+    narrative_density_score = FloatField(default=0.0)            # 0.0–1.0：claim-count 比例
+    narrative_density_weighted_score = FloatField(default=0.0)   # 0.0–1.0：text-length 加權比例
+    narrative_flag = BooleanField(default=False)                  # True when score > 0.6
     # Claims
     claims = ListField(EmbeddedDocumentField(AIClaim))
     evidence_status = StringField(
