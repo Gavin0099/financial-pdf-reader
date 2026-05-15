@@ -1,6 +1,10 @@
+import logging
+
 from fastapi import APIRouter, HTTPException
 from models.reports import AIReport
 from services.summarization import generate_summary
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -19,6 +23,9 @@ async def create_summary(document_id: str):
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        logger.exception("generate_summary unexpected error: document_id=%s", document_id)
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {type(e).__name__}: {e}")
 
 
 @router.get("/{document_id}/summary/{report_id}")
@@ -43,6 +50,10 @@ async def get_summary(document_id: str, report_id: str):
                 "claim_type": c.claim_type,
                 "claim_level": c.claim_level,
                 "confidence": c.confidence,
+                "source_type": c.source_type,
+                "attribution_prefix": c.attribution_prefix,
+                "forward_looking": c.forward_looking,
+                "rhetorical_risk_flag": c.rhetorical_risk_flag,
                 "requires_human_review": c.requires_human_review,
                 "evidence": [
                     {"page": e.page, "section": e.section, "quoted_text": e.quoted_text}

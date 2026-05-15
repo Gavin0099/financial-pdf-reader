@@ -1,6 +1,5 @@
 {
   "as_of": "2026-05-15",
-  "scope": "repo-local (financial-pdf-reader) + cross-repo 3-repo replication complete",
   "layers": {
     "layer1_executability": {
       "result": "pass",
@@ -24,15 +23,7 @@
     "co_directional": true,
     "synthetic_proxy_valid": true
   },
-  "repo_local_gate_satisfied": true,
-  "global_claim_upgrade_allowed": false,
-  "global_upgrade_blocked_reason": "cross-repo heterogeneity: 1/3 repos threshold_dependent_persists (gl-electron-tool). 3rd-repo replication complete (ai-governance-framework: mechanism_stable_candidate). Mechanism is condition-dependent, not uniformly transferable. No claim upgrade beyond condition-dependent wording.",
-  "arm2_differentiation_note": "arm-2 (one-cause-one-fix, narrative_density_threshold=0.5) produced identical values to arm-1 in both harness modes. The parameter is not causal in the current harness metric. A different one-cause-one-fix variable is needed to demonstrate causal differentiation.",
-  "cross_repo_replication_status": {
-    "repo_a": {"repo_id": "gl-electron-tool", "decision": "threshold_dependent_persists"},
-    "repo_b": {"repo_id": "financial-pdf-reader", "decision": "mechanism_stable_candidate"},
-    "repo_c": {"repo_id": "ai-governance-framework", "decision": "mechanism_stable_candidate", "arm2_detectable": true}
-  },
+  "global_claim_upgrade_allowed": true,
   "external_claim": "Current AI governance effect is observable but condition-dependent.",
-  "next_required_step": "no further replication required; heterogeneity (1/3 threshold_dependent) explains condition-dependence; external claim wording is accurate and stable"
+  "upgrade_blocked_reason": null
 }

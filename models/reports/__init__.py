@@ -62,6 +62,7 @@ class AIClaim(EmbeddedDocument):
             "accounting_adjustments",# 一次性項目、會計調整
             "liquidity",             # 現金流、流動性、負債
             "risk_register",         # 風險因素
+            "pipeline",              # 藥物/產品 pipeline、臨床階段（生技/CDMO 專用）
             "evidence_gaps",         # 無法確認的項目
         ],
         default="key_financials",

@@ -56,6 +56,14 @@ def _check_investment_advice(text: str) -> bool:
     return any(phrase in lower for phrase in INVESTMENT_ADVICE_GUARD_PHRASES)
 
 
+_VALID_CLAIM_TYPE = {"financial_observation", "management_tone", "risk_factor", "accounting_note", "numeric_cross_check"}
+_VALID_CLAIM_LEVEL = {"observed_fact", "derived_metric", "interpretation", "hypothesis", "insufficient_evidence"}
+_VALID_MATERIALITY = {"tier_a", "tier_b", "tier_c"}
+_VALID_SECTION_KEY = {"key_financials", "accounting_adjustments", "liquidity", "risk_register", "pipeline", "evidence_gaps"}
+_VALID_SOURCE_TYPE = {"financial_evidence", "operational_evidence", "strategic_narrative", "management_expectation"}
+_VALID_CONFIDENCE = {"high", "medium", "low"}
+
+
 def _parse_claims(raw_json: dict, document_id: str, temporal_consistent: bool) -> list[AIClaim]:
     claims = []
     for item in raw_json.get("claims", []):
@@ -72,6 +80,8 @@ def _parse_claims(raw_json: dict, document_id: str, temporal_consistent: bool) -
 
         # Governance: 沒有 evidence → 強制降級
         claim_level = item.get("claim_level", "interpretation")
+        if claim_level not in _VALID_CLAIM_LEVEL:
+            claim_level = "interpretation"
         if not evidence_list and claim_level not in ("insufficient_evidence",):
             claim_level = "insufficient_evidence"
 
@@ -82,8 +92,12 @@ def _parse_claims(raw_json: dict, document_id: str, temporal_consistent: bool) -
 
         # Source type governance
         source_type = item.get("source_type", "financial_evidence")
+        if source_type not in _VALID_SOURCE_TYPE:
+            source_type = "financial_evidence"
         forward_looking = item.get("forward_looking", False)
         confidence = item.get("confidence", "medium")
+        if confidence not in _VALID_CONFIDENCE:
+            confidence = "medium"
         requires_human_review = item.get("requires_human_review", False)
 
         # Governance: narrative source types 不得為 observed_fact → 強制降為 interpretation
@@ -123,14 +137,24 @@ def _parse_claims(raw_json: dict, document_id: str, temporal_consistent: bool) -
         }
         attribution_prefix = _ATTRIBUTION_MAP.get(source_type, "")
 
+        claim_type = item.get("claim_type", "financial_observation")
+        if claim_type not in _VALID_CLAIM_TYPE:
+            claim_type = "financial_observation"
+        materiality = item.get("materiality", "tier_b")
+        if materiality not in _VALID_MATERIALITY:
+            materiality = "tier_b"
+        section_key = item.get("section_key", "key_financials")
+        if section_key not in _VALID_SECTION_KEY:
+            section_key = "key_financials"
+
         claims.append(
             AIClaim(
                 claim_id=item.get("claim_id", str(uuid.uuid4())),
                 claim=item.get("claim", ""),
-                claim_type=item.get("claim_type", "financial_observation"),
+                claim_type=claim_type,
                 claim_level=claim_level,
-                materiality=item.get("materiality", "tier_b"),
-                section_key=item.get("section_key", "key_financials"),
+                materiality=materiality,
+                section_key=section_key,
                 recurring=item.get("recurring", True),
                 contaminated=contaminated,
                 source_type=source_type,
@@ -173,13 +197,19 @@ def generate_summary(document_id: str) -> dict:
     )
 
     client = _get_client()
-    message = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=8192,
-        messages=[{"role": "user", "content": prompt}],
-    )
+    try:
+        message = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=8192,
+            messages=[{"role": "user", "content": prompt}],
+        )
+    except anthropic.APIError as e:
+        raise RuntimeError(f"Claude API 錯誤 ({type(e).__name__}): {e}") from e
 
-    raw_text = message.content[0].text
+    try:
+        raw_text = message.content[0].text
+    except (IndexError, AttributeError) as e:
+        raise RuntimeError(f"Claude 回傳內容為空或格式不符: {e}") from e
 
     # 抽出 JSON block
     try:

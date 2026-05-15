@@ -69,6 +69,14 @@ EVIDENCE_BOUND_SUMMARY_PROMPT = """\
 
 ## Phase 1：時間軸驗證（Temporal Validation）
 
+⚠️ 民國年換算規則（必須嚴格遵守）：
+台灣財報使用中華民國曆（民國年）。換算公式：民國年 + 1911 = 西元年。
+- 民國113年 = 2024年
+- 民國114年 = 2025年
+- 民國115年 = 2026年
+- 民國116年 = 2027年
+document_period 必須換算為西元年再填入（例如「民國115年Q1」→ document_period = "2026Q1"）。
+
 檢查文件的實際報告期間是否與使用者指定期間一致。
 - 若不一致：temporal_validation.is_consistent = false，並在 mismatch_note 說明
 - 若不一致：所有 claim_level 為 derived_metric / interpretation / hypothesis 的 claim，contaminated = true
