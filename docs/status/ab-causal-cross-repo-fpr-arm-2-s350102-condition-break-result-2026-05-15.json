@@ -1,0 +1,53 @@
+{
+  "run_id": "cr-fpr-arm-2-s350102",
+  "repo_id": "financial-pdf-reader",
+  "window_id": "ab-causal-cross-repo-fpr-2026-05-15",
+  "seed": "350102",
+  "arm_type": "one-cause-one-fix",
+  "task_slice": "cross-repo observation first pass",
+  "injected_controls": {
+    "changed_variable": "narrative_density_threshold",
+    "changed_value": 0.5,
+    "rationale": "single-variable probe: stricter narrative threshold; all other governance unchanged"
+  },
+  "blind_review": true,
+  "completed": true,
+  "attempts_used": 1,
+  "outcome": {
+    "A_rate": null,
+    "B_rate": null,
+    "abs_delta": null,
+    "rel_lift": null,
+    "p_value": null,
+    "ci_95": null,
+    "direction": null
+  },
+  "safety_placebo": {
+    "guardrail_reopen_rate": 0.0,
+    "guardrail_stability_degraded_rate": 0.0,
+    "guardrail_defect_rate": 0.0,
+    "placebo_claim_overreach_rate": 0.0,
+    "placebo_p_value": null
+  },
+  "causal_threat_probe": {
+    "recognizability_score": null,
+    "hidden_metric_exposure": "no",
+    "style_marker_presence_pre": null,
+    "style_marker_presence_post": null,
+    "exploration_breadth_proxy": null,
+    "review_window_size": null,
+    "fallback_route_policy": null,
+    "governance_tests_passed": 42,
+    "governance_tests_total": 42
+  },
+  "primary_outcome_status": "unsupported",
+  "placebo_result": "not_applicable",
+  "guardrail_status": "pass",
+  "break_test_pass": false,
+  "run_label": "unsupported",
+  "policy_sensitive_pass": false,
+  "unsupported": true,
+  "unsupported_reason": "no_baseline_harness",
+  "one_line_interpretation": "cr-fpr-arm-2-s350102: unsupported; no_baseline_harness; single-variable probe (narrative_density_threshold=0.5) cannot be evaluated without A/B rate comparison.",
+  "mechanism_explanation": "arm-2 changed narrative_density_threshold from 0.6 to 0.5; governance tests still pass 42/42 (deterministic); directional lift cannot be computed without controlled baseline"
+}

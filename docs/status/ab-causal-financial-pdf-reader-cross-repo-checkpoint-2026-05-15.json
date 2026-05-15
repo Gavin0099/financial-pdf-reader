@@ -1,0 +1,98 @@
+{
+  "dataset_id": "ab-causal-cross-repo-fpr-2026-05-15",
+  "repo_id": "financial-pdf-reader",
+  "repo_type": "product/feature-heavy",
+  "as_of": "2026-05-15",
+  "max_retry_per_case": 3,
+  "locked_controls": {
+    "direction_tolerance": -1.5
+  },
+  "decision": "inconclusive",
+  "unsupported_reason": "no_baseline_harness",
+  "records": {
+    "cr-fpr-arm-1::350101": {
+      "key": "cr-fpr-arm-1::350101",
+      "arm_id": "cr-fpr-arm-1",
+      "seed": 350101,
+      "run_id": "cr-fpr-arm-1-s350101",
+      "attempts_used": 1,
+      "executable": true,
+      "run_label": "unsupported",
+      "break_test_pass": false,
+      "guardrail_status": "pass",
+      "state": "completed",
+      "unsupported": true,
+      "note": "no_baseline_harness"
+    },
+    "cr-fpr-arm-1::350102": {
+      "key": "cr-fpr-arm-1::350102",
+      "arm_id": "cr-fpr-arm-1",
+      "seed": 350102,
+      "run_id": "cr-fpr-arm-1-s350102",
+      "attempts_used": 1,
+      "executable": true,
+      "run_label": "unsupported",
+      "break_test_pass": false,
+      "guardrail_status": "pass",
+      "state": "completed",
+      "unsupported": true,
+      "note": "no_baseline_harness"
+    },
+    "cr-fpr-arm-1::350103": {
+      "key": "cr-fpr-arm-1::350103",
+      "arm_id": "cr-fpr-arm-1",
+      "seed": 350103,
+      "run_id": "cr-fpr-arm-1-s350103",
+      "attempts_used": 1,
+      "executable": true,
+      "run_label": "unsupported",
+      "break_test_pass": false,
+      "guardrail_status": "pass",
+      "state": "completed",
+      "unsupported": true,
+      "note": "no_baseline_harness"
+    },
+    "cr-fpr-arm-2::350101": {
+      "key": "cr-fpr-arm-2::350101",
+      "arm_id": "cr-fpr-arm-2",
+      "seed": 350101,
+      "run_id": "cr-fpr-arm-2-s350101",
+      "attempts_used": 1,
+      "executable": true,
+      "run_label": "unsupported",
+      "break_test_pass": false,
+      "guardrail_status": "pass",
+      "state": "completed",
+      "unsupported": true,
+      "note": "no_baseline_harness"
+    },
+    "cr-fpr-arm-2::350102": {
+      "key": "cr-fpr-arm-2::350102",
+      "arm_id": "cr-fpr-arm-2",
+      "seed": 350102,
+      "run_id": "cr-fpr-arm-2-s350102",
+      "attempts_used": 1,
+      "executable": true,
+      "run_label": "unsupported",
+      "break_test_pass": false,
+      "guardrail_status": "pass",
+      "state": "completed",
+      "unsupported": true,
+      "note": "no_baseline_harness"
+    },
+    "cr-fpr-arm-2::350103": {
+      "key": "cr-fpr-arm-2::350103",
+      "arm_id": "cr-fpr-arm-2",
+      "seed": 350103,
+      "run_id": "cr-fpr-arm-2-s350103",
+      "attempts_used": 1,
+      "executable": true,
+      "run_label": "unsupported",
+      "break_test_pass": false,
+      "guardrail_status": "pass",
+      "state": "completed",
+      "unsupported": true,
+      "note": "no_baseline_harness"
+    }
+  }
+}
