@@ -42,6 +42,7 @@ async def get_summary(document_id: str, report_id: str):
         "period": report.period,
         "evidence_status": report.evidence_status,
         "investment_advice_detected": report.investment_advice_detected,
+        "completeness_warnings": list(report.completeness_warnings or []),
         "created_at": str(report.created_at),
         "claims": [
             {

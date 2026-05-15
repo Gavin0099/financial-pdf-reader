@@ -63,6 +63,67 @@ _VALID_SECTION_KEY = {"key_financials", "accounting_adjustments", "liquidity", "
 _VALID_SOURCE_TYPE = {"financial_evidence", "operational_evidence", "strategic_narrative", "management_expectation"}
 _VALID_CONFIDENCE = {"high", "medium", "low"}
 
+# Keywords triggering OC-1 (non-recurring COGS/gross-margin items)
+_OC1_TRIGGER_KEYWORDS = ["迴轉利益", "跌價損失", "存貨跌價", "減損損失", "不動產減損", "廠房減損"]
+# Keywords triggering OC-2 liquidity items (debt/dividend side)
+_OC2_DEBT_KEYWORDS = ["借款", "可轉債", "股利"]
+# Keywords indicating OC-1 adjustment already present
+_OC1_ADJUSTMENT_KEYWORDS = ["調整後毛利率", "排除此項目"]
+# Keywords indicating OC-2 safety margin already present
+_OC2_SAFETY_KEYWORDS = ["安全墊", "現金安全墊"]
+
+
+def _check_completeness(claims: list[AIClaim]) -> list[str]:
+    """
+    Post-processing completeness validator.
+    OC-1: non-recurring gross-margin items → require adjustment derived_metric
+    OC-2: cash + debt/dividend coexist → require safety margin derived_metric
+    Returns list of warning strings (empty = all complete).
+    """
+    warnings: list[str] = []
+
+    # OC-1 check
+    oc1_triggers = [
+        c for c in claims
+        if not c.recurring
+        and c.section_key in ("accounting_adjustments", "key_financials")
+        and any(kw in c.claim for kw in _OC1_TRIGGER_KEYWORDS)
+    ]
+    has_oc1_adjustment = any(
+        c.claim_level == "derived_metric"
+        and c.section_key == "accounting_adjustments"
+        and any(kw in c.claim for kw in _OC1_ADJUSTMENT_KEYWORDS)
+        for c in claims
+    )
+    if oc1_triggers and not has_oc1_adjustment:
+        trigger_names = [c.claim[:30] for c in oc1_triggers[:2]]
+        warnings.append(
+            f"OC-1: 存在非常態毛利項目（{'; '.join(trigger_names)}...）但缺少調整後毛利率 derived_metric"
+        )
+
+    # OC-2 check
+    has_cash_claim = any(
+        c.section_key == "liquidity" and "現金" in c.claim
+        for c in claims
+    )
+    has_debt_claim = any(
+        c.section_key == "liquidity"
+        and any(kw in c.claim for kw in _OC2_DEBT_KEYWORDS)
+        for c in claims
+    )
+    has_oc2_safety = any(
+        c.claim_level == "derived_metric"
+        and c.section_key == "liquidity"
+        and any(kw in c.claim for kw in _OC2_SAFETY_KEYWORDS)
+        for c in claims
+    )
+    if has_cash_claim and has_debt_claim and not has_oc2_safety:
+        warnings.append(
+            "OC-2: 現金與短借/可轉債/股利並存但缺少現金安全墊 derived_metric（liquidity）"
+        )
+
+    return warnings
+
 
 def _parse_claims(raw_json: dict, document_id: str, temporal_consistent: bool) -> list[AIClaim]:
     claims = []
@@ -262,6 +323,9 @@ def generate_summary(document_id: str) -> dict:
 
     investment_advice_detected = _check_investment_advice(raw_text)
 
+    # --- Output Completeness Validation (OC-1, OC-2) ---
+    completeness_warnings = _check_completeness(claims)
+
     report = AIReport(
         report_id=str(uuid.uuid4()),
         document_id=document_id,
@@ -277,6 +341,7 @@ def generate_summary(document_id: str) -> dict:
         claims=claims,
         evidence_status=evidence_status,
         investment_advice_detected=investment_advice_detected,
+        completeness_warnings=completeness_warnings,
     )
     report.save()
 
@@ -301,6 +366,7 @@ def generate_summary(document_id: str) -> dict:
         "narrative_density_score": narrative_density_score,
         "narrative_density_weighted_score": narrative_density_weighted_score,
         "narrative_flag": narrative_flag,
+        "completeness_warnings": completeness_warnings,
         "claims": [
             {
                 "claim_id": c.claim_id,

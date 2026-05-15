@@ -174,6 +174,7 @@ class AIReport(Document):
         default="partial",
     )
     investment_advice_detected = BooleanField(default=False)
+    completeness_warnings = ListField(StringField(), default=list)  # OC-1/OC-2 post-processing flags
     created_at = DateTimeField(default=lambda: datetime.now(timezone.utc))
 
     meta = {
