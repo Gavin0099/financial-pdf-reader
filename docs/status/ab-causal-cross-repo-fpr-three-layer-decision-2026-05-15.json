@@ -1,0 +1,33 @@
+{
+  "as_of": "2026-05-15",
+  "scope": "repo-local (financial-pdf-reader only)",
+  "layers": {
+    "layer1_executability": {
+      "result": "pass",
+      "criterion": "no unsupported cases in any arm",
+      "evidence": "syn_unsupported=0; real_task_unsupported=0"
+    },
+    "layer2_harness_local": {
+      "result": "pass",
+      "criterion": "mechanism_stable_candidate in synthetic harness",
+      "evidence": "synthetic_decision=mechanism_stable_candidate",
+      "scope_note": "harness-local; metric-bound; not sufficient for global claim upgrade"
+    },
+    "layer3_real_task": {
+      "result": "pass",
+      "criterion": "mechanism_stable_candidate in real-task gate",
+      "evidence": "real_task_decision=mechanism_stable_candidate",
+      "scope_note": "real-task violation_rate; closer to actual AI session behavior"
+    }
+  },
+  "metric_bridge": {
+    "co_directional": true,
+    "synthetic_proxy_valid": true
+  },
+  "repo_local_gate_satisfied": true,
+  "global_claim_upgrade_allowed": false,
+  "global_upgrade_blocked_reason": "cross-repo replication required in at least 1 additional repo; gl-electron-tool is threshold_dependent_persists; 3rd repo replication pending",
+  "arm2_differentiation_note": "arm-2 (one-cause-one-fix, narrative_density_threshold=0.5) produced identical values to arm-1 in both harness modes. The parameter is not causal in the current harness metric. A different one-cause-one-fix variable is needed to demonstrate causal differentiation.",
+  "external_claim": "Current AI governance effect is observable but condition-dependent.",
+  "next_required_step": "replication in a 3rd repo (candidate: ai-governance-framework) before global claim upgrade"
+}

@@ -1,0 +1,38 @@
+{
+  "as_of": "2026-05-15",
+  "all_seeds_co_directional": true,
+  "bridge_verdict": "synthetic_metric_valid_as_diagnostic",
+  "avg_synthetic_delta": -8.0,
+  "avg_real_task_delta": -16.0,
+  "magnitude_relation": "real_task_stronger",
+  "predictive_validity": "synthetic is valid directional proxy; magnitude understates real governance effect",
+  "per_seed": {
+    "350101": {
+      "seed": 350101,
+      "synthetic_delta": -8.0,
+      "real_task_delta": -16.0,
+      "co_directional": true,
+      "synthetic_metric": "unblocked_narrative_claim_rate",
+      "real_task_metric": "governance_violation_rate",
+      "note": "synthetic is conservative lower bound of real effect"
+    },
+    "350102": {
+      "seed": 350102,
+      "synthetic_delta": -8.0,
+      "real_task_delta": -12.0,
+      "co_directional": true,
+      "synthetic_metric": "unblocked_narrative_claim_rate",
+      "real_task_metric": "governance_violation_rate",
+      "note": "synthetic is conservative lower bound of real effect"
+    },
+    "350103": {
+      "seed": 350103,
+      "synthetic_delta": -8.0,
+      "real_task_delta": -20.0,
+      "co_directional": true,
+      "synthetic_metric": "unblocked_narrative_claim_rate",
+      "real_task_metric": "governance_violation_rate",
+      "note": "synthetic is conservative lower bound of real effect"
+    }
+  }
+}

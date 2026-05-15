@@ -40,11 +40,31 @@ The AI governance mechanism is **not uniformly transferable** across repo types.
 Product/feature repos (evidence-bound claim enforcement) show stronger governance signal
 than tooling/infra repos (task acceptance rate governance).
 
+## Interpretation Boundary (REQUIRED — Do Not Overclaim)
+
+**mechanism_stable_candidate is harness-local and metric-bound.**
+
+The financial-pdf-reader result was determined using a synthetic harness metric
+(unblocked_narrative_claim_rate: deterministic ungoverned vs governed code path on
+synthetic claim sets). This is NOT equivalent to:
+- Cross-repo global mechanism robustness
+- Real-task AI session evidence
+- Multi-repo replication evidence
+
+Additional observation: arm-1 and arm-2 produced identical values across all seeds,
+meaning narrative_density_threshold=0.5 is not a detectable causal variable in the
+current harness. The arm-2 "pass" is mechanistically uninformative about the
+one-cause-one-fix probe; it reflects the same governed-vs-ungoverned delta.
+
+**External claim remains unchanged until real-task matched gate also passes:**
+→ "Current AI governance effect is observable but condition-dependent."
+
 ## Next Required Step (Per Protocol)
 
 Before global claim upgrade:
 - Run replication in a third repo (different from gl-electron-tool and financial-pdf-reader)
 - Candidate: ai-governance-framework repo itself
+- AND: matched real-task gate must pass (not just synthetic harness)
 
 ## Claim Boundary (Unchanged)
 
@@ -52,6 +72,6 @@ Allowed:
 - "Current AI governance effect is observable but condition-dependent."
 - "Strict-regime mechanism stability is not yet established across repos."
 
-STILL disallowed (until 3rd-repo replication):
+STILL disallowed (harness-local result is insufficient):
 - "Mechanism robustness confirmed"
 - "Generalized uplift proven"

@@ -1,0 +1,54 @@
+{
+  "run_id": "cr-fpr-real-task-arm-2-s350102",
+  "repo_id": "financial-pdf-reader",
+  "window_id": "ab-causal-cross-repo-fpr-real-task-2026-05-15",
+  "seed": "350102",
+  "arm_type": "one-cause-one-fix",
+  "task_slice": "cross-repo observation — real-task gate",
+  "injected_controls": {
+    "changed_variable": "narrative_density_threshold",
+    "changed_value": 0.5,
+    "rationale": "single-variable probe: stricter narrative threshold; all other governance unchanged"
+  },
+  "blind_review": true,
+  "completed": true,
+  "attempts_used": 1,
+  "outcome": {
+    "A_rate": 12.0,
+    "B_rate": 0.0,
+    "abs_delta": -12.0,
+    "rel_lift": -100.0,
+    "p_value": null,
+    "ci_95": null,
+    "direction": "A_gt_B"
+  },
+  "safety_placebo": {
+    "guardrail_reopen_rate": 0.0,
+    "guardrail_stability_degraded_rate": 0.0,
+    "guardrail_defect_rate": 0.0,
+    "placebo_claim_overreach_rate": 0.0,
+    "placebo_p_value": null
+  },
+  "causal_threat_probe": {
+    "recognizability_score": null,
+    "hidden_metric_exposure": "no",
+    "style_marker_presence_pre": null,
+    "style_marker_presence_post": null,
+    "exploration_breadth_proxy": null,
+    "review_window_size": null,
+    "fallback_route_policy": null,
+    "governance_mode": "real_task_violation_rate",
+    "ungoverned_violation_count": 6,
+    "governed_remaining_violations": 0
+  },
+  "primary_outcome_status": "pass",
+  "placebo_result": "not_applicable",
+  "guardrail_status": "pass",
+  "break_test_pass": true,
+  "run_label": "pass",
+  "policy_sensitive_pass": true,
+  "unsupported": false,
+  "metric_type": "real_task_violation_rate",
+  "one_line_interpretation": "cr-fpr-real-task-arm-2-s350102: label=pass; violations_ungoverned=6; violations_governed=0; A_rate=12.0; B_rate=0.0; abs_delta=-12.0.",
+  "mechanism_explanation": "real-task violations reduced from 6 to 0 by governance; abs_delta=-12.0 < -1.5"
+}
