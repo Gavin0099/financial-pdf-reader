@@ -40,3 +40,10 @@ ai-governance-framework/
 # Governance backups (timestamped, auto-generated)
 governance_backup_*/
 AGENTS_backup_*.md
+
+# Governance session closeout (transient — written by Claude, read by Stop hook, not committed)
+artifacts/session-closeout.txt
+# Runtime governance artifacts (auto-generated, not committed)
+artifacts/runtime/
+artifacts/candidates/
+artifacts/session-index.ndjson

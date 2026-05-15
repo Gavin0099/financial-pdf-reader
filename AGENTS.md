@@ -100,6 +100,30 @@ Capture what matters. Decisions, context, things to remember. Skip the secrets u
 - Use `scripts/closeout.ps1` to enforce this flow.
 - If any step fails, closeout fails (`exit 1`) and the task is not considered complete.
 
+### Session Closeout Obligation (Governance — Required)
+
+Writing `artifacts/session-closeout.txt` before session end is a **governance obligation**.
+
+The Stop hook calls `session_closeout_entry.py` at session end. If this file is missing or vague, memory will NOT be automatically updated (`memory_write_performed: false`). The gap is auditable.
+
+**Write this file at the end of every session** (before the session terminates):
+
+```
+TASK_INTENT: <one sentence — declared goal of this session>
+WORK_COMPLETED: <what was actually done — verifiable claims only>
+FILES_TOUCHED: <comma-separated file list, or NONE>
+CHECKS_RUN: <specific commands or checks run, or NONE>
+OPEN_RISKS: <what might be wrong or incomplete, or NONE>
+NOT_DONE: <what was not completed this session, or NONE>
+RECOMMENDED_MEMORY_UPDATE: <what memory/ file should change and why, or NO_UPDATE>
+```
+
+Rules:
+- `WORK_COMPLETED` must name a file (`word.ext`) or tool — "made improvements" is rejected as vague
+- `CHECKS_RUN` must name specific commands, or write `NONE`
+- If no material progress: write `WORK_COMPLETED: NONE`, explain in `OPEN_RISKS`
+- Do not omit failures — `NOT_DONE` and `OPEN_RISKS` are the most important fields
+
 ## Safety
 
 - Don't exfiltrate private data. Ever.
