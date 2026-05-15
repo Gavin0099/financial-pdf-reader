@@ -154,6 +154,7 @@ input[type="file"] { padding: 6px; cursor: pointer; }
 .fwd-tag { font-size: 0.62rem; font-weight: 600; color: #fff; background: #f97316; border-radius: 3px; padding: 1px 5px; }
 /* Rhetorical risk tag */
 .rhet-tag { font-size: 0.62rem; font-weight: 600; color: #7c2d12; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 3px; padding: 1px 5px; cursor: help; }
+.attr-prefix { font-style: italic; color: #6b7280; font-size: 0.9em; margin-right: 2px; }
 
 /* Source-type badge colours */
 .b-amber  { background:#fef3c7; color:#92400e; }
@@ -699,7 +700,8 @@ function renderClaim(c, isContaminated=false) {
   const evId = 'ev-'+c.claim_id;
   const edInfo = EVIDENCE_DISTANCE[c.claim_level] || { label: c.claim_level, cls: 'ed-insuf' };
   // Lower rhetorical confidence for interpretation/hypothesis
-  const claimText = isInterp ? `可能需要檢查：${c.claim}` : c.claim;
+  const attrPfx = c.attribution_prefix ? `<span class="attr-prefix">${c.attribution_prefix}</span>` : '';
+  const claimText = isInterp ? `可能需要檢查：${attrPfx}${c.claim}` : `${attrPfx}${c.claim}`;
   const stBadge = c.source_type && SOURCE_TYPE_BADGE[c.source_type]
     ? badge(SOURCE_TYPE_BADGE[c.source_type][0], SOURCE_TYPE_BADGE[c.source_type][1])
     : '';

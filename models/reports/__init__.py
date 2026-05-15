@@ -80,6 +80,7 @@ class AIClaim(EmbeddedDocument):
     forward_looking = BooleanField(default=False)  # True = 描述未來預期/計畫（自動 requires_human_review）
     rhetorical_risk_flag = BooleanField(default=False)   # strategic/management claims 含高確信語氣詞
     rhetorical_risk_terms = ListField(StringField())     # 命中的語氣詞列表
+    attribution_prefix = StringField(default="")         # 引述層前綴："公司宣稱：" / "管理層表示：" / ""
     evidence = ListField(EmbeddedDocumentField(ClaimEvidence))
     confidence = StringField(
         choices=["high", "medium", "low"],

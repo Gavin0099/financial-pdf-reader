@@ -116,6 +116,13 @@ def _parse_claims(raw_json: dict, document_id: str, temporal_consistent: bool) -
                 rhetorical_risk_flag = True
                 rhetorical_risk_terms = hits
 
+        # Quotation layer: attribution prefix for narrative source types (fail-closed, service-enforced)
+        _ATTRIBUTION_MAP = {
+            "strategic_narrative": "公司宣稱：",
+            "management_expectation": "管理層表示：",
+        }
+        attribution_prefix = _ATTRIBUTION_MAP.get(source_type, "")
+
         claims.append(
             AIClaim(
                 claim_id=item.get("claim_id", str(uuid.uuid4())),
@@ -130,6 +137,7 @@ def _parse_claims(raw_json: dict, document_id: str, temporal_consistent: bool) -
                 forward_looking=forward_looking,
                 rhetorical_risk_flag=rhetorical_risk_flag,
                 rhetorical_risk_terms=rhetorical_risk_terms,
+                attribution_prefix=attribution_prefix,
                 evidence=evidence_list,
                 confidence=confidence,
                 requires_human_review=requires_human_review,
@@ -277,6 +285,7 @@ def generate_summary(document_id: str) -> dict:
                 "forward_looking": c.forward_looking,
                 "rhetorical_risk_flag": c.rhetorical_risk_flag,
                 "rhetorical_risk_terms": list(c.rhetorical_risk_terms),
+                "attribution_prefix": c.attribution_prefix,
                 "confidence": c.confidence,
                 "requires_human_review": c.requires_human_review,
                 "evidence": [
