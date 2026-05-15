@@ -1,0 +1,44 @@
+{
+  "as_of": "2026-05-15",
+  "repo_id": "financial-pdf-reader",
+  "slice": "r48c-transfer-smoke-equivalence",
+  "freeze_compatible": true,
+  "topologies": {
+    "financial_evidence": {
+      "attribution_prefix": "",
+      "claim_level_changed": false,
+      "confidence_changed": false,
+      "expected_no_intervention": true,
+      "pass": true,
+      "topology_note": "financial_evidence: no attribution, no downgrade, no cap"
+    },
+    "operational_evidence": {
+      "attribution_prefix": "",
+      "claim_level_changed": false,
+      "confidence_changed": false,
+      "expected_no_intervention": true,
+      "pass": true,
+      "topology_note": "operational_evidence: no attribution, no downgrade, no cap"
+    },
+    "strategic_narrative": {
+      "attribution_prefix": "公司宣稱：",
+      "attribution_applied": true,
+      "pass": true,
+      "topology_note": "strategic_narrative: attribution_prefix='公司宣稱：' applied"
+    },
+    "management_expectation": {
+      "attribution_prefix": "管理層表示：",
+      "confidence_before": "high",
+      "confidence_after": "medium",
+      "attribution_applied": true,
+      "confidence_capped": true,
+      "pass": true,
+      "topology_note": "management_expectation: attribution + confidence cap both applied"
+    }
+  },
+  "detectable": true,
+  "unsupported_count": 0,
+  "decision": "pass",
+  "topology_differentiation": "governance rules are source_type-specific: financial/operational=no-intervention; narrative=attribution; management=attribution+confidence-cap",
+  "claim_boundary": "Current AI governance effect is observable but condition-dependent."
+}

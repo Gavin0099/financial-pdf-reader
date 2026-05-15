@@ -1,0 +1,52 @@
+{
+  "as_of": "2026-05-15",
+  "repo_id": "financial-pdf-reader",
+  "slice": "r48b-negative-path-equivalence",
+  "freeze_compatible": true,
+  "checks": {
+    "V1_observed_fact_downgrade": {
+      "input_claim_level": "observed_fact",
+      "governed_claim_level": "interpretation",
+      "pass": true,
+      "reason_code": "source_type=narrative cannot assert observed_fact → downgraded"
+    },
+    "V2_confidence_cap": {
+      "input_confidence": "high",
+      "governed_confidence": "medium",
+      "pass": true,
+      "reason_code": "management_expectation confidence capped to medium"
+    },
+    "V3_forward_looking_detect": {
+      "input_forward_looking": false,
+      "governed_forward_looking": true,
+      "pass": true,
+      "reason_code": "forward_looking keyword auto-detected ('預計')"
+    },
+    "V4_rhetorical_flag": {
+      "input_requires_review": false,
+      "governed_requires_review": false,
+      "governed_rhetorical_flag": true,
+      "pass": true,
+      "reason_code": "rhetorical phrase '明顯' detected → rhetorical_risk_flag=True"
+    },
+    "V5_attribution_required": {
+      "input_attribution": "",
+      "governed_attribution": "公司宣稱：",
+      "pass": true,
+      "reason_code": "strategic_narrative → attribution_prefix='公司宣稱：' applied"
+    }
+  },
+  "fail_closed": {
+    "ungoverned_count": 5,
+    "expected": 5,
+    "pass": true
+  },
+  "replay_determinism": {
+    "run1_attribution": "公司宣稱：",
+    "run2_attribution": "公司宣稱：",
+    "pass": true
+  },
+  "unsupported_count": 0,
+  "decision": "pass",
+  "claim_boundary": "Current AI governance effect is observable but condition-dependent."
+}
