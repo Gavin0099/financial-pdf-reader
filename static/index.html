@@ -180,6 +180,26 @@ input[type="file"] { padding: 6px; cursor: pointer; }
 .mini-stats { display: flex; gap: 16px; padding: 10px 0 14px; flex-wrap: wrap; }
 .ms-item .ms-n { font-size: 1.3rem; font-weight: 800; color: #1a1a2e; line-height: 1; }
 .ms-item .ms-l { font-size: 0.65rem; color: #94a3b8; margin-top: 1px; text-transform: uppercase; letter-spacing: .04em; }
+.fr-section { margin: 16px 0 18px; }
+.fr-title { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: #64748b; font-weight: 700; margin-bottom: 8px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.kpi-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; }
+.kpi-label { font-size: .68rem; color: #64748b; margin-bottom: 5px; }
+.kpi-value { font-size: .95rem; font-weight: 700; color: #0f172a; }
+.kpi-delta { font-size: .78rem; margin-top: 3px; font-weight: 700; }
+.delta-up { color: #b91c1c; }
+.delta-down { color: #b91c1c; }
+.delta-flat { color: #0f766e; }
+.kpi-impact { font-size: .68rem; color: #64748b; margin-top: 4px; }
+.flow-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; }
+.flow-step { font-size: .8rem; color: #1e293b; }
+.flow-arrow { color: #94a3b8; margin: 4px 0; }
+.adjust-grid { display: grid; gap: 8px; }
+.adjust-card { background: #fff7ed; border: 1px solid #fdba74; border-radius: 8px; padding: 10px 12px; }
+.adjust-title { font-size: .78rem; color: #9a3412; font-weight: 700; margin-bottom: 4px; }
+.risk-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+.risk-table th,.risk-table td { text-align: left; padding: 8px 10px; font-size: .78rem; border-bottom: 1px solid #f1f5f9; }
+.risk-table th { background: #f8fafc; color: #64748b; font-weight: 700; }
 
 /* ════════════════════════════════════════
    COVERAGE MATRIX
@@ -511,108 +531,129 @@ function renderResults(data) {
   const claims = data.claims || [];
   const cleanClaims = claims.filter(c => !c.contaminated);
   const contaminatedClaims = claims.filter(c => c.contaminated);
-  // KEY FINDINGS: tier_a + fact/metric only — interpretations excluded
   const tierA = cleanClaims.filter(c => c.materiality === 'tier_a');
   const keyFindings = tierA.filter(c => c.claim_level === 'observed_fact' || c.claim_level === 'derived_metric');
   const reviewCount = cleanClaims.filter(c => c.requires_human_review).length;
 
-  /* ── Governance badges ── */
-  const advBadge = data.investment_advice_detected
-    ? badge('b-red','⚠ 投資建議語言')
-    : badge('b-green','✓ 無投資建議');
-  const evBadge = {complete:badge('b-green','evidence 完整'),partial:badge('b-amber','evidence 部分'),insufficient:badge('b-red','evidence 不足')}[data.evidence_status]||'';
+  const advBadge = data.investment_advice_detected ? badge('b-red','advice-risk') : badge('b-green','no-advice');
+  const evBadge = {complete:badge('b-green','evidence-complete'),partial:badge('b-amber','evidence-partial'),insufficient:badge('b-red','evidence-insufficient')}[data.evidence_status]||'';
+
+  const byLv = {};
+  cleanClaims.forEach(c=>{ byLv[c.claim_level]=(byLv[c.claim_level]||0)+1; });
+  const evidenceCoverage = cleanClaims.length
+    ? Math.round((cleanClaims.filter(c => (c.evidence||[]).length > 0).length / cleanClaims.length) * 100)
+    : 0;
+  const confidence = reviewCount === 0 ? 'High' : (reviewCount <= 2 ? 'Medium' : 'Low');
+  const dashboard = data.dashboard || {};
+  const contractValid = data.dashboard_contract_valid !== false;
 
   let html = `
     <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:2px solid #e2e8f0;margin-bottom:14px;">
       <span class="report-title">${data.stock_id||''} ${data.period||''}</span>
       ${evBadge} ${advBadge}
-      ${reviewCount>0?badge('b-amber',`⚠ ${reviewCount} 需人工審查`):''}
+      ${reviewCount>0?badge('b-amber',`${reviewCount} review-required`):''}
     </div>`;
 
-  /* ── Temporal Banner ── */
+  if (data.dashboard_contract_valid === false) {
+    html += `<div class="alert alert-error" style="margin-bottom:12px;">Dashboard contract invalid: ${(data.dashboard_contract_errors||[]).join(', ')}</div>`;
+  }
+
   if (!data.temporal_consistent) {
     html += `<div class="temporal-banner">
-      <div class="t-title">⚠️ 時間軸不一致 — 分析結果部分無效</div>
+      <div class="t-title">Temporal mismatch detected</div>
       <div class="t-body">
-        要求期間：<b>${data.requested_period}</b>　文件實際期間：<b>${data.document_period}</b><br>
+        Requested period: <b>${data.requested_period||''}</b> / Document period: <b>${data.document_period||''}</b><br>
         ${data.temporal_note||''}
-        ${contaminatedClaims.length?`<br><span style="color:#b45309">${contaminatedClaims.length} 條 derived_metric / interpretation 已標記為 contaminated，顯示於各分頁底部</span>`:''}
+        ${contaminatedClaims.length?`<br><span style="color:#b45309">${contaminatedClaims.length} contaminated claims hidden from primary layer.</span>`:''}
       </div>
     </div>`;
   }
 
-  /* ── Mini stats ── */
-  const byLv = {};
-  cleanClaims.forEach(c=>{ byLv[c.claim_level]=(byLv[c.claim_level]||0)+1; });
   html += `<div class="mini-stats">
-    <div class="ms-item"><div class="ms-n">${cleanClaims.length}</div><div class="ms-l">觀察數</div></div>
+    <div class="ms-item"><div class="ms-n">${cleanClaims.length}</div><div class="ms-l">Claims</div></div>
     <div class="ms-item"><div class="ms-n">${tierA.length}</div><div class="ms-l">Tier A</div></div>
-    <div class="ms-item"><div class="ms-n">${byLv.observed_fact||0}</div><div class="ms-l">直接事實</div></div>
-    <div class="ms-item"><div class="ms-n">${byLv.derived_metric||0}</div><div class="ms-l">衍生指標</div></div>
-    <div class="ms-item"><div class="ms-n">${byLv.interpretation||0}</div><div class="ms-l">詮釋</div></div>
+    <div class="ms-item"><div class="ms-n">${byLv.observed_fact||0}</div><div class="ms-l">Facts</div></div>
+    <div class="ms-item"><div class="ms-n">${byLv.derived_metric||0}</div><div class="ms-l">Derived</div></div>
+    <div class="ms-item"><div class="ms-n">${byLv.interpretation||0}</div><div class="ms-l">Interpretation</div></div>
   </div>`;
 
-  /* ── Narrative Density Banner ── */
-  if (data.narrative_flag) {
-    const cntPct  = Math.round((data.narrative_density_score||0) * 100);
-    const textPct = Math.round((data.narrative_density_weighted_score||0) * 100);
-    html += `<div class="narrative-banner">
-      <span class="narrative-banner-icon">⚠️</span>
-      <div>
-        <strong>戰略敘事密度高：claim 數 ${cntPct}%，文字占比 ${textPct}%</strong><br>
-        <span>本報告中戰略敘事與管理展望類 claims 佔比超過 60%，直接財務 evidence 相對不足。建議對比財報數字後再使用 AI 分析結論。</span>
-      </div>
-    </div>`;
+  if (contractValid) {
+    html += `<div class="exec-card"><div class="ec-label">Financial Dashboard</div><div class="ec-text">${data.executive_summary||''}</div></div>`;
+
+    const whatChanged = dashboard.what_changed || [];
+    const kpi = whatChanged.map(item => {
+      const deltaText = item.delta_pct===null || item.delta_pct===undefined ? 'n/a' : `${item.delta_pct > 0 ? '+' : ''}${item.delta_pct}`;
+      const dirText = item.direction === 'up' ? '↑' : item.direction === 'down' ? '↓' : '→';
+      const cls = item.direction === 'up' ? 'delta-up' : item.direction === 'down' ? 'delta-down' : 'delta-flat';
+    return {
+      label: item.label || item.metric_id,
+      value: deltaText,
+      delta: `${dirText} ${item.direction || 'flat'}`,
+      cls,
+        impact: item.impact || 'medium',
+        claimText: item.claim_text || '',
+      };
+    });
+
+  html += `<div class="fr-section"><div class="fr-title">What Changed</div><div class="kpi-grid">`;
+  kpi.forEach(item => {
+    html += `<div class="kpi-card"><div class="kpi-label">${item.label}</div><div class="kpi-value">${item.value}</div><div class="kpi-delta ${item.cls}">${item.delta}</div><div class="kpi-impact">Impact: ${item.impact}</div>${item.claimText?`<div style="font-size:.7rem;color:#475569;margin-top:4px;">${item.claimText}</div>`:''}</div>`;
+  });
+  html += `</div></div>`;
+
+    const chain = dashboard.causal_edges || [];
+    html += `<div class="fr-section"><div class="fr-title">Why It Changed</div><div class="flow-box">`;
+    if (chain.length) {
+      chain.forEach((node, idx) => {
+        html += `<div class="flow-step">${node.source_metric} → ${node.target_metric} (${node.relation})</div>`;
+        if (idx < chain.length - 1) html += `<div class="flow-arrow">↓</div>`;
+      });
+    }
+    html += `</div></div>`;
+
+    const adjustments = dashboard.adjustments || [];
+    if (adjustments.length > 0) {
+    html += `<div class="fr-section"><div class="fr-title">Adjustments</div><div class="adjust-grid">`;
+    adjustments.slice(0,4).forEach(c => {
+      html += `<div class="adjust-card"><div class="adjust-title">Non-recurring adjustment</div><div style="font-size:.8rem;line-height:1.5;color:#7c2d12;">${c.claim}</div><div style="margin-top:6px;">${badge('b-red','recurring=false')} ${c.requires_human_review?badge('b-amber','review'):''}</div></div>`;
+    });
+    html += `</div></div>`;
   }
 
-  /* ── Executive Summary ── */
-  if (data.executive_summary) {
-    const claimMix = [
-      byLv.observed_fact   ? `${byLv.observed_fact} 條直接事實`   : '',
-      byLv.derived_metric  ? `${byLv.derived_metric} 條衍生指標`  : '',
-      byLv.interpretation  ? `${byLv.interpretation} 條詮釋`      : '',
-    ].filter(Boolean).join('、');
-    const reviewNote = reviewCount > 0 ? `其中 <b>${reviewCount} 條</b>需人工審查。` : '';
-    html += `<div class="exec-card">
-      <div class="ec-label">Executive Summary</div>
-      <div class="ec-text">${data.executive_summary}</div>
-      <div style="margin-top:12px;padding-top:10px;border-top:1px solid #334155;font-size:.75rem;color:#64748b;line-height:1.6;">
-        本摘要基於 <b style="color:#94a3b8">${claimMix}</b>。${reviewNote}
-      </div>
-    </div>`;
+    const riskRows = dashboard.risk_surface || [];
+    html += `<div class="fr-section"><div class="fr-title">Risk Surface</div>
+    <table class="risk-table">
+      <tr><th>Risk</th><th>Level</th><th>Trend</th><th>Reason</th></tr>
+      ${riskRows.map(r => `<tr><td>${r.label}</td><td>${r.severity}</td><td>${r.trend}</td><td>${r.severity_reason || ''}</td></tr>`).join('')}
+    </table>
+  </div>`;
+
+    const tr = dashboard.transparency || {};
+    html += `<div class="fr-section"><div class="fr-title">AI Transparency</div><div class="flow-box">
+    ${badge(confidence==='High'?'b-green':'b-amber',`confidence ${confidence}`)}
+    ${badge('b-blue',`evidence ${tr.evidence_coverage_pct ?? evidenceCoverage}%`)}
+    ${badge((tr.human_review_count ?? reviewCount)>0?'b-red':'b-green',`human review ${tr.human_review_count ?? reviewCount}`)}
+    ${(tr.narrative_flag ?? data.narrative_flag)?`<div style="margin-top:8px;font-size:.74rem;color:#92400e;">narrative density ${tr.narrative_density_score ?? data.narrative_density_score} / weighted ${tr.narrative_density_weighted_score ?? data.narrative_density_weighted_score}</div>`:''}
+  </div></div>`;
   }
 
-  /* ── Key Findings (tier_a + fact/metric only, no interpretations) ── */
   if (keyFindings.length > 0) {
-    const interpExcluded = tierA.length - keyFindings.length;
-    html += `<div class="kf-section">
-      <div class="kf-label">⚡ Key Findings
-        <span style="font-weight:400;color:#9ca3af;">（Tier A · 直接事實 + 衍生指標）</span>
-        ${interpExcluded>0?`<span style="font-weight:400;color:#f59e0b;font-size:.65rem;margin-left:4px;">${interpExcluded} 條詮釋已移至分頁</span>`:''}
-      </div>
-      <div class="kf-grid">`;
-    const KF_MAX = 4;
-    const kfHidden = keyFindings.length - KF_MAX;
-    keyFindings.slice(0, KF_MAX).forEach(c => {
+    html += `<div class="kf-section"><div class="kf-label">Raw Evidence (Tier A)</div><div class="kf-grid">`;
+    keyFindings.slice(0,4).forEach(c => {
       const kfc = KF_CLASS[c.claim_level] || 'kf-derived';
       const pages = (c.evidence||[]).map(e=>`P.${e.page}`).join(' ');
       html += `<div class="kf-card ${kfc}">
-        ${!c.recurring?'<span class="kf-nonrecurring">一次性</span>':''}
+        ${!c.recurring?'<span class="kf-nonrecurring">one-off</span>':''}
         <div class="kf-text">${c.claim}</div>
         <div class="kf-meta">
           ${badge(LEVEL_BADGE[c.claim_level]?.[0]||'b-gray', LEVEL_BADGE[c.claim_level]?.[1]||c.claim_level)}
           ${pages?`<span class="kf-page">${pages}</span>`:''}
-          ${c.requires_human_review?badge('b-red','需審查'):''}
+          ${c.requires_human_review?badge('b-red','review'):''}
         </div>
       </div>`;
     });
-    if (kfHidden > 0) {
-      html += `<div style="font-size:.72rem;color:#64748b;padding:4px 2px;">+${kfHidden} 條請見下方分頁</div>`;
-    }
     html += `</div></div>`;
   }
-
-  /* ── Group claims by section ── */
 
   const grouped = {};
   SECTION_ORDER.forEach(k => grouped[k]=[]);
@@ -623,7 +664,7 @@ function renderResults(data) {
   });
   SECTION_ORDER.forEach(k => grouped[k].sort((a,b)=>(TIER_ORDER[a.materiality]||1)-(TIER_ORDER[b.materiality]||1)));
 
-  /* ── Tabs ── */
+  html += `<div class="fr-section"><div class="fr-title">Evidence Explorer</div>`;
   html += `<div class="tabs" id="tabs-row">`;
   SECTION_ORDER.forEach((k,i) => {
     const m = SECTION_META[k];
@@ -635,13 +676,11 @@ function renderResults(data) {
   });
   html += `</div>`;
 
-  /* ── Claims panes ── */
   SECTION_ORDER.forEach((k,i) => {
     const sectionClaims = grouped[k];
     const sectionContam = contaminatedClaims.filter(c=>c.section_key===k);
     if (sectionClaims.length===0 && sectionContam.length===0) return;
 
-    /* Phase 10A: separate primary evidence from AI interpretations */
     const factClaims = sectionClaims.filter(c =>
       c.claim_level === 'observed_fact' ||
       c.claim_level === 'derived_metric' ||
@@ -652,43 +691,34 @@ function renderResults(data) {
     );
 
     html += `<div class="claims-pane${i===0?' active':''}" id="pane-${k}">`;
-
-    /* Primary: direct evidence only */
     factClaims.forEach(c => { html += renderClaim(c); });
     if (factClaims.length === 0 && interpClaims.length > 0) {
-      html += `<div style="font-size:.8rem;color:#94a3b8;padding:8px 4px;font-style:italic;">本節無直接事實揭露</div>`;
+      html += `<div style="font-size:.8rem;color:#94a3b8;padding:8px 4px;font-style:italic;">No direct evidence claims in this section.</div>`;
     }
 
-    /* AI interpretations: collapsed by default */
     if (interpClaims.length > 0) {
-      html += `<button class="interp-toggle" onclick="toggleInterp('interp-${k}')">
-        🧠 AI 假設與詮釋（${interpClaims.length} 條）— 展開確認
-      </button>
+      html += `<button class="interp-toggle" onclick="toggleInterp('interp-${k}')">AI interpretations (${interpClaims.length})</button>
       <div class="interp-section" id="interp-${k}">
-        <div class="interp-disclaimer">以下為 AI 詮釋，非財報直接事實。請結合原文查證後使用，不得單獨引用。</div>`;
+        <div class="interp-disclaimer">Interpretation claims are not direct facts. Confirm with evidence lines before use.</div>`;
       interpClaims.forEach(c => { html += renderClaim(c); });
       html += `</div>`;
     }
 
-    /* Contaminated section (collapsed by default) */
     if (sectionContam.length > 0) {
-      html += `<button class="contaminated-toggle" onclick="toggleContam('contam-${k}')">
-        ▶ 顯示 ${sectionContam.length} 條已污染觀察（時間軸不一致）
-      </button>
+      html += `<button class="contaminated-toggle" onclick="toggleContam('contam-${k}')">Contaminated claims (${sectionContam.length})</button>
       <div class="contaminated-section" id="contam-${k}">`;
       sectionContam.forEach(c => { html += renderClaim(c, true); });
       html += `</div>`;
     }
     html += `</div>`;
   });
+  html += `</div>`;
 
   document.getElementById('results-body').innerHTML = html;
 
-  /* Activate first non-empty tab */
   const firstTab = SECTION_ORDER.find(k => (grouped[k].length + contaminatedClaims.filter(c=>c.section_key===k).length) > 0);
   if (firstTab) switchTab(firstTab);
 }
-
 function renderClaim(c, isContaminated=false) {
   const lvCls = isContaminated ? 'lv-insuf' : (LEVEL_CLASS[c.claim_level]||'lv-insuf');
   const [bCls, bLabel] = LEVEL_BADGE[c.claim_level] || ['b-gray', c.claim_level];

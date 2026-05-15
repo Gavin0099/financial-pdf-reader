@@ -227,3 +227,10 @@
 | FinMind | 月營收、財務報表 | TWSE/MOPS 公開資料彙整 | 免費版每小時 600 次 |
 | TWSE | 即時/歷史行情 | 政府公開資料 | 直接抓需遵守條款 |
 | MOPS（公開資訊觀測站）| 財報原始文件 | 政府公開資料 | PDF 需人工上傳 |
+## Fix HTTP 500 / ValidationError / ROC year bugs; implement Phase 11A Output Completeness Rules (OC-1/OC-2); fix session auto-memory pipeline
+- Captured: 2026-05-15T10:24:11.611912+00:00
+- Approved by: governance-auto
+- Risk: low
+- Oversight: auto
+- Summary: Fix HTTP 500 / ValidationError / ROC year bugs; implement Phase 11A Output Completeness Rules (OC-1/OC-2); fix session auto-memory pipeline
+

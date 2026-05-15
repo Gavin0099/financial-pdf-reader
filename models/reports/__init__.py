@@ -175,6 +175,9 @@ class AIReport(Document):
     )
     investment_advice_detected = BooleanField(default=False)
     completeness_warnings = ListField(StringField(), default=list)  # OC-1/OC-2 post-processing flags
+    dashboard = DictField(default=dict)
+    dashboard_contract_valid = BooleanField(default=False)
+    dashboard_contract_errors = ListField(StringField(), default=list)
     created_at = DateTimeField(default=lambda: datetime.now(timezone.utc))
 
     meta = {

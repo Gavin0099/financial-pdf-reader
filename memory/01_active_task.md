@@ -150,3 +150,4 @@
 - Phase 10E：Quotation-layer（「公司宣稱 X」≠「X 成立」）
 - DiffReport R6 audit endpoint（選做）
 - Auth wiring（auth/ 已有骨架但未接入 router）
+- [x] Promoted memory: Fix HTTP 500 / ValidationError / ROC year bugs; implement Phase 11A Output Completeness Rules (OC-1/OC-2); fix session auto-memory pipeline

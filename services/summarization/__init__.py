@@ -14,6 +14,7 @@ Evidence discipline：
 - contaminated=True 的 claim 不納入 evidence_status 計算
 """
 import json
+import re
 import uuid
 
 import anthropic
@@ -21,12 +22,31 @@ import anthropic
 from config.config import AnthropicConfig
 from models.documents import PDFDocument, PDFChunk
 from models.reports import AIReport, AIClaim, ClaimEvidence
+from services.dashboard_contract import (
+    DASHBOARD_CONTRACT_VERSION,
+    METRIC_TYPE,
+    TREND_ENUM,
+    serialize_summary_response,
+    validate_dashboard_contract_v1,
+)
 from prompts import (
     EVIDENCE_BOUND_SUMMARY_PROMPT, INVESTMENT_ADVICE_GUARD_PHRASES,
     INDUSTRY_SUPPLEMENTS, RHETORICAL_RISK_PHRASES, FORWARD_LOOKING_INDICATOR_PHRASES,
 )
 
 _client = None
+
+
+_METRIC_REGISTRY = {
+    "revenue": ["營收", "收入", "revenue"],
+    "gross_margin": ["毛利率", "gross margin"],
+    "operating_income": ["營業利益", "operating income", "營業淨利"],
+    "eps": ["eps", "每股盈餘", "每股"],
+    "cash": ["現金", "cash"],
+    "debt": ["負債", "借款", "debt"],
+    "fx": ["匯率", "匯兌", "fx"],
+    "customer_concentration": ["客戶集中", "單一客戶", "concentration"],
+}
 
 
 def _get_client() -> anthropic.Anthropic:
@@ -231,6 +251,208 @@ def _parse_claims(raw_json: dict, document_id: str, temporal_consistent: bool) -
     return claims
 
 
+def _match_metric(claim_text: str) -> str | None:
+    lower = (claim_text or "").lower()
+    for metric, keywords in _METRIC_REGISTRY.items():
+        if any(kw.lower() in lower for kw in keywords):
+            return metric
+    return None
+
+
+def _extract_delta(claim_text: str) -> float | None:
+    if not claim_text:
+        return None
+    m = re.search(r"([+-]?\d+(?:\.\d+)?)\s*(pp|%)", claim_text.lower())
+    if not m:
+        return None
+    try:
+        val = float(m.group(1))
+    except ValueError:
+        return None
+    if "下降" in claim_text or "減少" in claim_text or "drop" in claim_text.lower() or "down" in claim_text.lower():
+        val = -abs(val)
+    elif "增加" in claim_text or "成長" in claim_text or "up" in claim_text.lower():
+        val = abs(val)
+    return val
+
+
+def _direction_from_text(claim_text: str, delta: float | None) -> str:
+    if delta is not None:
+        if delta > 0:
+            return "up"
+        if delta < 0:
+            return "down"
+        return "flat"
+    lower = (claim_text or "").lower()
+    if any(x in lower for x in ["下降", "減少", "衰退", "drop", "down"]):
+        return "down"
+    if any(x in lower for x in ["增加", "成長", "提升", "up", "increase"]):
+        return "up"
+    return "flat"
+
+
+def _build_dashboard_payload(
+    clean_claims: list[AIClaim],
+    all_claims: list[AIClaim],
+    temporal_consistent: bool,
+    narrative_flag: bool,
+    narrative_density_score: float,
+    narrative_density_weighted_score: float,
+) -> dict:
+    metrics: dict[str, dict] = {}
+    for c in clean_claims:
+        metric = _match_metric(c.claim)
+        if not metric:
+            continue
+        delta = _extract_delta(c.claim)
+        direction = _direction_from_text(c.claim, delta)
+        priority = {"tier_a": 3, "tier_b": 2, "tier_c": 1}.get(c.materiality, 1)
+        current = metrics.get(metric)
+        if current and current["priority"] > priority:
+            continue
+        metrics[metric] = {
+            "metric_id": metric,
+            "metric_type": METRIC_TYPE.get(metric, "other"),
+            "label": metric.replace("_", " ").title(),
+            "direction": direction,
+            "delta_pct": delta,
+            "evidence_claim_ids": [c.claim_id],
+            "priority": priority,
+            "claim_text": c.claim,
+            "confidence": c.confidence,
+        }
+
+    what_changed = []
+    for key in ["revenue", "gross_margin", "operating_income", "eps", "cash"]:
+        if key in metrics:
+            m = metrics[key]
+            what_changed.append(
+                {
+                    "metric": m["metric"],
+                    "metric_id": m["metric_id"],
+                    "metric_type": m["metric_type"],
+                    "label": m["label"],
+                    "direction": m["direction"],
+                    "delta_pct": m["delta_pct"],
+                    "evidence_claim_ids": m["evidence_claim_ids"],
+                    "impact": "high" if key in {"gross_margin", "operating_income", "eps"} else "medium",
+                    "claim_text": m["claim_text"],
+                    "confidence": m["confidence"],
+                }
+            )
+
+    causal_edges = []
+    if "revenue" in metrics and "gross_margin" in metrics:
+        causal_edges.append(
+            {
+                "source_metric": "revenue",
+                "target_metric": "gross_margin",
+                "relation": "positive_driver",
+                "confidence": "medium",
+                "evidence_claim_ids": metrics["revenue"]["evidence_claim_ids"] + metrics["gross_margin"]["evidence_claim_ids"],
+            }
+        )
+    if "gross_margin" in metrics and "operating_income" in metrics:
+        causal_edges.append(
+            {
+                "source_metric": "gross_margin",
+                "target_metric": "operating_income",
+                "relation": "positive_driver",
+                "confidence": "high",
+                "evidence_claim_ids": metrics["gross_margin"]["evidence_claim_ids"] + metrics["operating_income"]["evidence_claim_ids"],
+            }
+        )
+    if "operating_income" in metrics and "eps" in metrics:
+        causal_edges.append(
+            {
+                "source_metric": "operating_income",
+                "target_metric": "eps",
+                "relation": "positive_driver",
+                "confidence": "high",
+                "evidence_claim_ids": metrics["operating_income"]["evidence_claim_ids"] + metrics["eps"]["evidence_claim_ids"],
+            }
+        )
+
+    adjustments = [
+        {
+            "claim_id": c.claim_id,
+            "claim": c.claim,
+            "metric_id": _match_metric(c.claim),
+            "evidence_claim_ids": [c.claim_id],
+            "requires_human_review": bool(c.requires_human_review),
+            "comparability": "low",
+        }
+        for c in clean_claims
+        if not c.recurring
+    ]
+
+    gross_margin_drop = next((abs(w["delta_pct"]) for w in what_changed if w["metric_id"] == "gross_margin" and w["delta_pct"] is not None and w["delta_pct"] < 0), 0.0)
+    cash_claims = [c for c in clean_claims if _match_metric(c.claim) == "cash"]
+    fx_claims = [c for c in clean_claims if _match_metric(c.claim) == "fx"]
+    concentration_claims = [c for c in clean_claims if _match_metric(c.claim) == "customer_concentration"]
+
+    risk_surface = [
+        {
+            "risk_id": "customer_concentration",
+            "label": "Customer concentration",
+            "severity": "high" if concentration_claims else "medium",
+            "severity_reason": "customer_concentration_claim_present" if concentration_claims else "no_explicit_ratio_claim",
+            "trend": "up" if concentration_claims else "flat",
+            "evidence_claim_ids": [c.claim_id for c in concentration_claims[:3]],
+            "rule_id": "RISK-CUST-001",
+        },
+        {
+            "risk_id": "margin_pressure",
+            "label": "Margin pressure",
+            "severity": "high" if gross_margin_drop >= 10 else ("medium" if gross_margin_drop >= 5 else "low"),
+            "severity_reason": f"gross_margin_drop_pp={gross_margin_drop}",
+            "trend": "up" if gross_margin_drop > 0 else "flat",
+            "evidence_claim_ids": [m["evidence_claim_ids"][0] for m in what_changed if m["metric_id"] == "gross_margin"],
+            "rule_id": "RISK-MARGIN-010PP",
+        },
+        {
+            "risk_id": "liquidity",
+            "label": "Liquidity pressure",
+            "severity": "medium" if (not cash_claims) else "low",
+            "severity_reason": "cash_claim_missing" if not cash_claims else "cash_claim_present",
+            "trend": "up" if not cash_claims else "flat",
+            "evidence_claim_ids": [c.claim_id for c in cash_claims[:3]],
+            "rule_id": "RISK-LIQ-001",
+        },
+        {
+            "risk_id": "fx_exposure",
+            "label": "FX exposure",
+            "severity": "medium" if fx_claims else "low",
+            "severity_reason": "fx_claim_present" if fx_claims else "fx_claim_missing",
+            "trend": "up" if fx_claims else "flat",
+            "evidence_claim_ids": [c.claim_id for c in fx_claims[:3]],
+            "rule_id": "RISK-FX-001",
+        },
+    ]
+
+    contaminated_count = sum(1 for c in all_claims if c.contaminated)
+    transparency = {
+        "evidence_coverage_pct": round((sum(1 for c in clean_claims if c.evidence) / len(clean_claims)) * 100, 1) if clean_claims else 0.0,
+        "temporal_consistent": temporal_consistent,
+        "non_recurring_count": len(adjustments),
+        "contaminated_count": contaminated_count,
+        "narrative_density_score": narrative_density_score,
+        "narrative_density_weighted_score": narrative_density_weighted_score,
+        "narrative_flag": narrative_flag,
+        "human_review_count": sum(1 for c in clean_claims if c.requires_human_review),
+    }
+
+    return {
+        "contract_version": DASHBOARD_CONTRACT_VERSION,
+        "metrics": [v for v in metrics.values()],
+        "what_changed": what_changed,
+        "causal_edges": causal_edges,
+        "adjustments": adjustments,
+        "risk_surface": risk_surface,
+        "transparency": transparency,
+    }
+
+
 def generate_summary(document_id: str) -> dict:
     """
     主流程：取 chunks → 呼叫 Claude → Temporal Validation → 分層抽取 → 存 AIReport
@@ -325,6 +547,16 @@ def generate_summary(document_id: str) -> dict:
 
     # --- Output Completeness Validation (OC-1, OC-2) ---
     completeness_warnings = _check_completeness(claims)
+    dashboard_payload = _build_dashboard_payload(
+        clean_claims=clean_claims,
+        all_claims=claims,
+        temporal_consistent=temporal_consistent,
+        narrative_flag=narrative_flag,
+        narrative_density_score=narrative_density_score,
+        narrative_density_weighted_score=narrative_density_weighted_score,
+    )
+    dashboard_contract_errors = validate_dashboard_contract_v1(dashboard_payload)
+    dashboard_contract_valid = len(dashboard_contract_errors) == 0
 
     report = AIReport(
         report_id=str(uuid.uuid4()),
@@ -342,57 +574,14 @@ def generate_summary(document_id: str) -> dict:
         evidence_status=evidence_status,
         investment_advice_detected=investment_advice_detected,
         completeness_warnings=completeness_warnings,
+        dashboard=dashboard_payload,
+        dashboard_contract_valid=dashboard_contract_valid,
+        dashboard_contract_errors=dashboard_contract_errors,
     )
     report.save()
 
-    total = len(claims)
-    contaminated_count = sum(1 for c in claims if c.contaminated)
-
-    return {
-        "report_id": report.report_id,
-        "document_id": document_id,
-        "stock_id": doc.stock_id,
-        "period": doc.period,
-        "temporal_consistent": temporal_consistent,
-        "temporal_note": temporal_note,
-        "document_period": document_period,
-        "requested_period": requested_period,
-        "executive_summary": executive_summary,
-        "total_claims": total,
-        "contaminated_count": contaminated_count,
-        "insufficient_evidence_count": insufficient,
-        "evidence_status": evidence_status,
-        "investment_advice_detected": investment_advice_detected,
-        "narrative_density_score": narrative_density_score,
-        "narrative_density_weighted_score": narrative_density_weighted_score,
-        "narrative_flag": narrative_flag,
-        "completeness_warnings": completeness_warnings,
-        "claims": [
-            {
-                "claim_id": c.claim_id,
-                "claim": c.claim,
-                "claim_type": c.claim_type,
-                "claim_level": c.claim_level,
-                "materiality": c.materiality,
-                "section_key": c.section_key,
-                "recurring": c.recurring,
-                "contaminated": c.contaminated,
-                "source_type": c.source_type,
-                "forward_looking": c.forward_looking,
-                "rhetorical_risk_flag": c.rhetorical_risk_flag,
-                "rhetorical_risk_terms": list(c.rhetorical_risk_terms),
-                "attribution_prefix": c.attribution_prefix,
-                "confidence": c.confidence,
-                "requires_human_review": c.requires_human_review,
-                "evidence": [
-                    {
-                        "page": e.page,
-                        "section": e.section,
-                        "quoted_text": e.quoted_text,
-                    }
-                    for e in c.evidence
-                ],
-            }
-            for c in claims
-        ],
-    }
+    return serialize_summary_response(
+        report,
+        document_period=document_period,
+        requested_period=requested_period,
+    )
