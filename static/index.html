@@ -5,46 +5,90 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>台股財報 PDF 閱讀器</title>
 <style>
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #eef2ff;
+  --primary-border: #c7d2fe;
+  --navy: #1a1a2e;
+  --surface: #fff;
+  --bg: #f0f2f5;
+  --border: #e2e8f0;
+  --muted: #64748b;
+  --text: #1e293b;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
 /* ── Header ── */
-header { background: #1a1a2e; color: #fff; padding: 16px 32px; display: flex; align-items: center; gap: 12px; }
-header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; }
-header .tag { font-size: 0.7rem; color: #94a3b8; border: 1px solid #334155; border-radius: 4px; padding: 2px 8px; }
+header { background: var(--navy); color: #fff; padding: 14px 32px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,.06); }
+.header-brand { display: flex; align-items: center; gap: 10px; }
+.header-icon { font-size: 1.2rem; }
+header h1 { font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; }
+.tag { font-size: 0.65rem; color: #94a3b8; border: 1px solid #334155; border-radius: 4px; padding: 2px 7px; font-weight: 600; letter-spacing: .04em; }
+
+/* ── Stepper ── */
+.stepper-wrap { background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+.stepper { max-width: 920px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; }
+.sn { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; }
+.sn-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; background: #e2e8f0; color: #94a3b8; transition: all .25s; border: 2px solid transparent; }
+.sn.active .sn-circle { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+.sn.done .sn-circle { background: #22c55e; color: #fff; border-color: #16a34a; content: '✓'; }
+.sn-label { font-size: 0.63rem; color: var(--muted); font-weight: 600; white-space: nowrap; }
+.sn.active .sn-label { color: var(--primary); }
+.sn.done .sn-label { color: #16a34a; }
+.sn-line { flex: 1; height: 2px; background: #e2e8f0; margin: 0 4px; margin-bottom: 14px; transition: background .3s; }
+.sn-line.done { background: #22c55e; }
 
 /* ── Layout ── */
-.container { max-width: 920px; margin: 28px auto; padding: 0 16px; }
+.container { max-width: 920px; margin: 22px auto; padding: 0 16px; }
 
-/* ── Wizard cards ── */
-.card { background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 16px; overflow: hidden; }
-.card-header { padding: 14px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; }
-.step-badge { background: #1a1a2e; color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; }
+/* ── Cards ── */
+.card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 14px; overflow: hidden; box-shadow: var(--shadow); }
+.card-header { padding: 13px 20px; background: #fafbfc; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.step-badge { background: var(--navy); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; transition: background .2s; }
 .step-badge.done { background: #22c55e; }
 .card-header h2 { font-size: 0.9rem; font-weight: 600; }
+.card-header .step-hint { font-size: 0.72rem; color: var(--muted); margin-left: auto; }
 .card-body { padding: 20px; }
 
 /* ── Form ── */
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-.form-group { display: flex; flex-direction: column; gap: 4px; }
-label { font-size: 0.78rem; color: #64748b; font-weight: 500; }
-input, select { border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; font-size: 0.88rem; outline: none; transition: border-color 0.15s; background: #fff; }
-input:focus, select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
-input[type="file"] { padding: 6px; cursor: pointer; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+label { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
+label .req { color: #ef4444; margin-left: 2px; }
+input, select { border: 1.5px solid var(--border); border-radius: 7px; padding: 9px 11px; font-size: 0.875rem; outline: none; transition: border-color .15s, box-shadow .15s; background: var(--surface); color: var(--text); width: 100%; }
+input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
+input::placeholder { color: #cbd5e1; }
+
+/* ── Dropzone ── */
+.dropzone { border: 2px dashed var(--border); border-radius: 8px; padding: 28px 20px; text-align: center; cursor: pointer; transition: all .2s; background: #fafbfc; margin-bottom: 14px; margin-top: 5px; }
+.dropzone:hover, .dropzone.dz-active { border-color: var(--primary); background: var(--primary-light); }
+.dropzone.dz-has-file { border-color: #22c55e; background: #f0fdf4; border-style: solid; }
+.dz-icon { font-size: 1.8rem; margin-bottom: 8px; }
+.dz-text { font-size: 0.875rem; font-weight: 600; color: var(--muted); margin-bottom: 3px; }
+.dz-hint { font-size: 0.72rem; color: #94a3b8; }
+.dz-filename { font-size: 0.78rem; color: #16a34a; font-weight: 700; margin-top: 6px; }
 
 /* ── Buttons ── */
-.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 6px; font-size: 0.88rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
-.btn-primary { background: #6366f1; color: #fff; }
-.btn-primary:hover { background: #4f46e5; }
-.btn-primary:disabled { background: #a5b4fc; cursor: not-allowed; }
-.btn-ghost { background: transparent; color: #6366f1; border: 1px solid #c7d2fe; font-size: 0.78rem; padding: 4px 10px; }
-.btn-ghost:hover { background: #eef2ff; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 20px; border-radius: 7px; font-size: 0.875rem; font-weight: 600; cursor: pointer; border: none; transition: all .15s; line-height: 1; }
+.btn-primary { background: var(--primary); color: #fff; box-shadow: 0 1px 3px rgba(79,70,229,.3); }
+.btn-primary:hover { background: var(--primary-hover); box-shadow: 0 2px 6px rgba(79,70,229,.4); }
+.btn-primary:active { transform: translateY(1px); }
+.btn-primary:disabled { background: #a5b4fc; cursor: not-allowed; box-shadow: none; }
+.btn-ghost { background: transparent; color: var(--primary); border: 1.5px solid var(--primary-border); font-size: 0.8rem; padding: 6px 12px; }
+.btn-ghost:hover { background: var(--primary-light); }
 
 /* ── Alerts ── */
-.alert { border-radius: 6px; padding: 10px 14px; font-size: 0.83rem; margin-top: 10px; }
+.alert { border-radius: 7px; padding: 10px 14px; font-size: 0.83rem; margin-top: 10px; display: flex; align-items: flex-start; gap: 8px; }
+.alert-icon { flex-shrink: 0; }
 .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
 .alert-error   { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
-.alert-info    { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+.alert-info    { background: var(--primary-light); border: 1px solid var(--primary-border); color: #3730a3; }
+.step-hint-text { font-size: 0.75rem; color: #94a3b8; margin-top: 7px; display: flex; align-items: center; gap: 5px; }
 
 /* ── Badges ── */
 .badge { font-size: 0.68rem; padding: 2px 7px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
@@ -57,207 +101,367 @@ input[type="file"] { padding: 6px; cursor: pointer; }
 .b-orange { background: #ffedd5; color: #c2410c; }
 
 /* ── Spinner ── */
-.spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,.5); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+.spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .hidden { display: none !important; }
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════
    RESULTS AREA
-════════════════════════════════════════ */
+══════════════════════════════════════ */
+.results-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-md); overflow: hidden; margin-bottom: 14px; }
+.results-card-header { padding: 14px 20px; background: var(--navy); color: #fff; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.results-card-body { padding: 20px; }
+.report-title { font-size: 1.05rem; font-weight: 700; }
+.gov-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-left: auto; }
 
-/* Governance bar */
-.gov-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 10px 0 14px; }
-.report-title { font-size: 1.1rem; font-weight: 700; margin-right: 8px; }
+/* Mini stats */
+.mini-stats { display: flex; gap: 20px; padding: 14px 0; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.ms-item .ms-n { font-size: 1.4rem; font-weight: 800; color: var(--navy); line-height: 1; }
+.ms-item .ms-l { font-size: 0.62rem; color: #94a3b8; margin-top: 2px; text-transform: uppercase; letter-spacing: .05em; }
 
-/* Temporal warning */
+/* Section labels */
+.fr-section { margin: 18px 0; }
+.fr-title { font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.fr-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* KPI grid */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; }
+.kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; position: relative; overflow: hidden; }
+.kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--primary-border); }
+.kpi-label { font-size: .68rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+.kpi-value { font-size: 1.05rem; font-weight: 800; color: var(--navy); }
+.kpi-delta { font-size: .78rem; margin-top: 4px; font-weight: 700; }
+.delta-up   { color: #dc2626; }
+.delta-down { color: #dc2626; }
+.delta-flat { color: #0d9488; }
+.kpi-impact { font-size: .65rem; color: var(--muted); margin-top: 5px; }
+
+/* Flow box */
+.flow-box { background: #fafbfc; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+.flow-step { font-size: .83rem; color: var(--text); padding: 4px 0; }
+.flow-arrow { color: #94a3b8; padding: 2px 0; font-size: .8rem; }
+
+/* Adjustments */
+.adjust-grid { display: grid; gap: 8px; }
+.adjust-card { background: #fff7ed; border: 1px solid #fdba74; border-left: 3px solid #f97316; border-radius: 8px; padding: 12px 14px; }
+.adjust-title { font-size: .72rem; color: #c2410c; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .05em; }
+
+/* Risk table */
+.risk-table { width: 100%; border-collapse: collapse; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+.risk-table th { background: #f8fafc; color: var(--muted); font-size: .72rem; font-weight: 700; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+.risk-table td { padding: 9px 12px; font-size: .78rem; border-bottom: 1px solid #f1f5f9; }
+.risk-table tr:last-child td { border-bottom: none; }
+.risk-table tr:hover td { background: #fafbfc; }
+
+/* Transparency */
+.transparency-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* Temporal banner */
 .temporal-banner { background: #fffbeb; border: 2px solid #f59e0b; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
 .temporal-banner .t-title { font-weight: 700; color: #92400e; font-size: 0.85rem; margin-bottom: 4px; }
 .temporal-banner .t-body  { font-size: 0.8rem; color: #78350f; line-height: 1.5; }
 
-/* Executive Summary */
-.exec-card { background: #1a1a2e; border-radius: 10px; padding: 18px 22px; margin-bottom: 16px; }
-.exec-card .ec-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: .1em; color: #64748b; font-weight: 700; margin-bottom: 8px; }
-.exec-card .ec-text  { font-size: 0.9rem; line-height: 1.75; color: #e2e8f0; }
+/* Completeness banner */
+.completeness-banner { background: #fefce8; border: 2px solid #eab308; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; }
+.completeness-banner .cb-title { font-size: 0.8rem; font-weight: 700; color: #713f12; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.completeness-banner .cb-list { display: flex; flex-direction: column; gap: 5px; }
+.completeness-banner .cb-item { font-size: 0.78rem; color: #713f12; background: #fef9c3; border-radius: 4px; padding: 5px 10px; line-height: 1.5; }
 
-/* Key Findings grid */
+/* Executive summary */
+.exec-card { background: var(--navy); border-radius: 10px; padding: 18px 22px; margin-bottom: 18px; position: relative; overflow: hidden; }
+.exec-card::before { content: ''; position: absolute; top: 0; right: 0; width: 200px; height: 100%; background: radial-gradient(ellipse at top right, rgba(99,102,241,.15) 0%, transparent 70%); pointer-events: none; }
+.ec-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: .12em; color: #64748b; font-weight: 700; margin-bottom: 10px; }
+.ec-text  { font-size: 0.88rem; line-height: 1.8; color: #e2e8f0; }
+
+/* Key Findings */
 .kf-section { margin-bottom: 20px; }
-.kf-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: #6b7280; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.kf-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.kf-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .kf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
-.kf-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; position: relative; overflow: hidden; }
-.kf-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
-/* 與 claim-row 同一中性色系：fact=石板灰, derived=靛青, interp=琥珀 */
-.kf-card.kf-fact   { --lc: #64748b; }
-.kf-card.kf-derived { --lc: #4338ca; }
-.kf-card.kf-interp  { --lc: #d97706; }
-.kf-card::before { background: var(--lc, #e2e8f0); }
-.kf-card .kf-text { font-size: 0.85rem; line-height: 1.5; color: #1e293b; margin-bottom: 8px; }
+.kf-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+.kf-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--border); }
+.kf-card.kf-fact::before    { background: #64748b; }
+.kf-card.kf-derived::before { background: #4338ca; }
+.kf-card.kf-interp::before  { background: #d97706; }
+.kf-card .kf-text { font-size: 0.84rem; line-height: 1.55; color: #1e293b; margin-bottom: 8px; }
 .kf-card .kf-meta { display: flex; gap: 5px; flex-wrap: wrap; }
-.kf-card .kf-page { font-size: 0.7rem; color: #6366f1; font-weight: 700; }
-/* 一次性標籤：中性灰，不帶情緒正負 */
-.kf-nonrecurring { position: absolute; top: 10px; right: 10px; font-size: 0.62rem; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 3px; padding: 1px 5px; font-weight: 600; }
+.kf-card .kf-page { font-size: 0.7rem; color: var(--primary); font-weight: 700; }
+.kf-nonrecurring { position: absolute; top: 10px; right: 10px; font-size: 0.62rem; background: #f1f5f9; color: #475569; border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; font-weight: 600; }
 
 /* Tabs */
-.tabs { display: flex; gap: 2px; border-bottom: 2px solid #e2e8f0; margin-bottom: 16px; flex-wrap: wrap; }
-.tab { padding: 8px 14px; font-size: 0.8rem; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s; border-radius: 6px 6px 0 0; white-space: nowrap; }
-.tab:hover { background: #f8fafc; color: #1e293b; }
-.tab.active { color: #6366f1; border-bottom-color: #6366f1; background: #f5f3ff; }
-.tab .tab-count { font-size: 0.65rem; background: #e2e8f0; color: #64748b; border-radius: 999px; padding: 1px 5px; margin-left: 4px; }
-.tab.active .tab-count { background: #c7d2fe; color: #4338ca; }
+.tabs { display: flex; gap: 2px; border-bottom: 2px solid var(--border); margin-bottom: 16px; flex-wrap: wrap; }
+.tab { padding: 8px 14px; font-size: 0.78rem; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s; border-radius: 6px 6px 0 0; white-space: nowrap; }
+.tab:hover { background: #f8fafc; color: var(--text); }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--primary-light); }
+.tab .tab-count { font-size: 0.63rem; background: #e2e8f0; color: var(--muted); border-radius: 999px; padding: 1px 5px; margin-left: 4px; }
+.tab.active .tab-count { background: var(--primary-border); color: #4338ca; }
 
-/* Claim cards
-   顏色代表「認識論類型」，非情緒好壞：
-   fact=石板灰  derived=靛青  interpretation=琥珀（AI判斷，需注意）  insuf=淺灰 */
+/* Claim cards */
 .claims-pane { display: none; }
 .claims-pane.active { display: block; }
-
-.claim-row { border-radius: 8px; padding: 13px 15px; margin-bottom: 8px; border: 1px solid transparent; position: relative; padding-left: 18px; }
-.claim-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 8px 0 0 8px; background: var(--border-c, #cbd5e1); }
-
-/* observed_fact: 石板灰，中性權威感 */
-.claim-row.lv-fact    { background: #f8fafc; border-color: #e2e8f0; --border-c: #64748b; }
-/* derived_metric: 靛青，計算/數學感 */
-.claim-row.lv-derived { background: #eef2ff; border-color: #c7d2fe; --border-c: #4338ca; }
-/* interpretation: 琥珀，AI判斷需注意（非正負評價） */
-.claim-row.lv-interp  { background: #fffbeb; border-color: #fde68a; --border-c: #d97706; }
-/* insufficient/hypothesis: 淺灰，低可信 */
-.claim-row.lv-insuf   { background: #f8fafc; border-color: #e2e8f0; opacity: .72; --border-c: #94a3b8; }
-
+.claim-row { border-radius: 8px; padding: 12px 15px; margin-bottom: 8px; border: 1px solid transparent; position: relative; padding-left: 18px; }
+.claim-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 8px 0 0 8px; background: var(--lc, #cbd5e1); }
+.claim-row.lv-fact    { background: #f8fafc; border-color: #e2e8f0; --lc: #64748b; }
+.claim-row.lv-derived { background: #eef2ff; border-color: #c7d2fe; --lc: #4338ca; }
+.claim-row.lv-interp  { background: #fffbeb; border-color: #fde68a; --lc: #d97706; }
+.claim-row.lv-insuf   { background: #f8fafc; border-color: #e2e8f0; opacity: .72; --lc: #94a3b8; }
+.claim-row.review-flag { border-color: #fca5a5 !important; }
 .claim-meta { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-bottom: 5px; }
-.claim-text { font-size: 0.88rem; line-height: 1.6; color: #1e293b; }
+.claim-text { font-size: 0.875rem; line-height: 1.6; color: #1e293b; }
 .claim-text.interp-warn::before { content: '⚠ 詮釋：'; color: #92400e; font-size: 0.75rem; font-weight: 700; margin-right: 4px; }
-.non-rec { font-size: 0.65rem; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 3px; padding: 1px 5px; font-weight: 600; }
+.non-rec { font-size: 0.65rem; background: #f1f5f9; color: #475569; border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; font-weight: 600; }
+.fwd-tag  { font-size: 0.62rem; font-weight: 600; color: #fff; background: #f97316; border-radius: 3px; padding: 1px 5px; }
+.rhet-tag { font-size: 0.62rem; font-weight: 600; color: #7c2d12; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 3px; padding: 1px 5px; cursor: help; }
+.attr-prefix { font-style: italic; color: #6b7280; font-size: 0.9em; margin-right: 2px; }
+.ed-label  { font-size: 0.62rem; font-style: italic; margin-left: auto; padding-right: 2px; }
+.ed-fact   { color: #64748b; }
+.ed-derived{ color: #4338ca; }
+.ed-interp { color: #92400e; font-weight: 600; }
+.ed-hypo   { color: #94a3b8; }
+.ed-insuf  { color: #94a3b8; }
 
-/* Evidence toggle */
+/* Evidence */
 .ev-toggle { margin-top: 8px; }
-.ev-btn { font-size: 0.75rem; color: #6366f1; background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; display: flex; align-items: center; gap: 3px; }
+.ev-btn { font-size: 0.75rem; color: var(--primary); background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; display: flex; align-items: center; gap: 3px; }
 .ev-btn:hover { text-decoration: underline; }
 .ev-list { display: none; margin-top: 6px; }
 .ev-list.open { display: block; }
-.ev-item { font-size: 0.76rem; color: #475569; background: #f8fafc; border-radius: 4px; padding: 5px 9px; margin-top: 4px; display: flex; gap: 7px; align-items: flex-start; }
-.ev-page { color: #6366f1; font-weight: 700; flex-shrink: 0; }
+.ev-item { font-size: 0.75rem; color: #475569; background: #f8fafc; border: 1px solid var(--border); border-radius: 4px; padding: 5px 9px; margin-top: 4px; display: flex; gap: 7px; align-items: flex-start; }
+.ev-page  { color: var(--primary); font-weight: 700; flex-shrink: 0; }
 .ev-quote { font-style: italic; color: #334155; }
 
-/* Contaminated toggle */
-.contaminated-toggle { font-size: 0.78rem; color: #b45309; background: none; border: none; cursor: pointer; padding: 6px 0 0; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
-.contaminated-toggle:hover { text-decoration: underline; }
-.contaminated-section { display: none; margin-top: 8px; padding: 10px; background: #fffbeb; border: 1px dashed #fde68a; border-radius: 6px; }
-.contaminated-section.open { display: block; }
-
-/* AI Interpretations section — collapsed by default (Phase 10A) */
-.interp-toggle { font-size: 0.78rem; color: #92400e; background: none; border: none; cursor: pointer; padding: 8px 0 0; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
-.interp-toggle:hover { text-decoration: underline; }
-.interp-section { display: none; margin-top: 8px; padding: 10px; background: #fffbeb; border: 1px dashed #fcd34d; border-radius: 6px; }
-.interp-section.open { display: block; }
+/* Interp / contaminated toggles */
+.interp-toggle, .contaminated-toggle { font-size: 0.78rem; background: none; border: none; cursor: pointer; padding: 8px 0 0; display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+.interp-toggle { color: #92400e; }
+.contaminated-toggle { color: #b45309; }
+.interp-toggle:hover, .contaminated-toggle:hover { text-decoration: underline; }
+.interp-section, .contaminated-section { display: none; margin-top: 8px; padding: 10px; background: #fffbeb; border: 1px dashed #fcd34d; border-radius: 6px; }
+.interp-section.open, .contaminated-section.open { display: block; }
 .interp-disclaimer { font-size: 0.72rem; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; border-radius: 4px; padding: 6px 10px; margin-bottom: 8px; line-height: 1.5; }
 
-/* Forward-looking tag */
-.fwd-tag { font-size: 0.62rem; font-weight: 600; color: #fff; background: #f97316; border-radius: 3px; padding: 1px 5px; }
-/* Rhetorical risk tag */
-.rhet-tag { font-size: 0.62rem; font-weight: 600; color: #7c2d12; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 3px; padding: 1px 5px; cursor: help; }
-.attr-prefix { font-style: italic; color: #6b7280; font-size: 0.9em; margin-right: 2px; }
+/* Narrative banner */
+.narrative-banner { display: flex; align-items: flex-start; gap: 10px; background: #fff7ed; border: 1px solid #fb923c; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; font-size: .8rem; color: #7c2d12; line-height: 1.5; }
+.narrative-banner-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
 
-/* Source-type badge colours */
-.b-amber  { background:#fef3c7; color:#92400e; }
-.b-purple { background:#ede9fe; color:#5b21b6; }
-.b-green  { background:#dcfce7; color:#166534; }
+/* ══════════════════════════════════════
+   SECTION RESULT CARD (coverage / patterns)
+══════════════════════════════════════ */
+.section-result-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 14px; }
+.src-header { padding: 13px 20px; background: #fafbfc; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.src-header h3 { font-size: 0.9rem; font-weight: 600; }
+.src-body { padding: 20px; }
 
-/* Narrative density banner */
-.narrative-banner { display:flex; align-items:flex-start; gap:10px; background:#fff7ed; border:1px solid #fb923c; border-radius:8px; padding:12px 14px; margin-bottom:14px; font-size:.8rem; color:#7c2d12; line-height:1.5; }
-.narrative-banner-icon { font-size:1.1rem; flex-shrink:0; margin-top:1px; }
-
-/* Evidence distance label — right-aligned in claim-meta */
-.ed-label { font-size: 0.62rem; font-style: italic; margin-left: auto; padding-right: 2px; }
-.ed-fact    { color: #64748b; }
-.ed-derived { color: #4338ca; }
-.ed-interp  { color: #92400e; font-weight: 600; }
-.ed-hypo    { color: #94a3b8; }
-.ed-insuf   { color: #94a3b8; }
-
-/* Review flag */
-.claim-row.review-flag { border-color: #fca5a5 !important; }
-
-/* Stats mini-bar */
-.mini-stats { display: flex; gap: 16px; padding: 10px 0 14px; flex-wrap: wrap; }
-.ms-item .ms-n { font-size: 1.3rem; font-weight: 800; color: #1a1a2e; line-height: 1; }
-.ms-item .ms-l { font-size: 0.65rem; color: #94a3b8; margin-top: 1px; text-transform: uppercase; letter-spacing: .04em; }
-.fr-section { margin: 16px 0 18px; }
-.fr-title { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: #64748b; font-weight: 700; margin-bottom: 8px; }
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
-.kpi-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; }
-.kpi-label { font-size: .68rem; color: #64748b; margin-bottom: 5px; }
-.kpi-value { font-size: .95rem; font-weight: 700; color: #0f172a; }
-.kpi-delta { font-size: .78rem; margin-top: 3px; font-weight: 700; }
-.delta-up { color: #b91c1c; }
-.delta-down { color: #b91c1c; }
-.delta-flat { color: #0f766e; }
-.kpi-impact { font-size: .68rem; color: #64748b; margin-top: 4px; }
-.flow-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; }
-.flow-step { font-size: .8rem; color: #1e293b; }
-.flow-arrow { color: #94a3b8; margin: 4px 0; }
-.adjust-grid { display: grid; gap: 8px; }
-.adjust-card { background: #fff7ed; border: 1px solid #fdba74; border-radius: 8px; padding: 10px 12px; }
-.adjust-title { font-size: .78rem; color: #9a3412; font-weight: 700; margin-bottom: 4px; }
-.risk-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
-.risk-table th,.risk-table td { text-align: left; padding: 8px 10px; font-size: .78rem; border-bottom: 1px solid #f1f5f9; }
-.risk-table th { background: #f8fafc; color: #64748b; font-weight: 700; }
-
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════
    COVERAGE MATRIX
-════════════════════════════════════════ */
-.cov-header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; margin-bottom: 14px; }
-.cov-title { font-size: 1.05rem; font-weight: 700; }
+══════════════════════════════════════ */
+.cov-title { font-size: 1.0rem; font-weight: 700; }
 .cov-disclaimer { font-size: 0.72rem; color: #94a3b8; margin-top: 4px; }
-.cov-stats { display: flex; gap: 14px; padding: 8px 0 14px; flex-wrap: wrap; }
-.cov-stat .cs-n { font-size: 1.2rem; font-weight: 800; line-height: 1; }
-.cov-stat .cs-l { font-size: 0.62rem; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; margin-top: 1px; }
-.cov-stat.cs-found    .cs-n { color: #15803d; }
-.cov-stat.cs-partial  .cs-n { color: #92400e; }
-.cov-stat.cs-missing  .cs-n { color: #64748b; }
+.cov-stats { display: flex; gap: 20px; padding: 12px 0 16px; flex-wrap: wrap; }
+.cov-stat .cs-n { font-size: 1.3rem; font-weight: 800; line-height: 1; }
+.cov-stat .cs-l { font-size: 0.62rem; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+.cov-stat.cs-found   .cs-n { color: #15803d; }
+.cov-stat.cs-partial .cs-n { color: #92400e; }
+.cov-stat.cs-missing .cs-n { color: #64748b; }
 .cov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
 .cov-item { border-radius: 7px; padding: 10px 13px; display: flex; align-items: flex-start; gap: 10px; border: 1px solid transparent; }
-.cov-item.cv-found    { background: #f0fdf4; border-color: #bbf7d0; }
-.cov-item.cv-partial  { background: #fffbeb; border-color: #fde68a; }
-.cov-item.cv-missing  { background: #f8fafc; border-color: #e2e8f0; }
-.cov-item.cv-ambig    { background: #f8fafc; border-color: #e2e8f0; opacity: .75; }
-.cov-item.cv-na       { background: #f8fafc; border-color: #e2e8f0; opacity: .6; }
-.cov-icon { font-size: 0.95rem; flex-shrink: 0; margin-top: 1px; }
-.cov-body .cov-label { font-size: 0.83rem; font-weight: 600; color: #1e293b; }
-.cov-body .cov-note  { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
-.cov-body .cov-pages { font-size: 0.68rem; color: #6366f1; font-weight: 700; margin-top: 2px; }
+.cov-item.cv-found   { background: #f0fdf4; border-color: #bbf7d0; }
+.cov-item.cv-partial { background: #fffbeb; border-color: #fde68a; }
+.cov-item.cv-missing { background: #f8fafc; border-color: #e2e8f0; }
+.cov-item.cv-ambig   { background: #f8fafc; border-color: #e2e8f0; opacity: .75; }
+.cov-item.cv-na      { background: #f8fafc; border-color: #e2e8f0; opacity: .6; }
+.cov-icon { font-size: 0.9rem; flex-shrink: 0; margin-top: 2px; }
+.cov-body .cov-label { font-size: 0.82rem; font-weight: 600; color: #1e293b; }
+.cov-body .cov-note  { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+.cov-body .cov-pages { font-size: 0.68rem; color: var(--primary); font-weight: 700; margin-top: 2px; }
 
-/* ── Pattern Results ── */
-.pat-title { font-size: 1.05rem; font-weight: 700; }
+/* ══════════════════════════════════════
+   PATTERN RESULTS
+══════════════════════════════════════ */
+.pat-title { font-size: 1.0rem; font-weight: 700; }
 .pat-disclaimer { font-size: 0.72rem; color: #94a3b8; margin-top: 4px; }
-.pat-stats { display: flex; gap: 14px; padding: 8px 0 14px; flex-wrap: wrap; }
-.pat-stat .ps-n { font-size: 1.2rem; font-weight: 800; line-height: 1; }
-.pat-stat .ps-l { font-size: 0.62rem; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; margin-top: 1px; }
+.pat-stats { display: flex; gap: 20px; padding: 12px 0 16px; flex-wrap: wrap; }
+.pat-stat .ps-n { font-size: 1.3rem; font-weight: 800; line-height: 1; }
+.pat-stat .ps-l { font-size: 0.62rem; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
 .pat-stat.ps-triggered .ps-n { color: #92400e; }
 .pat-stat.ps-insuf .ps-n { color: #64748b; }
 .pat-list { display: flex; flex-direction: column; gap: 10px; }
-.pat-item { border-radius: 8px; padding: 12px 15px; border: 1px solid transparent; }
-.pat-item.pi-triggered   { background: #fffbeb; border-color: #fde68a; }
+.pat-item { border-radius: 8px; padding: 14px 16px; border: 1px solid transparent; }
+.pat-item.pi-triggered    { background: #fffbeb; border-color: #fde68a; border-left: 3px solid #f59e0b; }
 .pat-item.pi-insufficient { background: #f8fafc; border-color: #e2e8f0; opacity: .8; }
-.pat-item.pi-not_triggered { background: #f8fafc; border-color: #e2e8f0; opacity: .65; }
+.pat-item.pi-not_triggered{ background: #f8fafc; border-color: #e2e8f0; opacity: .65; }
 .pat-item-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
 .pat-name { font-size: 0.88rem; font-weight: 700; color: #1e293b; }
-.pat-obs { font-size: 0.78rem; color: #334155; margin: 6px 0 4px; line-height: 1.5; }
-.pat-guard { font-size: 0.68rem; color: #94a3b8; font-style: italic; margin-top: 4px; }
-.pat-missing { font-size: 0.72rem; color: #64748b; margin-top: 4px; }
+.pat-obs  { font-size: 0.8rem; color: #334155; margin: 6px 0 4px; line-height: 1.55; }
+.pat-guard  { font-size: 0.68rem; color: #94a3b8; font-style: italic; margin-top: 6px; }
+.pat-missing{ font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
 .pat-claims-toggle { font-size: 0.72rem; color: #4338ca; cursor: pointer; margin-top: 6px; user-select: none; }
 .pat-claims-toggle:hover { text-decoration: underline; }
 .pat-claims-body { margin-top: 6px; display: none; }
 .pat-claims-body.open { display: block; }
 .pat-claim-row { font-size: 0.72rem; color: #475569; border-left: 2px solid #cbd5e1; padding: 3px 8px; margin-bottom: 4px; }
-.pat-claim-row .pcr-id { font-weight: 700; color: #64748b; font-size: 0.65rem; }
+.pat-claim-row .pcr-id  { font-weight: 700; color: #64748b; font-size: 0.65rem; }
 .pat-claim-row .pcr-sec { font-size: 0.65rem; color: #94a3b8; margin-left: 6px; }
+
+@media (max-width: 640px) {
+  .form-row { grid-template-columns: 1fr; }
+  .sn-label { display: none; }
+  .kf-grid { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  header { padding: 12px 16px; }
+  .container { padding: 0 12px; }
+  .stepper { padding: 10px 8px; }
+}
+
+/* ── Decision Banner ── */
+.decision-banner { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+.db-signal { background: var(--surface); padding: 13px 14px; display: flex; align-items: flex-start; gap: 9px; }
+.db-label  { font-size: 0.6rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; margin-bottom: 3px; }
+.db-value  { font-size: 0.88rem; font-weight: 700; }
+.db-icon   { font-size: 1.05rem; flex-shrink: 0; margin-top: 1px; }
+.db-ok    .db-value { color: #15803d; }
+.db-warn  .db-value { color: #92400e; }
+.db-alert .db-value { color: #b91c1c; }
+.db-ok    .db-icon  { color: #16a34a; }
+.db-warn  .db-icon  { color: #d97706; }
+.db-alert .db-icon  { color: #dc2626; }
+
+/* ── Section label (with trailing line) ── */
+.section-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── Finding Cards (hero layer) ── */
+.findings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.finding-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 14px 12px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
+.finding-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--border); }
+.finding-card.fc-up::before   { background: #dc2626; }
+.finding-card.fc-down::before { background: #dc2626; }
+.finding-card.fc-flat::before { background: #0d9488; }
+.fc-impact { position: absolute; top: 9px; right: 9px; }
+.fc-metric { font-size: 0.63rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 6px; margin-top: 4px; }
+.fc-delta  { font-size: 1.15rem; font-weight: 800; color: var(--navy); margin-bottom: 3px; }
+.fc-dir    { font-size: 0.78rem; font-weight: 700; margin-bottom: 5px; }
+.fc-dir.dir-up   { color: #dc2626; }
+.fc-dir.dir-down { color: #dc2626; }
+.fc-dir.dir-flat { color: #0d9488; }
+.fc-claim  { font-size: 0.72rem; color: var(--muted); line-height: 1.45; }
+
+/* ── Analyst Attention Panel ── */
+.attention-panel { background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+.attn-header { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; color: #92400e; margin-bottom: 8px; }
+.attn-items  { display: flex; flex-direction: column; }
+.attn-item   { display: flex; align-items: flex-start; gap: 8px; font-size: 0.82rem; color: #78350f; padding: 7px 0; border-bottom: 1px solid #fef3c7; }
+.attn-item:last-child { border-bottom: none; }
+.attn-tag  { font-size: 0.62rem; font-weight: 700; background: rgba(245,158,11,.15); border: 1px solid #fde68a; border-radius: 3px; padding: 1px 5px; color: #92400e; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.attn-text { flex: 1; line-height: 1.5; }
+
+/* ── KPI group labels ── */
+.kpi-group-label { font-size: 0.63rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; margin: 12px 0 8px; display: flex; align-items: center; gap: 6px; }
+.kpi-group-label::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.kg-primary   { color: #4338ca; }
+.kg-secondary { color: #94a3b8; }
+
+/* ── Evidence Explorer separator ── */
+.explorer-sep { display: flex; align-items: center; gap: 12px; margin: 22px 0 14px; }
+.explorer-sep::before, .explorer-sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.explorer-sep-label { font-size: 0.63rem; text-transform: uppercase; letter-spacing: .12em; color: #94a3b8; font-weight: 700; white-space: nowrap; }
+
+/* ════════════════════════════════════
+   SEMANTIC COLOR SYSTEM (Phase 2A)
+   green=validated  yellow=watch
+   red=structural   blue=metadata
+════════════════════════════════════ */
+/* Override: review-required is WATCH, not risk */
+.b-review { background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; border-radius: 999px; font-size: 0.68rem; padding: 2px 7px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.b-review:hover { background: #e0f2fe; }
+
+/* Attention tag variants */
+.attn-tag-risk   { font-size: .62rem; font-weight: 700; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 3px; padding: 1px 5px; color: #991b1b; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.attn-tag-watch  { font-size: .62rem; font-weight: 700; background: #fef3c7; border: 1px solid #fde68a; border-radius: 3px; padding: 1px 5px; color: #92400e; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.attn-tag-info   { font-size: .62rem; font-weight: 700; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 3px; padding: 1px 5px; color: #0369a1; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.attn-tag-oc     { font-size: .62rem; font-weight: 700; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 3px; padding: 1px 5px; color: #6d28d9; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+
+/* ── Primary Narrative Card (Phase 2B) ── */
+.narr-card { border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 14px; }
+.narr-ok    { background: #f0fdf4; border: 1px solid #86efac; border-left: 4px solid #16a34a; }
+.narr-watch { background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #d97706; }
+.narr-risk  { background: #fff1f2; border: 1px solid #fda4af; border-left: 4px solid #e11d48; }
+.narr-icon  { font-size: 1.6rem; flex-shrink: 0; line-height: 1; }
+.narr-body  { flex: 1; }
+.narr-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; margin-bottom: 3px; }
+.narr-ok    .narr-label { color: #166534; }
+.narr-watch .narr-label { color: #92400e; }
+.narr-risk  .narr-label { color: #9f1239; }
+.narr-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 2px; }
+.narr-ok    .narr-title { color: #14532d; }
+.narr-watch .narr-title { color: #78350f; }
+.narr-risk  .narr-title { color: #881337; }
+.narr-sub   { font-size: 0.75rem; margin-bottom: 10px; }
+.narr-ok    .narr-sub { color: #166534; }
+.narr-watch .narr-sub { color: #92400e; }
+.narr-risk  .narr-sub { color: #9f1239; }
+.narr-conf  { display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; font-weight: 700; margin-bottom: 8px; }
+.narr-conf-bar { height: 4px; width: 72px; background: rgba(0,0,0,.1); border-radius: 2px; }
+.narr-conf-fill { height: 100%; border-radius: 2px; }
+.narr-ok    .narr-conf-fill { background: #16a34a; }
+.narr-watch .narr-conf-fill { background: #d97706; }
+.narr-risk  .narr-conf-fill { background: #e11d48; }
+.narr-cols  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.narr-col-title { font-size: 0.62rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; margin-bottom: 5px; }
+.narr-ok    .narr-col-title { color: #166534; }
+.narr-watch .narr-col-title { color: #92400e; }
+.narr-risk  .narr-col-title { color: #9f1239; }
+.narr-points { list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.narr-points li { font-size: 0.78rem; line-height: 1.5; padding-left: 12px; position: relative; }
+.narr-points li::before { content: '·'; position: absolute; left: 2px; font-weight: 700; }
+.narr-ok    .narr-points li { color: #14532d; }
+.narr-watch .narr-points li { color: #78350f; }
+.narr-risk  .narr-points li { color: #881337; }
+
+/* ── Hero KPI card (wider, higher contrast) ── */
+.finding-card.fc-hero { grid-column: span 2; display: flex; align-items: center; gap: 18px; padding: 16px 18px; }
+.finding-card.fc-hero .fc-metric { margin-bottom: 4px; font-size: .68rem; }
+.finding-card.fc-hero .fc-delta  { font-size: 1.55rem; }
+.finding-card.fc-hero .fc-impact { position: static; margin-top: 6px; }
+.finding-card.fc-hero .fc-hero-left  { flex: 1; }
+.finding-card.fc-hero .fc-hero-right { flex: 2; }
+
+/* ── Review panel (expandable) ── */
+.review-toggle-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 600; color: #0369a1; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 5px; padding: 4px 10px; cursor: pointer; margin-top: 8px; }
+.review-toggle-btn:hover { background: #e0f2fe; }
+.review-panel { display: none; margin-top: 10px; border: 1px solid #bae6fd; border-radius: 8px; overflow: hidden; }
+.review-panel.open { display: block; }
+.review-panel-header { background: #f0f9ff; padding: 8px 14px; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #0369a1; border-bottom: 1px solid #bae6fd; }
+.review-panel-items { display: flex; flex-direction: column; }
+.review-panel-item  { padding: 10px 14px; font-size: .8rem; border-bottom: 1px solid #e0f2fe; display: flex; align-items: flex-start; gap: 8px; }
+.review-panel-item:last-child { border-bottom: none; }
+.review-panel-item-tag { font-size: .62rem; background: #fff; border: 1px solid #bae6fd; border-radius: 3px; padding: 1px 5px; color: #0369a1; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.review-panel-item-text { color: #0c4a6e; line-height: 1.5; flex: 1; }
+.review-panel-item-page { font-size: .65rem; color: #0369a1; font-weight: 700; flex-shrink: 0; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>台股財報 PDF 閱讀器</h1>
-  <span class="tag">Evidence-Bound</span>
+  <div class="header-brand">
+    <span class="header-icon">📊</span>
+    <h1>台股財報 PDF 閱讀器</h1>
+    <span class="tag">Evidence-Bound</span>
+  </div>
 </header>
+
+<div class="stepper-wrap">
+  <div class="stepper">
+    <div class="sn active" id="sn1"><div class="sn-circle">1</div><div class="sn-label">上傳</div></div>
+    <div class="sn-line" id="snl12"></div>
+    <div class="sn" id="sn2"><div class="sn-circle">2</div><div class="sn-label">解析</div></div>
+    <div class="sn-line" id="snl23"></div>
+    <div class="sn" id="sn3"><div class="sn-circle">3</div><div class="sn-label">AI 分析</div></div>
+    <div class="sn-line" id="snl34"></div>
+    <div class="sn" id="sn4"><div class="sn-circle">4</div><div class="sn-label">揭露稽核</div></div>
+    <div class="sn-line" id="snl45"></div>
+    <div class="sn" id="sn5"><div class="sn-circle">5</div><div class="sn-label">財報檢查</div></div>
+  </div>
+</div>
 
 <div class="container">
 
@@ -270,18 +474,18 @@ input[type="file"] { padding: 6px; cursor: pointer; }
     <div class="card-body">
       <div class="form-row">
         <div class="form-group">
-          <label>股票代號 *</label>
-          <input type="text" id="stock_id" placeholder="例：2330" maxlength="10">
+          <label>股票代號</label>
+          <input type="text" id="stock_id" placeholder="選填：例 2330（可由檔名推斷）" maxlength="10">
         </div>
         <div class="form-group">
-          <label>公司名稱 *</label>
-          <input type="text" id="company_name" placeholder="例：台積電">
+          <label>公司名稱</label>
+          <input type="text" id="company_name" placeholder="選填：例 台積電（可由檔名推斷）">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>季度 *</label>
-          <input type="text" id="period" placeholder="例：2025Q1">
+          <label>季度</label>
+          <input type="text" id="period" placeholder="選填：例 2025Q1（可由檔名推斷）">
         </div>
         <div class="form-group">
           <label>報告類型</label>
@@ -303,11 +507,17 @@ input[type="file"] { padding: 6px; cursor: pointer; }
         </div>
         <div class="form-group"></div>
       </div>
-      <div class="form-group" style="margin-bottom:14px;">
-        <label>PDF 檔案 *</label>
-        <input type="file" id="pdf_file" accept=".pdf">
+      <label>PDF 檔案 <span class="req">*</span></label>
+      <div class="dropzone" id="dropzone"
+        onclick="document.getElementById('pdf_file').click()"
+        ondragover="dzDragOver(event)" ondrop="dzDrop(event)" ondragleave="dzDragLeave(event)">
+        <div class="dz-icon">📄</div>
+        <div class="dz-text">拖曳 PDF 至此，或點擊選擇檔案</div>
+        <div class="dz-hint">僅支援 .pdf 格式</div>
+        <div class="dz-filename" id="dz-filename"></div>
       </div>
-      <button class="btn btn-primary" onclick="uploadPDF()" id="upload-btn">上傳</button>
+      <input type="file" id="pdf_file" accept=".pdf" style="display:none" onchange="dzFileSelected(this)">
+      <button class="btn btn-primary" onclick="uploadPDF()" id="upload-btn">上傳財報</button>
       <div id="upload-result"></div>
     </div>
   </div>
@@ -317,10 +527,11 @@ input[type="file"] { padding: 6px; cursor: pointer; }
     <div class="card-header">
       <div class="step-badge" id="badge2">2</div>
       <h2>解析文件</h2>
+      <span class="step-hint">抽取頁面文字與結構</span>
     </div>
     <div class="card-body">
       <div class="alert alert-success" id="upload-success-msg"></div>
-      <br>
+      <div style="height:12px;"></div>
       <button class="btn btn-primary" onclick="ingestDoc()" id="ingest-btn">開始解析</button>
       <div id="ingest-result"></div>
     </div>
@@ -330,13 +541,14 @@ input[type="file"] { padding: 6px; cursor: pointer; }
   <div class="card hidden" id="step3-card">
     <div class="card-header">
       <div class="step-badge" id="badge3">3</div>
-      <h2>產生 AI 分析</h2>
+      <h2>AI 分析</h2>
+      <span class="step-hint">Evidence-bound claims</span>
     </div>
     <div class="card-body">
       <div class="alert alert-success" id="ingest-success-msg"></div>
-      <br>
+      <div style="height:12px;"></div>
       <button class="btn btn-primary" onclick="generateSummary()" id="summary-btn">產生分析</button>
-      <p style="font-size:.76rem;color:#94a3b8;margin-top:6px;">呼叫 Claude API，通常需要 30–90 秒</p>
+      <p class="step-hint-text">⏱ 呼叫 Claude API，通常需要 30–90 秒</p>
       <div id="summary-result"></div>
     </div>
   </div>
@@ -351,20 +563,22 @@ input[type="file"] { padding: 6px; cursor: pointer; }
     <div class="card-header">
       <div class="step-badge" id="badge4">4</div>
       <h2>揭露完整性稽核</h2>
+      <span class="step-hint">14 項法定揭露</span>
     </div>
     <div class="card-body">
-      <p style="font-size:.8rem;color:#64748b;margin-bottom:12px;">
-        逐一檢查 14 項法定揭露事項（第 12、17 條 + IFRS）是否出現於財報中
-      </p>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px;">逐一檢查 14 項法定揭露事項（第 12、17 條 + IFRS）是否出現於財報中</p>
       <button class="btn btn-primary" onclick="runCoverage()" id="coverage-btn">執行稽核</button>
-      <p style="font-size:.76rem;color:#94a3b8;margin-top:6px;">使用 Haiku 模型，約 10–20 秒</p>
+      <p class="step-hint-text">⏱ 使用 Haiku 模型，約 10–20 秒</p>
       <div id="coverage-result"></div>
     </div>
   </div>
 
   <!-- Coverage Matrix -->
   <div class="hidden" id="coverage-area">
-    <div id="coverage-body"></div>
+    <div class="section-result-card">
+      <div class="src-header"><span>📋</span><h3>揭露完整性稽核結果</h3></div>
+      <div class="src-body" id="coverage-body"></div>
+    </div>
   </div>
 
   <!-- STEP 5 -->
@@ -372,20 +586,22 @@ input[type="file"] { padding: 6px; cursor: pointer; }
     <div class="card-header">
       <div class="step-badge" id="badge5">5</div>
       <h2>財報檢查模式</h2>
+      <span class="step-hint">6 個警示 pattern</span>
     </div>
     <div class="card-body">
-      <p style="font-size:.8rem;color:#64748b;margin-bottom:12px;">
-        6 個常見財報警示模式，基於現有 claims 屬性掃描，不呼叫 AI
-      </p>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px;">6 個常見財報警示模式，基於現有 claims 屬性掃描，不呼叫 AI</p>
       <button class="btn btn-primary" onclick="runPatterns()" id="patterns-btn">執行財報檢查</button>
-      <p style="font-size:.76rem;color:#94a3b8;margin-top:6px;">純本地邏輯，不呼叫 Claude API，通常 &lt;1 秒完成</p>
+      <p class="step-hint-text">⚡ 純本地邏輯，不呼叫 Claude，通常 &lt;1 秒完成</p>
       <div id="patterns-result"></div>
     </div>
   </div>
 
   <!-- Pattern Results -->
   <div class="hidden" id="patterns-area">
-    <div id="patterns-body"></div>
+    <div class="section-result-card">
+      <div class="src-header"><span>🔍</span><h3>財報檢查模式結果</h3></div>
+      <div class="src-body" id="patterns-body"></div>
+    </div>
   </div>
 
 </div>
@@ -393,29 +609,61 @@ input[type="file"] { padding: 6px; cursor: pointer; }
 <script>
 let documentId = null;
 
+/* ── Stepper ── */
+function updateStepper(step) {
+  for (let i = 1; i <= 5; i++) {
+    const sn = document.getElementById('sn' + i);
+    if (!sn) continue;
+    sn.classList.remove('active', 'done');
+    if (i < step) sn.classList.add('done');
+    else if (i === step) sn.classList.add('active');
+  }
+  const lines = ['snl12','snl23','snl34','snl45'];
+  lines.forEach((id, idx) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('done', idx + 2 <= step);
+  });
+}
+
+/* ── Dropzone ── */
+function dzDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('dz-active'); }
+function dzDragLeave(e) { e.currentTarget.classList.remove('dz-active'); }
+function dzDrop(e) {
+  e.preventDefault(); e.currentTarget.classList.remove('dz-active');
+  const f = e.dataTransfer.files[0];
+  if (f && f.name.toLowerCase().endsWith('.pdf')) {
+    const dt = new DataTransfer(); dt.items.add(f);
+    document.getElementById('pdf_file').files = dt.files;
+    dzFileSelected({ files: [f] });
+  }
+}
+function dzFileSelected(input) {
+  const f = input.files[0];
+  if (f) {
+    document.getElementById('dz-filename').textContent = '✓ ' + f.name;
+    document.getElementById('dropzone').classList.add('dz-has-file');
+  }
+}
+
 /* ── Mappings ── */
 const LEVEL_CLASS = {
-  observed_fact: 'lv-fact', derived_metric: 'lv-derived',
-  interpretation: 'lv-interp', hypothesis: 'lv-insuf',
-  insufficient_evidence: 'lv-insuf',
+  observed_fact:'lv-fact', derived_metric:'lv-derived',
+  interpretation:'lv-interp', hypothesis:'lv-insuf', insufficient_evidence:'lv-insuf',
 };
 const LEVEL_BADGE = {
-  observed_fact:        ['b-gray',   '直接事實'],   // 石板灰：中性事實
-  derived_metric:       ['b-blue',   '衍生指標'],   // 靛青：計算結果
-  interpretation:       ['b-amber',  '詮釋'],       // 琥珀：AI判斷
-  hypothesis:           ['b-gray',   '假設'],
-  insufficient_evidence:['b-gray',   '證據不足'],
+  observed_fact:        ['b-gray',  '直接事實'],
+  derived_metric:       ['b-blue',  '衍生指標'],
+  interpretation:       ['b-amber', '詮釋'],
+  hypothesis:           ['b-gray',  '假設'],
+  insufficient_evidence:['b-gray',  '證據不足'],
 };
-const KF_CLASS = {
-  observed_fact: 'kf-fact', derived_metric: 'kf-derived',
-  interpretation: 'kf-interp',
-};
+const KF_CLASS = { observed_fact:'kf-fact', derived_metric:'kf-derived', interpretation:'kf-interp' };
 const EVIDENCE_DISTANCE = {
-  observed_fact:         { label: '財報直接揭露',    cls: 'ed-fact' },
-  derived_metric:        { label: '由財報數字計算',  cls: 'ed-derived' },
-  interpretation:        { label: 'AI 假設·需確認', cls: 'ed-interp' },
-  hypothesis:            { label: 'AI 推測·低確信', cls: 'ed-hypo' },
-  insufficient_evidence: { label: '缺少足夠證據',    cls: 'ed-insuf' },
+  observed_fact:         { label:'財報直接揭露',    cls:'ed-fact' },
+  derived_metric:        { label:'由財報數字計算',  cls:'ed-derived' },
+  interpretation:        { label:'AI 假設·需確認', cls:'ed-interp' },
+  hypothesis:            { label:'AI 推測·低確信', cls:'ed-hypo' },
+  insufficient_evidence: { label:'缺少足夠證據',    cls:'ed-insuf' },
 };
 const SOURCE_TYPE_BADGE = {
   financial_evidence:    ['b-blue',   '財報數字'],
@@ -424,15 +672,15 @@ const SOURCE_TYPE_BADGE = {
   management_expectation:['b-purple', '管理展望'],
 };
 const SECTION_META = {
-  key_financials:         { icon: '📊', label: '核心財務' },
-  accounting_adjustments: { icon: '🔧', label: '會計調整' },
-  liquidity:              { icon: '💧', label: '流動性' },
-  risk_register:          { icon: '⚠️', label: '風險' },
-  pipeline:               { icon: '🔬', label: 'Pipeline' },
-  evidence_gaps:          { icon: '❓', label: '不足' },
+  key_financials:         { icon:'📊', label:'核心財務' },
+  accounting_adjustments: { icon:'🔧', label:'會計調整' },
+  liquidity:              { icon:'💧', label:'流動性' },
+  risk_register:          { icon:'⚠️', label:'風險' },
+  pipeline:               { icon:'🔬', label:'Pipeline' },
+  evidence_gaps:          { icon:'❓', label:'不足' },
 };
 const SECTION_ORDER = ['key_financials','accounting_adjustments','liquidity','risk_register','pipeline','evidence_gaps'];
-const TIER_ORDER    = { tier_a:0, tier_b:1, tier_c:2 };
+const TIER_ORDER = { tier_a:0, tier_b:1, tier_c:2 };
 
 /* ── Helpers ── */
 async function parseResponse(res) {
@@ -445,87 +693,93 @@ async function parseResponse(res) {
 function setResult(id, type, msg) {
   const el = document.getElementById(id);
   if (!msg) { el.innerHTML = ''; return; }
-  el.innerHTML = `<div class="alert alert-${type==='error'?'error':'info'}">${msg}</div>`;
+  el.innerHTML = `<div class="alert alert-${type==='error'?'error':'info'}"><span class="alert-icon">${type==='error'?'✕':'ℹ'}</span><span>${msg}</span></div>`;
 }
 function badge(cls, text) { return `<span class="badge ${cls}">${text}</span>`; }
 
-/* ── Steps ── */
+/* ── Step 1 ── */
 async function uploadPDF() {
-  const stockId=document.getElementById('stock_id').value.trim();
-  const companyName=document.getElementById('company_name').value.trim();
-  const period=document.getElementById('period').value.trim();
-  const docType=document.getElementById('document_type').value;
-  const fileInput=document.getElementById('pdf_file');
-  if (!stockId||!companyName||!period||!fileInput.files[0]) {
-    setResult('upload-result','error','請填寫所有必填欄位並選擇 PDF 檔案'); return;
+  const stockId = document.getElementById('stock_id').value.trim();
+  const companyName = document.getElementById('company_name').value.trim();
+  const period = document.getElementById('period').value.trim();
+  const docType = document.getElementById('document_type').value;
+  const fileInput = document.getElementById('pdf_file');
+  if (!fileInput.files[0]) {
+    setResult('upload-result','error','請先選擇 PDF 檔案'); return;
   }
-  const btn=document.getElementById('upload-btn');
-  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> 上傳中...';
-  const fd=new FormData();
-  const industryType=document.getElementById('industry_type').value;
+  const btn = document.getElementById('upload-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 上傳中...';
+  const fd = new FormData();
+  const industryType = document.getElementById('industry_type').value;
   fd.append('file',fileInput.files[0]); fd.append('stock_id',stockId);
   fd.append('company_name',companyName); fd.append('period',period);
   fd.append('document_type',docType); fd.append('industry_type',industryType);
   try {
-    const data=await parseResponse(await fetch('/api/v1/documents/upload',{method:'POST',body:fd}));
-    documentId=data.document_id;
-    document.getElementById('badge1').textContent='✓';
+    const data = await parseResponse(await fetch('/api/v1/documents/upload',{method:'POST',body:fd}));
+    documentId = data.document_id;
+    document.getElementById('badge1').textContent = '✓';
     document.getElementById('badge1').classList.add('done');
-    document.getElementById('upload-success-msg').textContent=`✅ 上傳成功  ${documentId}`;
+    document.getElementById('upload-success-msg').innerHTML = '<span class="alert-icon">✓</span><span>上傳成功 — ' + documentId + '</span>';
     document.getElementById('step2-card').classList.remove('hidden');
     document.getElementById('step2-card').scrollIntoView({behavior:'smooth'});
+    updateStepper(2);
   } catch(e) { setResult('upload-result','error','上傳失敗：'+e.message); }
-  finally { btn.disabled=false; btn.innerHTML='上傳'; }
+  finally { btn.disabled = false; btn.innerHTML = '上傳財報'; }
 }
 
+/* ── Step 2 ── */
 async function ingestDoc() {
-  const btn=document.getElementById('ingest-btn');
-  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> 解析中...';
+  const btn = document.getElementById('ingest-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 解析中...';
   try {
-    const data=await parseResponse(await fetch(`/api/v1/documents/${documentId}/ingest`,{method:'POST'}));
-    document.getElementById('badge2').textContent='✓';
+    const data = await parseResponse(await fetch(`/api/v1/documents/${documentId}/ingest`,{method:'POST'}));
+    document.getElementById('badge2').textContent = '✓';
     document.getElementById('badge2').classList.add('done');
-    document.getElementById('ingest-success-msg').textContent=
-      `✅ 解析完成  ${data.pages_extracted} 頁 / ${data.chunks_created} 個 chunks`;
+    document.getElementById('ingest-success-msg').innerHTML =
+      '<span class="alert-icon">✓</span><span>解析完成 — ' + data.pages_extracted + ' 頁 / ' + data.chunks_created + ' 個 chunks</span>';
     document.getElementById('step3-card').classList.remove('hidden');
     document.getElementById('step3-card').scrollIntoView({behavior:'smooth'});
+    updateStepper(3);
   } catch(e) { setResult('ingest-result','error','解析失敗：'+e.message); }
-  finally { btn.disabled=false; btn.innerHTML='開始解析'; }
+  finally { btn.disabled = false; btn.innerHTML = '開始解析'; }
 }
 
+/* ── Step 3 ── */
 async function generateSummary() {
-  const btn=document.getElementById('summary-btn');
-  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Claude 分析中，請稍候...';
+  const btn = document.getElementById('summary-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Claude 分析中，請稍候...';
   try {
-    const data=await parseResponse(await fetch(`/api/v1/documents/${documentId}/summary`,{method:'POST'}));
-    document.getElementById('badge3').textContent='✓';
+    const data = await parseResponse(await fetch(`/api/v1/documents/${documentId}/summary`,{method:'POST'}));
+    document.getElementById('badge3').textContent = '✓';
     document.getElementById('badge3').classList.add('done');
     renderResults(data);
     document.getElementById('results-area').classList.remove('hidden');
     document.getElementById('results-area').scrollIntoView({behavior:'smooth'});
-    // Show Step 4 + Step 5 after summary completes
     document.getElementById('step4-card').classList.remove('hidden');
     document.getElementById('step5-card').classList.remove('hidden');
+    updateStepper(4);
   } catch(e) { setResult('summary-result','error','摘要失敗：'+e.message); }
-  finally { btn.disabled=false; btn.innerHTML='產生分析'; }
+  finally { btn.disabled = false; btn.innerHTML = '產生分析'; }
 }
 
+/* ── Step 4 ── */
 async function runCoverage() {
-  const btn=document.getElementById('coverage-btn');
-  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Haiku 稽核中...';
+  const btn = document.getElementById('coverage-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Haiku 稽核中...';
   try {
-    const data=await parseResponse(await fetch(`/api/v1/documents/${documentId}/disclosure-coverage`,{method:'POST'}));
-    document.getElementById('badge4').textContent='✓';
+    const data = await parseResponse(await fetch(`/api/v1/documents/${documentId}/disclosure-coverage`,{method:'POST'}));
+    document.getElementById('badge4').textContent = '✓';
     document.getElementById('badge4').classList.add('done');
     renderCoverage(data);
     document.getElementById('coverage-area').classList.remove('hidden');
     document.getElementById('coverage-area').scrollIntoView({behavior:'smooth'});
+    updateStepper(5);
   } catch(e) { setResult('coverage-result','error','稽核失敗：'+e.message); }
-  finally { btn.disabled=false; btn.innerHTML='執行稽核'; }
+  finally { btn.disabled = false; btn.innerHTML = '執行稽核'; }
 }
 
 /* ══════════════════════════════════════════
-   RENDER RESULTS
+   RENDER RESULTS  — Phase 1 Cognitive Workflow (5 layers)
 ══════════════════════════════════════════ */
 function renderResults(data) {
   const claims = data.claims || [];
@@ -535,144 +789,264 @@ function renderResults(data) {
   const keyFindings = tierA.filter(c => c.claim_level === 'observed_fact' || c.claim_level === 'derived_metric');
   const reviewCount = cleanClaims.filter(c => c.requires_human_review).length;
 
-  const advBadge = data.investment_advice_detected ? badge('b-red','advice-risk') : badge('b-green','no-advice');
-  const evBadge = {complete:badge('b-green','evidence-complete'),partial:badge('b-amber','evidence-partial'),insufficient:badge('b-red','evidence-insufficient')}[data.evidence_status]||'';
-
-  const byLv = {};
-  cleanClaims.forEach(c=>{ byLv[c.claim_level]=(byLv[c.claim_level]||0)+1; });
+  const evBadge = {complete:badge('b-green','佐證完整'),partial:badge('b-amber','佐證部分'),insufficient:badge('b-red','佐證不足')}[data.evidence_status]||'';
   const evidenceCoverage = cleanClaims.length
-    ? Math.round((cleanClaims.filter(c => (c.evidence||[]).length > 0).length / cleanClaims.length) * 100)
-    : 0;
-  const confidence = reviewCount === 0 ? 'High' : (reviewCount <= 2 ? 'Medium' : 'Low');
+    ? Math.round((cleanClaims.filter(c=>(c.evidence||[]).length>0).length/cleanClaims.length)*100) : 0;
+  const confidence = reviewCount===0 ? 'High' : (reviewCount<=2 ? 'Medium' : 'Low');
   const dashboard = data.dashboard || {};
   const contractValid = data.dashboard_contract_valid !== false;
 
-  let html = `
-    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:2px solid #e2e8f0;margin-bottom:14px;">
+  const METRIC_ZH = {revenue:'營收',gross_margin:'毛利率',operating_income:'營業利益',eps:'每股損益',cash:'現金',debt:'負債',fx:'匯兌損益',customer_concentration:'客戶集中度'};
+  const DIR_ZH = {up:'↑ 上升',down:'↓ 下降',flat:'→ 持平'};
+  const IMPACT_ZH = {high:'高',medium:'中',low:'低'};
+
+  // ── Layer 1 signals ──
+  const periodOk = data.temporal_consistent !== false;
+  const riskRows = dashboard.risk_surface || [];
+  const highRisk = riskRows.filter(r => r.severity === 'high');
+  const covStatus = highRisk.length > 2 ? 'alert' : highRisk.length > 0 ? 'warn' : 'ok';
+  const whatChanged = dashboard.what_changed || [];
+  const revItem = whatChanged.find(m => m.metric_id === 'revenue');
+  const revStatus = revItem && revItem.direction === 'down' ? 'warn' : 'ok';
+  const advOk = !data.investment_advice_detected;
+
+  const COV_SIG = {ok:['✓','無高風險','db-ok'], warn:['⚠','部分高風險','db-warn'], alert:['✕','多項高風險','db-alert']};
+  const covSignal = COV_SIG[covStatus];
+  const revSignal = revItem
+    ? (revStatus==='warn'
+        ? ['↓', revItem.delta_pct!=null ? `${revItem.delta_pct}%` : '下降', 'db-warn']
+        : ['↑', revItem.delta_pct!=null ? `+${revItem.delta_pct}%` : '成長', 'db-ok'])
+    : ['—','無資料','db-ok'];
+  const periodSignal = periodOk ? ['✓','期間一致','db-ok'] : ['⚠','期間不符','db-warn'];
+  const advSignal = advOk ? ['✓','無投資建議','db-ok'] : ['⚠','含建議風險','db-warn'];
+
+  // ── Layer 3: attention items (語意分類) ──
+  const completenessWarnings = data.completeness_warnings || [];
+  const RISK_ZH = {'Customer concentration':'客戶集中度','Margin pressure':'毛利壓力','Liquidity pressure':'流動性壓力','FX exposure':'匯兌風險'};
+  const attnItems = [];
+  completenessWarnings.forEach(w => attnItems.push({tagCls:'attn-tag-oc', tag:'OC規則', text:w}));
+  if (contaminatedClaims.length > 0) attnItems.push({tagCls:'attn-tag-watch', tag:'污染', text:`${contaminatedClaims.length} 條觀察期間不一致，已隔離`});
+  highRisk.forEach(r => attnItems.push({tagCls:'attn-tag-risk', tag:'結構風險', text:`${RISK_ZH[r.label]||r.label}：${r.severity_reason||''}`}));
+  if (data.investment_advice_detected) attnItems.push({tagCls:'attn-tag-risk', tag:'治理', text:'摘要含投資建議語氣，請人工確認'});
+  if (reviewCount > 0) attnItems.push({tagCls:'attn-tag-info', tag:'待確認', text:`${reviewCount} 條觀察需人工確認（不確定性，非風險）`});
+
+  // ── Layer 4: KPI split ──
+  const primaryKpis = whatChanged.filter(m => m.impact === 'high');
+  const secondaryKpis = whatChanged.filter(m => m.impact !== 'high');
+
+  // ── Build HTML ──
+  const reviewClaims = cleanClaims.filter(c => c.requires_human_review);
+  let html = `<div class="results-card">
+    <div class="results-card-header">
       <span class="report-title">${data.stock_id||''} ${data.period||''}</span>
-      ${evBadge} ${advBadge}
-      ${reviewCount>0?badge('b-amber',`${reviewCount} review-required`):''}
-    </div>`;
+      <div class="gov-bar">${evBadge} ${reviewCount>0?`<button class="b-review" onclick="toggleReviewPanel()">⚑ ${reviewCount} 條待確認</button>`:''}</div>
+    </div>
+    <div class="results-card-body">`;
 
   if (data.dashboard_contract_valid === false) {
-    html += `<div class="alert alert-error" style="margin-bottom:12px;">Dashboard contract invalid: ${(data.dashboard_contract_errors||[]).join(', ')}</div>`;
+    html += `<div class="alert alert-error" style="margin-bottom:12px;"><span class="alert-icon">✕</span><span>Dashboard contract invalid: ${(data.dashboard_contract_errors||[]).join(', ')}</span></div>`;
   }
 
-  if (!data.temporal_consistent) {
+  // ── LAYER 0: Primary Narrative ──
+  html += computeNarrative(data, highRisk, riskRows, cleanClaims, whatChanged);
+
+  // ── LAYER 1: Decision Banner ──
+  html += `<div class="decision-banner">
+    <div class="db-signal ${periodSignal[2]}"><div class="db-icon">${periodSignal[0]}</div><div><div class="db-label">期間一致性</div><div class="db-value">${periodSignal[1]}</div></div></div>
+    <div class="db-signal ${revSignal[2]}"><div class="db-icon">${revSignal[0]}</div><div><div class="db-label">營收趨勢</div><div class="db-value">${revSignal[1]}</div></div></div>
+    <div class="db-signal ${covSignal[2]}"><div class="db-icon">${covSignal[0]}</div><div><div class="db-label">風險概況</div><div class="db-value">${covSignal[1]}</div></div></div>
+    <div class="db-signal ${advSignal[2]}"><div class="db-icon">${advSignal[0]}</div><div><div class="db-label">治理</div><div class="db-value">${advSignal[1]}</div></div></div>
+  </div>`;
+
+  if (!periodOk) {
     html += `<div class="temporal-banner">
-      <div class="t-title">Temporal mismatch detected</div>
-      <div class="t-body">
-        Requested period: <b>${data.requested_period||''}</b> / Document period: <b>${data.document_period||''}</b><br>
-        ${data.temporal_note||''}
-        ${contaminatedClaims.length?`<br><span style="color:#b45309">${contaminatedClaims.length} contaminated claims hidden from primary layer.</span>`:''}
-      </div>
+      <div class="t-title">⚠ 期間不一致</div>
+      <div class="t-body">請求期間：<b>${data.requested_period||''}</b> / 文件期間：<b>${data.document_period||''}</b><br>${data.temporal_note||''}
+      ${contaminatedClaims.length?`<br><span style="color:#b45309">${contaminatedClaims.length} 條受污染觀察已隔離。</span>`:''}</div>
     </div>`;
   }
 
-  html += `<div class="mini-stats">
-    <div class="ms-item"><div class="ms-n">${cleanClaims.length}</div><div class="ms-l">Claims</div></div>
-    <div class="ms-item"><div class="ms-n">${tierA.length}</div><div class="ms-l">Tier A</div></div>
-    <div class="ms-item"><div class="ms-n">${byLv.observed_fact||0}</div><div class="ms-l">Facts</div></div>
-    <div class="ms-item"><div class="ms-n">${byLv.derived_metric||0}</div><div class="ms-l">Derived</div></div>
-    <div class="ms-item"><div class="ms-n">${byLv.interpretation||0}</div><div class="ms-l">Interpretation</div></div>
-  </div>`;
-
   if (contractValid) {
-    html += `<div class="exec-card"><div class="ec-label">Financial Dashboard</div><div class="ec-text">${data.executive_summary||''}</div></div>`;
+    // ── LAYER 2a: Executive Summary ──
+    html += `<div class="exec-card"><div class="ec-label">財務摘要</div><div class="ec-text">${data.executive_summary||''}</div></div>`;
 
-    const whatChanged = dashboard.what_changed || [];
-    const kpi = whatChanged.map(item => {
-      const deltaText = item.delta_pct===null || item.delta_pct===undefined ? 'n/a' : `${item.delta_pct > 0 ? '+' : ''}${item.delta_pct}`;
-      const dirText = item.direction === 'up' ? '↑' : item.direction === 'down' ? '↓' : '→';
-      const cls = item.direction === 'up' ? 'delta-up' : item.direction === 'down' ? 'delta-down' : 'delta-flat';
-    return {
-      label: item.label || item.metric_id,
-      value: deltaText,
-      delta: `${dirText} ${item.direction || 'flat'}`,
-      cls,
-        impact: item.impact || 'medium',
-        claimText: item.claim_text || '',
-      };
-    });
-
-  html += `<div class="fr-section"><div class="fr-title">What Changed</div><div class="kpi-grid">`;
-  kpi.forEach(item => {
-    html += `<div class="kpi-card"><div class="kpi-label">${item.label}</div><div class="kpi-value">${item.value}</div><div class="kpi-delta ${item.cls}">${item.delta}</div><div class="kpi-impact">Impact: ${item.impact}</div>${item.claimText?`<div style="font-size:.7rem;color:#475569;margin-top:4px;">${item.claimText}</div>`:''}</div>`;
-  });
-  html += `</div></div>`;
-
-    const chain = dashboard.causal_edges || [];
-    html += `<div class="fr-section"><div class="fr-title">Why It Changed</div><div class="flow-box">`;
-    if (chain.length) {
-      chain.forEach((node, idx) => {
-        html += `<div class="flow-step">${node.source_metric} → ${node.target_metric} (${node.relation})</div>`;
-        if (idx < chain.length - 1) html += `<div class="flow-arrow">↓</div>`;
+    // ── LAYER 2b: Hero KPI cards (top 3) ──
+    const topChanges = whatChanged.slice(0, 3);
+    if (topChanges.length > 0) {
+      html += `<div class="section-label">關鍵指標一覽</div><div class="findings-grid">`;
+      topChanges.forEach((item, idx) => {
+        const delta = item.delta_pct===null||item.delta_pct===undefined ? '—' : `${item.delta_pct>0?'+':''}${item.delta_pct}%`;
+        const dirCls = `dir-${item.direction||'flat'}`;
+        const fcCls = item.direction === 'flat' ? 'fc-flat' : 'fc-up';
+        const isHero = idx === 0 && item.impact === 'high';
+        if (isHero) {
+          html += `<div class="finding-card ${fcCls} fc-hero">
+            <div class="fc-hero-left">
+              <div class="fc-metric">${METRIC_ZH[item.metric_id]||item.label||item.metric_id}</div>
+              <div class="fc-delta">${delta}</div>
+              <div class="fc-dir ${dirCls}">${DIR_ZH[item.direction]||'→ 持平'}</div>
+              <div class="fc-impact">${badge('b-red','影響：高')}</div>
+            </div>
+            ${item.claim_text?`<div class="fc-hero-right fc-claim">${item.claim_text}</div>`:'<div class="fc-hero-right"></div>'}
+          </div>`;
+        } else {
+          html += `<div class="finding-card ${fcCls}">
+            <div class="fc-impact">${badge(item.impact==='high'?'b-red':item.impact==='medium'?'b-amber':'b-gray','影響：'+(IMPACT_ZH[item.impact]||'中'))}</div>
+            <div class="fc-metric">${METRIC_ZH[item.metric_id]||item.label||item.metric_id}</div>
+            <div class="fc-delta">${delta}</div>
+            <div class="fc-dir ${dirCls}">${DIR_ZH[item.direction]||'→ 持平'}</div>
+            ${item.claim_text?`<div class="fc-claim">${item.claim_text}</div>`:''}
+          </div>`;
+        }
       });
+      html += `</div>`;
     }
-    html += `</div></div>`;
 
+    // ── LAYER 3: Attention Panel ──
+    if (attnItems.length > 0) {
+      html += `<div class="attention-panel">
+        <div class="attn-header">⚠ 注意事項</div>
+        <div class="attn-items">`;
+      attnItems.forEach(a => {
+        html += `<div class="attn-item"><span class="${a.tagCls||'attn-tag'}">${a.tag}</span><span class="attn-text">${a.text}</span></div>`;
+      });
+      html += `</div></div>`;
+    }
+
+    // ── LAYER 4: Full KPI Grid ──
+    if (whatChanged.length > 0) {
+      html += `<div class="fr-section"><div class="fr-title">完整指標變化</div>`;
+      if (primaryKpis.length > 0 && secondaryKpis.length > 0) {
+        html += `<div class="kpi-group-label kg-primary">核心指標（高影響）</div><div class="kpi-grid">`;
+        primaryKpis.forEach(item => { html += renderKpiCard(item, METRIC_ZH, DIR_ZH, IMPACT_ZH); });
+        html += `</div><div class="kpi-group-label kg-secondary">次要指標</div><div class="kpi-grid">`;
+        secondaryKpis.forEach(item => { html += renderKpiCard(item, METRIC_ZH, DIR_ZH, IMPACT_ZH); });
+        html += `</div>`;
+      } else {
+        html += `<div class="kpi-grid">`;
+        whatChanged.forEach(item => { html += renderKpiCard(item, METRIC_ZH, DIR_ZH, IMPACT_ZH); });
+        html += `</div>`;
+      }
+      html += `</div>`;
+    }
+
+    // Causal chain
+    const RELATION_ZH = {positive_driver:'正向驅動',negative_driver:'負向驅動',correlated:'相關'};
+    const chain = dashboard.causal_edges || [];
+    if (chain.length > 0) {
+      html += `<div class="fr-section"><div class="fr-title">變化原因</div><div class="flow-box">`;
+      chain.forEach((node, idx) => {
+        const src = METRIC_ZH[node.source_metric]||node.source_metric;
+        const tgt = METRIC_ZH[node.target_metric]||node.target_metric;
+        html += `<div class="flow-step">${src} → ${tgt}（${RELATION_ZH[node.relation]||node.relation}）</div>`;
+        if (idx < chain.length-1) html += `<div class="flow-arrow">↓</div>`;
+      });
+      html += `</div></div>`;
+    }
+
+    // Adjustments
     const adjustments = dashboard.adjustments || [];
     if (adjustments.length > 0) {
-    html += `<div class="fr-section"><div class="fr-title">Adjustments</div><div class="adjust-grid">`;
-    adjustments.slice(0,4).forEach(c => {
-      html += `<div class="adjust-card"><div class="adjust-title">Non-recurring adjustment</div><div style="font-size:.8rem;line-height:1.5;color:#7c2d12;">${c.claim}</div><div style="margin-top:6px;">${badge('b-red','recurring=false')} ${c.requires_human_review?badge('b-amber','review'):''}</div></div>`;
-    });
-    html += `</div></div>`;
-  }
+      html += `<div class="fr-section"><div class="fr-title">非常態調整項目</div><div class="adjust-grid">`;
+      adjustments.slice(0,4).forEach(c => {
+        html += `<div class="adjust-card"><div class="adjust-title">一次性項目</div>
+          <div style="font-size:.8rem;line-height:1.5;color:#7c2d12;">${c.claim}</div>
+          <div style="margin-top:6px;">${badge('b-red','一次性')} ${c.requires_human_review?badge('b-amber','需人工確認'):''}</div>
+        </div>`;
+      });
+      html += `</div></div>`;
+    }
 
-    const riskRows = dashboard.risk_surface || [];
-    html += `<div class="fr-section"><div class="fr-title">Risk Surface</div>
-    <table class="risk-table">
-      <tr><th>Risk</th><th>Level</th><th>Trend</th><th>Reason</th></tr>
-      ${riskRows.map(r => `<tr><td>${r.label}</td><td>${r.severity}</td><td>${r.trend}</td><td>${r.severity_reason || ''}</td></tr>`).join('')}
-    </table>
-  </div>`;
+    // Risk table
+    if (riskRows.length > 0) {
+      const SEV_ZH = {high:'高',medium:'中',low:'低'};
+      const TREND_ZH = {up:'上升',flat:'持平',down:'下降'};
+      const REASON_ZH = r => {
+        const s = r.severity_reason||'';
+        if (s==='no_explicit_ratio_claim') return '無明確集中度比率揭露';
+        if (s==='customer_concentration_claim_present') return '集中度揭露存在';
+        if (s.startsWith('gross_margin_drop_pp=')) return `毛利率降幅 ${s.split('=')[1]} pp`;
+        if (s==='cash_claim_present') return '現金揭露存在';
+        if (s==='cash_claim_missing') return '現金揭露缺失';
+        if (s==='fx_claim_present') return '匯兌揭露存在';
+        if (s==='fx_claim_missing') return '匯兌揭露缺失';
+        return s;
+      };
+      html += `<div class="fr-section"><div class="fr-title">風險面向</div>
+        <table class="risk-table">
+          <tr><th>風險項目</th><th>程度</th><th>趨勢</th><th>說明</th></tr>
+          ${riskRows.map(r=>`<tr><td>${RISK_ZH[r.label]||r.label}</td><td>${SEV_ZH[r.severity]||r.severity}</td><td>${TREND_ZH[r.trend]||r.trend}</td><td>${REASON_ZH(r)}</td></tr>`).join('')}
+        </table>
+      </div>`;
+    }
 
+    // AI Transparency
+    const CONF_ZH = {High:'高',Medium:'中',Low:'低'};
     const tr = dashboard.transparency || {};
-    html += `<div class="fr-section"><div class="fr-title">AI Transparency</div><div class="flow-box">
-    ${badge(confidence==='High'?'b-green':'b-amber',`confidence ${confidence}`)}
-    ${badge('b-blue',`evidence ${tr.evidence_coverage_pct ?? evidenceCoverage}%`)}
-    ${badge((tr.human_review_count ?? reviewCount)>0?'b-red':'b-green',`human review ${tr.human_review_count ?? reviewCount}`)}
-    ${(tr.narrative_flag ?? data.narrative_flag)?`<div style="margin-top:8px;font-size:.74rem;color:#92400e;">narrative density ${tr.narrative_density_score ?? data.narrative_density_score} / weighted ${tr.narrative_density_weighted_score ?? data.narrative_density_weighted_score}</div>`:''}
-  </div></div>`;
+    html += `<div class="fr-section"><div class="fr-title">AI 透明度</div><div class="transparency-box">
+      ${badge(confidence==='High'?'b-green':'b-amber',`可信度：${CONF_ZH[confidence]||confidence}`)}
+      ${badge('b-blue',`佐證覆蓋率：${tr.evidence_coverage_pct??evidenceCoverage}%`)}
+      ${badge((tr.human_review_count??reviewCount)>0?'b-red':'b-green',`需人工審查：${tr.human_review_count??reviewCount} 條`)}
+      ${(tr.narrative_flag??data.narrative_flag)?`<div style="margin-top:8px;font-size:.74rem;color:#92400e;width:100%;">敘事密度 ${tr.narrative_density_score??data.narrative_density_score} / 加權 ${tr.narrative_density_weighted_score??data.narrative_density_weighted_score}</div>`:''}
+    </div></div>`;
   }
 
+  // Key Findings
   if (keyFindings.length > 0) {
-    html += `<div class="kf-section"><div class="kf-label">Raw Evidence (Tier A)</div><div class="kf-grid">`;
+    html += `<div class="kf-section"><div class="kf-label">核心直接事實</div><div class="kf-grid">`;
     keyFindings.slice(0,4).forEach(c => {
-      const kfc = KF_CLASS[c.claim_level] || 'kf-derived';
       const pages = (c.evidence||[]).map(e=>`P.${e.page}`).join(' ');
-      html += `<div class="kf-card ${kfc}">
-        ${!c.recurring?'<span class="kf-nonrecurring">one-off</span>':''}
+      html += `<div class="kf-card ${KF_CLASS[c.claim_level]||'kf-derived'}">
+        ${!c.recurring?'<span class="kf-nonrecurring">一次性</span>':''}
         <div class="kf-text">${c.claim}</div>
         <div class="kf-meta">
-          ${badge(LEVEL_BADGE[c.claim_level]?.[0]||'b-gray', LEVEL_BADGE[c.claim_level]?.[1]||c.claim_level)}
+          ${badge(LEVEL_BADGE[c.claim_level]?.[0]||'b-gray',LEVEL_BADGE[c.claim_level]?.[1]||c.claim_level)}
           ${pages?`<span class="kf-page">${pages}</span>`:''}
-          ${c.requires_human_review?badge('b-red','review'):''}
+          ${c.requires_human_review?badge('b-red','需審查'):''}
         </div>
       </div>`;
     });
     html += `</div></div>`;
   }
 
+  // ── Review Panel (expandable) ──
+  if (reviewClaims.length > 0) {
+    const TAG_ZH = {observed_fact:'直接事實',derived_metric:'衍生指標',interpretation:'AI詮釋',hypothesis:'假設',insufficient_evidence:'佐證不足'};
+    const REVIEW_REASON = c => {
+      if (c.forward_looking) return '前瞻性說明';
+      if (c.claim_level === 'interpretation' || c.claim_level === 'hypothesis') return 'AI詮釋類';
+      if ((c.evidence||[]).length === 0) return '缺乏頁碼佐證';
+      if (c.rhetorical_risk_flag) return '敘事語氣偏強';
+      return '需人工驗證';
+    };
+    html += `<div class="review-toggle-btn" onclick="toggleReviewPanel()" id="review-toggle-btn">▶ 展開 ${reviewClaims.length} 條待確認項目</div>
+    <div class="review-panel" id="review-panel">
+      <div class="review-panel-header">待確認觀察（不確定性提示，非風險判斷）</div>
+      <div class="review-panel-items">`;
+    reviewClaims.forEach(c => {
+      const pages = (c.evidence||[]).map(e=>`P.${e.page}`).join(' ');
+      html += `<div class="review-panel-item">
+        <span class="review-panel-item-tag">${REVIEW_REASON(c)}</span>
+        <span class="review-panel-item-text">${c.claim}</span>
+        ${pages?`<span class="review-panel-item-page">${pages}</span>`:''}
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // ── LAYER 5: Evidence Explorer ──
   const grouped = {};
   SECTION_ORDER.forEach(k => grouped[k]=[]);
-  cleanClaims.forEach(c => {
-    const k = c.section_key||'key_financials';
-    if (!grouped[k]) grouped[k]=[];
-    grouped[k].push(c);
-  });
+  cleanClaims.forEach(c => { const k=c.section_key||'key_financials'; if(!grouped[k]) grouped[k]=[]; grouped[k].push(c); });
   SECTION_ORDER.forEach(k => grouped[k].sort((a,b)=>(TIER_ORDER[a.materiality]||1)-(TIER_ORDER[b.materiality]||1)));
 
-  html += `<div class="fr-section"><div class="fr-title">Evidence Explorer</div>`;
+  html += `<div class="explorer-sep"><span class="explorer-sep-label">逐條佐證</span></div>`;
   html += `<div class="tabs" id="tabs-row">`;
   SECTION_ORDER.forEach((k,i) => {
     const m = SECTION_META[k];
-    const cnt = grouped[k].length + (contaminatedClaims.filter(c=>c.section_key===k).length);
-    if (cnt === 0) return;
-    html += `<div class="tab${i===0?' active':''}" onclick="switchTab('${k}')" id="tab-${k}">
-      ${m.icon} ${m.label}<span class="tab-count">${cnt}</span>
-    </div>`;
+    const cnt = grouped[k].length + contaminatedClaims.filter(c=>c.section_key===k).length;
+    if (cnt===0) return;
+    html += `<div class="tab${i===0?' active':''}" onclick="switchTab('${k}')" id="tab-${k}">${m.icon} ${m.label}<span class="tab-count">${cnt}</span></div>`;
   });
   html += `</div>`;
 
@@ -680,242 +1054,205 @@ function renderResults(data) {
     const sectionClaims = grouped[k];
     const sectionContam = contaminatedClaims.filter(c=>c.section_key===k);
     if (sectionClaims.length===0 && sectionContam.length===0) return;
-
-    const factClaims = sectionClaims.filter(c =>
-      c.claim_level === 'observed_fact' ||
-      c.claim_level === 'derived_metric' ||
-      c.claim_level === 'insufficient_evidence'
-    );
-    const interpClaims = sectionClaims.filter(c =>
-      c.claim_level === 'interpretation' || c.claim_level === 'hypothesis'
-    );
+    const factClaims = sectionClaims.filter(c=>c.claim_level==='observed_fact'||c.claim_level==='derived_metric'||c.claim_level==='insufficient_evidence');
+    const interpClaims = sectionClaims.filter(c=>c.claim_level==='interpretation'||c.claim_level==='hypothesis');
 
     html += `<div class="claims-pane${i===0?' active':''}" id="pane-${k}">`;
     factClaims.forEach(c => { html += renderClaim(c); });
-    if (factClaims.length === 0 && interpClaims.length > 0) {
-      html += `<div style="font-size:.8rem;color:#94a3b8;padding:8px 4px;font-style:italic;">No direct evidence claims in this section.</div>`;
+    if (factClaims.length===0 && interpClaims.length>0) {
+      html += `<div style="font-size:.8rem;color:#94a3b8;padding:8px 4px;font-style:italic;">本段落無直接事實，以下為 AI 詮釋。</div>`;
     }
-
     if (interpClaims.length > 0) {
-      html += `<button class="interp-toggle" onclick="toggleInterp('interp-${k}')">AI interpretations (${interpClaims.length})</button>
+      html += `<button class="interp-toggle" onclick="toggleInterp('interp-${k}')">🧠 AI 假設與詮釋（${interpClaims.length} 條）— 展開確認</button>
       <div class="interp-section" id="interp-${k}">
-        <div class="interp-disclaimer">Interpretation claims are not direct facts. Confirm with evidence lines before use.</div>`;
+        <div class="interp-disclaimer">以下為 AI 詮釋類觀察，非直接事實。使用前請確認 evidence。</div>`;
       interpClaims.forEach(c => { html += renderClaim(c); });
       html += `</div>`;
     }
-
     if (sectionContam.length > 0) {
-      html += `<button class="contaminated-toggle" onclick="toggleContam('contam-${k}')">Contaminated claims (${sectionContam.length})</button>
+      html += `<button class="contaminated-toggle" onclick="toggleContam('contam-${k}')">▶ 顯示 ${sectionContam.length} 條已污染觀察（時間軸不一致）</button>
       <div class="contaminated-section" id="contam-${k}">`;
       sectionContam.forEach(c => { html += renderClaim(c, true); });
       html += `</div>`;
     }
     html += `</div>`;
   });
-  html += `</div>`;
+  html += `</div></div>`;
 
   document.getElementById('results-body').innerHTML = html;
-
-  const firstTab = SECTION_ORDER.find(k => (grouped[k].length + contaminatedClaims.filter(c=>c.section_key===k).length) > 0);
+  const firstTab = SECTION_ORDER.find(k=>(grouped[k].length+contaminatedClaims.filter(c=>c.section_key===k).length)>0);
   if (firstTab) switchTab(firstTab);
 }
+
+function renderKpiCard(item, METRIC_ZH, DIR_ZH, IMPACT_ZH) {
+  const delta = item.delta_pct===null||item.delta_pct===undefined ? '—' : `${item.delta_pct>0?'+':''}${item.delta_pct}`;
+  const cls = item.direction==='flat' ? 'delta-flat' : 'delta-up';
+  return `<div class="kpi-card">
+    <div class="kpi-label">${METRIC_ZH[item.metric_id]||item.label||item.metric_id}</div>
+    <div class="kpi-value">${delta}</div>
+    <div class="kpi-delta ${cls}">${DIR_ZH[item.direction]||'→ 持平'}</div>
+    <div class="kpi-impact">影響程度：${IMPACT_ZH[item.impact]||item.impact||'中'}</div>
+    ${item.claim_text?`<div style="font-size:.7rem;color:#475569;margin-top:4px;">${item.claim_text}</div>`:''}
+  </div>`;
+}
+
+function computeNarrative(data, highRisk, riskRows, cleanClaims, whatChanged) {
+  const dashboard = data.dashboard || {};
+  const adjustments = dashboard.adjustments || [];
+  const reviewClaims = cleanClaims.filter(c => c.requires_human_review);
+
+  const hasMarginRisk = highRisk.some(r => r.label === 'Margin pressure' && r.trend === 'up');
+  const hasConcentrationRisk = highRisk.some(r => r.label === 'Customer concentration');
+  const allAdjNonRecurring = adjustments.length > 0 && adjustments.every(c => c.recurring === false);
+  const cashOk = !highRisk.some(r => r.label === 'Liquidity pressure');
+  const revDown  = whatChanged.find(m => m.metric_id === 'revenue')?.direction === 'down';
+  const margDown = whatChanged.find(m => m.metric_id === 'gross_margin')?.direction === 'down';
+  const hasHighImpact = whatChanged.some(m => m.impact === 'high');
+
+  let type, icon, label, sublabel, colorCls, confidence, reasons, watchPoints;
+
+  if ((hasMarginRisk && margDown) || (highRisk.length >= 2 && !allAdjNonRecurring)) {
+    type = 'structural'; icon = '🔴'; colorCls = 'narr-risk';
+    label = '系統主結論'; sublabel = '結構性壓力跡象'; confidence = 68;
+    reasons = [
+      hasMarginRisk ? '毛利率出現持續性下滑趨勢' : null,
+      hasConcentrationRisk ? '客戶集中度風險未獲充分揭露' : null,
+      margDown && !allAdjNonRecurring ? '毛利下滑非一次性因素可解釋' : null,
+    ].filter(Boolean);
+    watchPoints = ['下季毛利率是否回升', '客戶集中度具體比率揭露', '是否有結構性訂單流失'];
+  } else if ((revDown || margDown) && (allAdjNonRecurring || adjustments.length > 0) && cashOk) {
+    type = 'transient'; icon = '🟡'; colorCls = 'narr-watch';
+    label = '系統主結論'; sublabel = '短期營運波動'; confidence = 76;
+    reasons = [
+      revDown ? '營收下滑可追溯至具體遞延事件' : null,
+      allAdjNonRecurring ? '毛利影響項目屬非常態一次性費用' : null,
+      cashOk ? '現金流動性維持穩健' : null,
+    ].filter(Boolean);
+    watchPoints = ['下季訂單入帳時間確認', '一次性費用是否重複發生', '毛利率是否恢復基準'];
+  } else {
+    type = 'stable'; icon = '🟢'; colorCls = 'narr-ok';
+    label = '系統主結論'; sublabel = '整體穩健'; confidence = 85;
+    reasons = [
+      !revDown ? '營收維持穩定或正向成長' : null,
+      !margDown ? '毛利率無明顯惡化' : null,
+      cashOk ? '流動性風險無虞' : null,
+    ].filter(Boolean);
+    watchPoints = ['持續監控毛利率變化', '留意客戶集中度揭露完整性'];
+  }
+
+  if (reasons.length === 0) reasons = ['財務指標未見重大異常'];
+
+  const confPct = confidence + '%';
+  return `<div class="narr-card ${colorCls}">
+    <div class="narr-icon">${icon}</div>
+    <div class="narr-body">
+      <div class="narr-label">${label}</div>
+      <div class="narr-title">${sublabel}</div>
+      <div class="narr-conf">
+        信心程度 ${confidence}%
+        <div class="narr-conf-bar"><div class="narr-conf-fill" style="width:${confPct}"></div></div>
+      </div>
+      <div class="narr-cols">
+        <div>
+          <div class="narr-col-title">主要原因</div>
+          <ul class="narr-points">${reasons.map(r=>`<li>${r}</li>`).join('')}</ul>
+        </div>
+        <div>
+          <div class="narr-col-title">需持續觀察</div>
+          <ul class="narr-points">${watchPoints.map(w=>`<li>${w}</li>`).join('')}</ul>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
 function renderClaim(c, isContaminated=false) {
   const lvCls = isContaminated ? 'lv-insuf' : (LEVEL_CLASS[c.claim_level]||'lv-insuf');
-  const [bCls, bLabel] = LEVEL_BADGE[c.claim_level] || ['b-gray', c.claim_level];
-  const isInterp = c.claim_level === 'interpretation' || c.claim_level === 'hypothesis';
-  const reviewCls = (!isContaminated && c.requires_human_review) ? ' review-flag' : '';
-  const evHtml = (c.evidence||[]).map(e =>
-    `<div class="ev-item"><span class="ev-page">P.${e.page}</span><span class="ev-quote">${e.quoted_text||e.section||''}</span></div>`
-  ).join('');
+  const [bCls, bLabel] = LEVEL_BADGE[c.claim_level]||['b-gray',c.claim_level];
+  const isInterp = c.claim_level==='interpretation'||c.claim_level==='hypothesis';
+  const reviewCls = (!isContaminated&&c.requires_human_review) ? ' review-flag' : '';
+  const evHtml = (c.evidence||[]).map(e=>`<div class="ev-item"><span class="ev-page">P.${e.page}</span><span class="ev-quote">${e.quoted_text||e.section||''}</span></div>`).join('');
   const evId = 'ev-'+c.claim_id;
-  const edInfo = EVIDENCE_DISTANCE[c.claim_level] || { label: c.claim_level, cls: 'ed-insuf' };
-  // Lower rhetorical confidence for interpretation/hypothesis
+  const edInfo = EVIDENCE_DISTANCE[c.claim_level]||{label:c.claim_level,cls:'ed-insuf'};
   const attrPfx = c.attribution_prefix ? `<span class="attr-prefix">${c.attribution_prefix}</span>` : '';
   const claimText = isInterp ? `可能需要檢查：${attrPfx}${c.claim}` : `${attrPfx}${c.claim}`;
-  const stBadge = c.source_type && SOURCE_TYPE_BADGE[c.source_type]
-    ? badge(SOURCE_TYPE_BADGE[c.source_type][0], SOURCE_TYPE_BADGE[c.source_type][1])
-    : '';
+  const stBadge = c.source_type&&SOURCE_TYPE_BADGE[c.source_type] ? badge(SOURCE_TYPE_BADGE[c.source_type][0],SOURCE_TYPE_BADGE[c.source_type][1]) : '';
   const fwdTag = c.forward_looking ? '<span class="fwd-tag">前瞻</span>' : '';
-  const rhetTag = c.rhetorical_risk_flag
-    ? `<span class="rhet-tag" title="敘事語氣偏強：${(c.rhetorical_risk_terms||[]).join('、')}">敘事語氣偏強</span>`
-    : '';
+  const rhetTag = c.rhetorical_risk_flag ? `<span class="rhet-tag" title="敘事語氣偏強：${(c.rhetorical_risk_terms||[]).join('、')}">敘事語氣偏強</span>` : '';
 
   return `<div class="claim-row ${lvCls}${reviewCls}">
     <div class="claim-meta">
-      ${badge(bCls, bLabel)}
+      ${badge(bCls,bLabel)}
       ${c.claim_type?badge('b-gray',c.claim_type):''}
-      ${stBadge}
-      ${fwdTag}
-      ${rhetTag}
+      ${stBadge} ${fwdTag} ${rhetTag}
       ${!c.recurring?'<span class="non-rec">一次性</span>':''}
-      ${isContaminated?badge('b-orange','contaminated'):''}
-      ${(!isContaminated&&c.requires_human_review)?badge('b-red','需人工審查'):''}
+      ${isContaminated?badge('b-orange','污染'):''}
+      ${(!isContaminated&&c.requires_human_review)?badge('b-red','需人工確認'):''}
       <span class="ed-label ${edInfo.cls}">${edInfo.label}</span>
     </div>
     <div class="claim-text${isInterp?' interp-warn':''}">${claimText}</div>
-    ${evHtml?`<div class="ev-toggle">
-      <button class="ev-btn" onclick="toggleEv('${evId}')">▶ 查看來源</button>
-      <div class="ev-list" id="${evId}">${evHtml}</div>
-    </div>`:''}
+    ${evHtml?`<div class="ev-toggle"><button class="ev-btn" onclick="toggleEv('${evId}')">▶ 查看來源</button><div class="ev-list" id="${evId}">${evHtml}</div></div>`:''}
   </div>`;
 }
 
 function switchTab(key) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.claims-pane').forEach(p => p.classList.remove('active'));
-  const t = document.getElementById('tab-'+key);
-  const p = document.getElementById('pane-'+key);
-  if (t) t.classList.add('active');
-  if (p) p.classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.claims-pane').forEach(p=>p.classList.remove('active'));
+  const t=document.getElementById('tab-'+key); const p=document.getElementById('pane-'+key);
+  if(t) t.classList.add('active'); if(p) p.classList.add('active');
 }
 function toggleEv(id) {
-  const el = document.getElementById(id);
-  const btn = el.previousElementSibling;
+  const el=document.getElementById(id); const btn=el.previousElementSibling;
   el.classList.toggle('open');
   btn.textContent = el.classList.contains('open') ? '▼ 收起來源' : '▶ 查看來源';
 }
 function toggleContam(id) {
-  const el = document.getElementById(id);
-  const btn = el.previousElementSibling;
+  const el=document.getElementById(id); const btn=el.previousElementSibling;
   el.classList.toggle('open');
-  btn.textContent = el.classList.contains('open')
-    ? '▲ 隱藏已污染觀察'
-    : `▶ 顯示 ${el.querySelectorAll('.claim-row').length} 條已污染觀察（時間軸不一致）`;
+  btn.textContent = el.classList.contains('open') ? '▲ 隱藏已污染觀察' : `▶ 顯示 ${el.querySelectorAll('.claim-row').length} 條已污染觀察（時間軸不一致）`;
 }
 function toggleInterp(id) {
-  const el = document.getElementById(id);
-  const btn = el.previousElementSibling;
+  const el=document.getElementById(id); const btn=el.previousElementSibling;
   el.classList.toggle('open');
-  const cnt = el.querySelectorAll('.claim-row').length;
-  btn.textContent = el.classList.contains('open')
-    ? '▲ 收起 AI 假設與詮釋'
-    : `🧠 AI 假設與詮釋（${cnt} 條）— 展開確認`;
+  const cnt=el.querySelectorAll('.claim-row').length;
+  btn.textContent = el.classList.contains('open') ? '▲ 收起 AI 假設與詮釋' : `🧠 AI 假設與詮釋（${cnt} 條）— 展開確認`;
+}
+function toggleReviewPanel() {
+  const panel = document.getElementById('review-panel');
+  const btn = document.getElementById('review-toggle-btn');
+  if (!panel || !btn) return;
+  panel.classList.toggle('open');
+  const cnt = panel.querySelectorAll('.review-panel-item').length;
+  btn.textContent = panel.classList.contains('open') ? `▼ 收起待確認項目` : `▶ 展開 ${cnt} 條待確認項目`;
 }
 
 /* ══════════════════════════════════════════
-   RENDER COVERAGE MATRIX
+   RENDER COVERAGE
 ══════════════════════════════════════════ */
 const COV_STATUS = {
-  found:            { cls: 'cv-found',   icon: '✓', label: '已揭露' },
-  found_incomplete: { cls: 'cv-partial', icon: '△', label: '揭露不完整' },
-  not_found:        { cls: 'cv-missing', icon: '✕', label: '未找到' },
-  ambiguous:        { cls: 'cv-ambig',   icon: '?', label: '無法判斷' },
-  not_applicable:   { cls: 'cv-na',      icon: '—', label: '不適用' },
+  found:            { cls:'cv-found',   icon:'✓', label:'已揭露' },
+  found_incomplete: { cls:'cv-partial', icon:'△', label:'揭露不完整' },
+  not_found:        { cls:'cv-missing', icon:'✕', label:'未找到' },
+  ambiguous:        { cls:'cv-ambig',   icon:'?', label:'無法判斷' },
+  not_applicable:   { cls:'cv-na',      icon:'—', label:'不適用' },
 };
-
-async function runPatterns() {
-  const btn=document.getElementById('patterns-btn');
-  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> 分析中...';
-  try {
-    const data=await parseResponse(await fetch(`/api/v1/documents/${documentId}/patterns/run`,{method:'POST'}));
-    document.getElementById('badge5').textContent='✓';
-    document.getElementById('badge5').classList.add('done');
-    renderPatterns(data);
-    document.getElementById('patterns-area').classList.remove('hidden');
-    document.getElementById('patterns-area').scrollIntoView({behavior:'smooth'});
-  } catch(e) { setResult('patterns-result','error','檢查失敗：'+e.message); }
-  finally { btn.disabled=false; btn.innerHTML='執行財報檢查'; }
-}
-
-const PAT_STATUS = {
-  triggered:            { cls:'pi-triggered',    icon:'⚠', label:'觸發' },
-  insufficient_evidence:{ cls:'pi-insufficient', icon:'—', label:'證據不足' },
-  not_triggered:        { cls:'pi-not_triggered', icon:'✓', label:'未觸發' },
-};
-
-function renderPatterns(data) {
-  const results = data.results || [];
-  let html = `
-    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:2px solid #e2e8f0;margin-bottom:14px;">
-      <span class="pat-title">${data.stock_id||''} ${data.period||''} — 財報檢查模式</span>
-    </div>
-    <p class="pat-disclaimer">⚠ 此觀察為 AI 推論，非確定事實。所有 pattern 結果均為詮釋層級，需人工確認，不進入 Key Findings。</p>
-    <div class="pat-stats">
-      <div class="pat-stat ps-triggered">
-        <div class="ps-n">${data.triggered_count}</div><div class="ps-l">觸發</div>
-      </div>
-      <div class="pat-stat ps-insuf">
-        <div class="ps-n">${data.insufficient_count}</div><div class="ps-l">證據不足</div>
-      </div>
-      <div class="pat-stat">
-        <div class="ps-n" style="color:#64748b;">${data.not_triggered_count}</div><div class="ps-l">未觸發</div>
-      </div>
-    </div>
-    <div class="pat-list">`;
-
-  results.forEach((r, idx) => {
-    const s = PAT_STATUS[r.status] || PAT_STATUS.insufficient_evidence;
-    const claimsId = `pat-claims-${idx}`;
-    html += `<div class="pat-item ${s.cls}">
-      <div class="pat-item-header">
-        ${badge(r.status==='triggered'?'b-amber':'b-gray', s.icon+' '+s.label)}
-        <span class="pat-name">${r.name_zh}</span>
-      </div>`;
-
-    if (r.status === 'triggered') {
-      html += `<div class="pat-obs">${r.generated_observation}</div>`;
-      if (r.source_claims && r.source_claims.length) {
-        html += `<div class="pat-claims-toggle" onclick="togglePatClaims('${claimsId}')">
-          ▶ 觸發來源 (${r.source_claims.length} 條 claims)
-        </div>
-        <div class="pat-claims-body" id="${claimsId}">`;
-        r.source_claims.forEach(c => {
-          html += `<div class="pat-claim-row">
-            <span class="pcr-id">${c.claim_id}</span>
-            <span class="pcr-sec">[${c.section_key||''} / ${c.materiality||''}]</span><br>
-            ${c.claim||''}
-          </div>`;
-        });
-        html += `</div>`;
-      }
-      html += `<div class="pat-guard">⚠ 詮釋，需人工確認 · 此觀察為 AI 推論，非確定事實</div>`;
-    } else if (r.status === 'insufficient_evidence' && r.missing_evidence_keys && r.missing_evidence_keys.length) {
-      html += `<div class="pat-missing">缺少必要 evidence：${r.missing_evidence_keys.join('；')}</div>`;
-    }
-
-    html += `</div>`;
-  });
-
-  html += `</div>`;
-  document.getElementById('patterns-body').innerHTML = html;
-}
-
-function togglePatClaims(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.toggle('open');
-  const toggle = el.previousElementSibling;
-  if (toggle) toggle.textContent = toggle.textContent.replace(/^[▶▼]/, el.classList.contains('open') ? '▼' : '▶');
-}
-
 function renderCoverage(data) {
   const items = data.items || [];
-  let html = `
-    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:2px solid #e2e8f0;margin-bottom:14px;">
-      <span class="cov-title">${data.stock_id||''} ${data.period||''} — 揭露完整性稽核</span>
-    </div>
+  let html = `<div style="border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:14px;">
+    <span class="cov-title">${data.stock_id||''} ${data.period||''} — 揭露完整性稽核</span>
     <p class="cov-disclaimer">⚠ 此稽核只判斷揭露是否出現於財報中，不代表財報品質、法遵評等或任何投資建議。</p>
-    <div class="cov-stats">
-      <div class="cov-stat cs-found">
-        <div class="cs-n">${data.found_count}</div><div class="cs-l">已揭露</div>
-      </div>
-      <div class="cov-stat cs-partial">
-        <div class="cs-n">${data.found_incomplete_count}</div><div class="cs-l">不完整</div>
-      </div>
-      <div class="cov-stat cs-missing">
-        <div class="cs-n">${data.not_found_count}</div><div class="cs-l">未找到</div>
-      </div>
-      <div class="cov-stat">
-        <div class="cs-n" style="color:#64748b;">${data.total_count}</div><div class="cs-l">總項目</div>
-      </div>
-    </div>
-    <div class="cov-grid">`;
-
+  </div>
+  <div class="cov-stats">
+    <div class="cov-stat cs-found"><div class="cs-n">${data.found_count}</div><div class="cs-l">已揭露</div></div>
+    <div class="cov-stat cs-partial"><div class="cs-n">${data.found_incomplete_count}</div><div class="cs-l">不完整</div></div>
+    <div class="cov-stat cs-missing"><div class="cs-n">${data.not_found_count}</div><div class="cs-l">未找到</div></div>
+    <div class="cov-stat"><div class="cs-n" style="color:#64748b;">${data.total_count}</div><div class="cs-l">總項目</div></div>
+  </div>
+  <div class="cov-grid">`;
   items.forEach(item => {
-    const s = COV_STATUS[item.status] || COV_STATUS.ambiguous;
+    const s = COV_STATUS[item.status]||COV_STATUS.ambiguous;
     const pages = (item.evidence_pages||[]).map(p=>`p.${p}`).join(' ');
-    html += `<div class="cov-item ${s.cls}">
-      <span class="cov-icon">${s.icon}</span>
+    html += `<div class="cov-item ${s.cls}"><span class="cov-icon">${s.icon}</span>
       <div class="cov-body">
         <div class="cov-label">${item.label_zh}</div>
         ${item.note?`<div class="cov-note">${item.note}</div>`:''}
@@ -925,6 +1262,71 @@ function renderCoverage(data) {
   });
   html += `</div>`;
   document.getElementById('coverage-body').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════
+   RENDER PATTERNS
+══════════════════════════════════════════ */
+async function runPatterns() {
+  const btn = document.getElementById('patterns-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 分析中...';
+  try {
+    const data = await parseResponse(await fetch(`/api/v1/documents/${documentId}/patterns/run`,{method:'POST'}));
+    document.getElementById('badge5').textContent = '✓';
+    document.getElementById('badge5').classList.add('done');
+    renderPatterns(data);
+    document.getElementById('patterns-area').classList.remove('hidden');
+    document.getElementById('patterns-area').scrollIntoView({behavior:'smooth'});
+    updateStepper(6);
+  } catch(e) { setResult('patterns-result','error','檢查失敗：'+e.message); }
+  finally { btn.disabled = false; btn.innerHTML = '執行財報檢查'; }
+}
+const PAT_STATUS = {
+  triggered:            { cls:'pi-triggered',    icon:'⚠', label:'觸發' },
+  insufficient_evidence:{ cls:'pi-insufficient', icon:'—', label:'證據不足' },
+  not_triggered:        { cls:'pi-not_triggered',icon:'✓', label:'未觸發' },
+};
+function renderPatterns(data) {
+  const results = data.results || [];
+  let html = `<div style="border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:14px;">
+    <span class="pat-title">${data.stock_id||''} ${data.period||''} — 財報檢查模式</span>
+    <p class="pat-disclaimer">⚠ 此觀察為 AI 推論，非確定事實。所有 pattern 結果均為詮釋層級，需人工確認，不進入 Key Findings。</p>
+  </div>
+  <div class="pat-stats">
+    <div class="pat-stat ps-triggered"><div class="ps-n">${data.triggered_count}</div><div class="ps-l">觸發</div></div>
+    <div class="pat-stat ps-insuf"><div class="ps-n">${data.insufficient_count}</div><div class="ps-l">證據不足</div></div>
+    <div class="pat-stat"><div class="ps-n" style="color:#64748b;">${data.not_triggered_count}</div><div class="ps-l">未觸發</div></div>
+  </div>
+  <div class="pat-list">`;
+  results.forEach((r, idx) => {
+    const s = PAT_STATUS[r.status]||PAT_STATUS.insufficient_evidence;
+    const claimsId = `pat-claims-${idx}`;
+    html += `<div class="pat-item ${s.cls}">
+      <div class="pat-item-header">${badge(r.status==='triggered'?'b-amber':'b-gray',s.icon+' '+s.label)}<span class="pat-name">${r.name_zh}</span></div>`;
+    if (r.status === 'triggered') {
+      html += `<div class="pat-obs">${r.generated_observation}</div>`;
+      if (r.source_claims&&r.source_claims.length) {
+        html += `<div class="pat-claims-toggle" onclick="togglePatClaims('${claimsId}')">▶ 觸發來源 (${r.source_claims.length} 條 claims)</div>
+        <div class="pat-claims-body" id="${claimsId}">`;
+        r.source_claims.forEach(c => {
+          html += `<div class="pat-claim-row"><span class="pcr-id">${c.claim_id}</span><span class="pcr-sec">[${c.section_key||''} / ${c.materiality||''}]</span><br>${c.claim||''}</div>`;
+        });
+        html += `</div>`;
+      }
+      html += `<div class="pat-guard">⚠ 詮釋，需人工確認 · 此觀察為 AI 推論，非確定事實</div>`;
+    } else if (r.status==='insufficient_evidence'&&r.missing_evidence_keys&&r.missing_evidence_keys.length) {
+      html += `<div class="pat-missing">缺少必要 evidence：${r.missing_evidence_keys.join('；')}</div>`;
+    }
+    html += `</div>`;
+  });
+  html += `</div>`;
+  document.getElementById('patterns-body').innerHTML = html;
+}
+function togglePatClaims(id) {
+  const el = document.getElementById(id); if (!el) return;
+  el.classList.toggle('open');
+  const toggle = el.previousElementSibling;
+  if (toggle) toggle.textContent = toggle.textContent.replace(/^[▶▼]/,el.classList.contains('open')?'▼':'▶');
 }
 </script>
 </body>

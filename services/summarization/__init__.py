@@ -328,7 +328,6 @@ def _build_dashboard_payload(
             m = metrics[key]
             what_changed.append(
                 {
-                    "metric": m["metric"],
                     "metric_id": m["metric_id"],
                     "metric_type": m["metric_type"],
                     "label": m["label"],
@@ -508,6 +507,15 @@ def generate_summary(document_id: str) -> dict:
     temporal_note = tv.get("mismatch_note", "")
     document_period = tv.get("document_period", doc.period)
     requested_period = tv.get("requested_period", doc.period)
+
+    # Guard: if user did not explicitly provide a requested period, do NOT treat as mismatch.
+    # This prevents false contamination cascades when upload flow allows optional period.
+    _unknown_tokens = {"", "unknown", "UNKNOWN", "n/a", "N/A", "null", "None"}
+    requested_missing = str(requested_period).strip() in _unknown_tokens
+    if requested_missing:
+        temporal_consistent = True
+        temporal_note = ""
+        requested_period = document_period
 
     # --- Executive Summary ---
     executive_summary = raw_json.get("executive_summary", "")

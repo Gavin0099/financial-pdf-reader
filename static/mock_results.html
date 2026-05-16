@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mock — Phase 2A/2B</title>
+<style>
+  :root {
+    --navy:#1a1a2e; --surface:#fff; --bg:#f0f2f5;
+    --border:#e2e8f0; --muted:#64748b; --primary:#4f46e5;
+    --primary-light:#eef2ff; --primary-border:#c7d2fe;
+    --shadow:0 1px 3px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04);
+    --shadow-md:0 4px 16px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans TC',sans-serif;font-size:14px;color:#1e293b;padding:24px}
+  .page-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+  .page-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+  /* Card */
+  .results-card{background:var(--surface);border-radius:12px;border:1px solid var(--border);max-width:900px;margin:0 auto;box-shadow:var(--shadow-md);overflow:hidden}
+  .results-card-header{background:var(--navy);padding:14px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .report-title{color:#fff;font-size:1.05rem;font-weight:700}
+  .gov-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-left:auto}
+  .results-card-body{padding:20px;display:flex;flex-direction:column;gap:0}
+
+  /* Badges */
+  .badge{font-size:.68rem;padding:2px 7px;border-radius:999px;font-weight:600;white-space:nowrap}
+  .b-green{background:#dcfce7;color:#15803d}
+  .b-amber{background:#fef3c7;color:#92400e}
+  .b-red  {background:#fee2e2;color:#b91c1c}
+  .b-blue {background:#dbeafe;color:#1d4ed8}
+  .b-gray {background:#f1f5f9;color:#475569}
+
+  /* ── Semantic: review = WATCH (blue), not risk (red) ── */
+  .b-review{background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;border-radius:999px;font-size:.68rem;padding:2px 7px;font-weight:600;white-space:nowrap;cursor:pointer}
+  .attn-tag-risk {font-size:.62rem;font-weight:700;background:#fee2e2;border:1px solid #fca5a5;border-radius:3px;padding:1px 5px;color:#991b1b;white-space:nowrap;flex-shrink:0;margin-top:2px}
+  .attn-tag-watch{font-size:.62rem;font-weight:700;background:#fef3c7;border:1px solid #fde68a;border-radius:3px;padding:1px 5px;color:#92400e;white-space:nowrap;flex-shrink:0;margin-top:2px}
+  .attn-tag-info {font-size:.62rem;font-weight:700;background:#f0f9ff;border:1px solid #bae6fd;border-radius:3px;padding:1px 5px;color:#0369a1;white-space:nowrap;flex-shrink:0;margin-top:2px}
+  .attn-tag-oc   {font-size:.62rem;font-weight:700;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:3px;padding:1px 5px;color:#6d28d9;white-space:nowrap;flex-shrink:0;margin-top:2px}
+
+  /* ══ LAYER 0: Primary Narrative ══ */
+  .narr-card{border-radius:10px;padding:16px 18px;margin-bottom:16px;display:flex;align-items:flex-start;gap:14px}
+  .narr-watch{background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #d97706}
+  .narr-ok   {background:#f0fdf4;border:1px solid #86efac;border-left:4px solid #16a34a}
+  .narr-risk {background:#fff1f2;border:1px solid #fda4af;border-left:4px solid #e11d48}
+  .narr-icon{font-size:1.6rem;flex-shrink:0;line-height:1}
+  .narr-body{flex:1}
+  .narr-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:3px}
+  .narr-watch .narr-label{color:#92400e}
+  .narr-ok    .narr-label{color:#166534}
+  .narr-risk  .narr-label{color:#9f1239}
+  .narr-title{font-size:1.05rem;font-weight:800;margin-bottom:2px}
+  .narr-watch .narr-title{color:#78350f}
+  .narr-ok    .narr-title{color:#14532d}
+  .narr-risk  .narr-title{color:#881337}
+  .narr-conf{display:inline-flex;align-items:center;gap:6px;font-size:.68rem;font-weight:700;margin-bottom:8px}
+  .narr-watch .narr-conf{color:#92400e}
+  .narr-ok    .narr-conf{color:#166534}
+  .narr-risk  .narr-conf{color:#9f1239}
+  .narr-conf-bar{height:4px;width:72px;background:rgba(0,0,0,.1);border-radius:2px}
+  .narr-conf-fill{height:100%;border-radius:2px}
+  .narr-watch .narr-conf-fill{background:#d97706}
+  .narr-ok    .narr-conf-fill{background:#16a34a}
+  .narr-risk  .narr-conf-fill{background:#e11d48}
+  .narr-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .narr-col-title{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:5px}
+  .narr-watch .narr-col-title{color:#92400e}
+  .narr-ok    .narr-col-title{color:#166534}
+  .narr-risk  .narr-col-title{color:#9f1239}
+  .narr-points{list-style:none;display:flex;flex-direction:column;gap:3px}
+  .narr-points li{font-size:.78rem;line-height:1.5;padding-left:12px;position:relative}
+  .narr-points li::before{content:'·';position:absolute;left:2px;font-weight:700}
+  .narr-watch .narr-points li{color:#78350f}
+  .narr-ok    .narr-points li{color:#14532d}
+  .narr-risk  .narr-points li{color:#881337}
+
+  /* Decision Banner */
+  .decision-banner{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
+  .db-signal{background:var(--surface);padding:13px 14px;display:flex;align-items:flex-start;gap:9px}
+  .db-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-bottom:3px}
+  .db-value{font-size:.88rem;font-weight:700}
+  .db-icon{font-size:1.05rem;flex-shrink:0;margin-top:1px}
+  .db-ok  .db-value{color:#15803d} .db-ok  .db-icon{color:#16a34a}
+  .db-warn .db-value{color:#92400e} .db-warn .db-icon{color:#d97706}
+  .db-alert .db-value{color:#b91c1c} .db-alert .db-icon{color:#dc2626}
+
+  /* Exec card */
+  .exec-card{background:var(--navy);border-radius:10px;padding:18px 22px;margin-bottom:18px;position:relative;overflow:hidden}
+  .exec-card::before{content:'';position:absolute;top:0;right:0;width:200px;height:100%;background:radial-gradient(ellipse at top right,rgba(99,102,241,.15) 0%,transparent 70%);pointer-events:none}
+  .ec-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:#64748b;font-weight:700;margin-bottom:10px}
+  .ec-text{font-size:.88rem;line-height:1.8;color:#e2e8f0}
+
+  /* Section label */
+  .section-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+  /* ── Finding Cards with Hero ── */
+  .findings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px;margin-bottom:16px}
+  .finding-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 14px 12px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+  .finding-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--border)}
+  .finding-card.fc-up::before,.finding-card.fc-down::before{background:#dc2626}
+  .finding-card.fc-flat::before{background:#0d9488}
+  .fc-impact{position:absolute;top:9px;right:9px}
+  .fc-metric{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px;margin-top:4px}
+  .fc-delta{font-size:1.15rem;font-weight:800;color:var(--navy);margin-bottom:3px}
+  .fc-dir{font-size:.78rem;font-weight:700;margin-bottom:5px}
+  .fc-dir.dir-up,.fc-dir.dir-down{color:#dc2626}
+  .fc-dir.dir-flat{color:#0d9488}
+  .fc-claim{font-size:.72rem;color:var(--muted);line-height:1.45}
+  /* Hero card — spans 2 columns */
+  .finding-card.fc-hero{grid-column:span 2;display:flex;align-items:center;gap:18px;padding:16px 18px}
+  .finding-card.fc-hero::before{height:4px}
+  .finding-card.fc-hero .fc-metric{margin-bottom:4px;font-size:.68rem}
+  .finding-card.fc-hero .fc-delta{font-size:1.55rem}
+  .finding-card.fc-hero .fc-impact{position:static;margin-top:6px}
+  .fc-hero-left{flex:1}
+  .fc-hero-right{flex:2;font-size:.8rem;color:#475569;line-height:1.55;padding-left:16px;border-left:1px solid var(--border)}
+
+  /* Attention Panel */
+  .attention-panel{background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:8px;padding:12px 16px;margin-bottom:16px}
+  .attn-header{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:#92400e;margin-bottom:8px}
+  .attn-items{display:flex;flex-direction:column}
+  .attn-item{display:flex;align-items:flex-start;gap:8px;font-size:.82rem;color:#78350f;padding:7px 0;border-bottom:1px solid #fef3c7}
+  .attn-item:last-child{border-bottom:none}
+  .attn-text{flex:1;line-height:1.5}
+
+  /* KPI Grid */
+  .fr-section{margin-bottom:16px}
+  .fr-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .fr-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .kpi-group-label{font-size:.63rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin:12px 0 8px;display:flex;align-items:center;gap:6px}
+  .kpi-group-label::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
+  .kg-primary{color:#4338ca} .kg-secondary{color:#94a3b8}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:8px}
+  .kpi-card{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+  .kpi-label{font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+  .kpi-value{font-size:1.1rem;font-weight:800;color:var(--navy)}
+  .kpi-delta{font-size:.72rem;font-weight:700;margin-top:2px}
+  .delta-up{color:#dc2626} .delta-flat{color:#0d9488}
+  .kpi-impact{font-size:.65rem;color:var(--muted);margin-top:4px}
+
+  /* Risk table */
+  .risk-table{width:100%;border-collapse:collapse;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+  .risk-table th{background:#f8fafc;color:var(--muted);font-size:.72rem;font-weight:700;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+  .risk-table td{padding:9px 12px;font-size:.78rem;border-bottom:1px solid #f1f5f9}
+  .risk-table tr:last-child td{border-bottom:none}
+  .risk-table tr:hover td{background:#fafbfc}
+
+  /* Transparency */
+  .transparency-box{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+  /* Key Findings */
+  .kf-section{margin-bottom:16px}
+  .kf-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .kf-label::after{content:'';flex:1;height:1px;background:var(--border)}
+  .kf-grid{display:flex;flex-direction:column;gap:8px}
+  .kf-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid #4338ca;border-radius:8px;padding:12px 16px}
+  .kf-text{font-size:.84rem;line-height:1.55;color:#1e293b;margin-bottom:6px}
+  .kf-meta{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+  .kf-page{font-size:.7rem;color:var(--primary);font-weight:700}
+
+  /* ── Review Panel ── */
+  .review-toggle-btn{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;color:#0369a1;background:#f0f9ff;border:1px solid #bae6fd;border-radius:5px;padding:4px 10px;cursor:pointer;margin-bottom:10px}
+  .review-panel{border:1px solid #bae6fd;border-radius:8px;overflow:hidden;margin-bottom:16px}
+  .review-panel-header{background:#f0f9ff;padding:8px 14px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#0369a1;border-bottom:1px solid #bae6fd}
+  .review-panel-items{display:flex;flex-direction:column}
+  .review-panel-item{padding:10px 14px;font-size:.8rem;border-bottom:1px solid #e0f2fe;display:flex;align-items:flex-start;gap:8px}
+  .review-panel-item:last-child{border-bottom:none}
+  .review-panel-item-tag{font-size:.62rem;background:#fff;border:1px solid #bae6fd;border-radius:3px;padding:1px 5px;color:#0369a1;font-weight:700;flex-shrink:0;margin-top:2px}
+  .review-panel-item-text{color:#0c4a6e;line-height:1.5;flex:1}
+  .review-panel-item-page{font-size:.65rem;color:#0369a1;font-weight:700;flex-shrink:0}
+
+  /* Explorer sep */
+  .explorer-sep{display:flex;align-items:center;gap:12px;margin:22px 0 14px}
+  .explorer-sep::before,.explorer-sep::after{content:'';flex:1;height:1px;background:var(--border)}
+  .explorer-sep-label{font-size:.63rem;text-transform:uppercase;letter-spacing:.12em;color:#94a3b8;font-weight:700;white-space:nowrap}
+
+  /* Tabs */
+  .tabs{display:flex;gap:2px;border-bottom:2px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
+  .tab{padding:8px 14px;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;border-radius:6px 6px 0 0;white-space:nowrap}
+  .tab.active{color:var(--primary);border-bottom-color:var(--primary);background:var(--primary-light)}
+  .tab-count{font-size:.63rem;background:#e2e8f0;color:var(--muted);border-radius:999px;padding:1px 5px;margin-left:4px}
+  .tab.active .tab-count{background:var(--primary-border);color:#4338ca}
+
+  /* Claim stub */
+  .claim-stub{background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:6px}
+  .claim-stub-head{font-size:.82rem;font-weight:600;color:#1e293b;margin-bottom:4px}
+  .claim-stub-meta{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="page-label">Mock 預覽 — Phase 2A / 2B（假資料）台康生技 6589 2026Q1</div>
+
+<div class="results-card">
+
+  <!-- Header -->
+  <div class="results-card-header">
+    <span class="report-title">台康生技 6589 &nbsp; 2026Q1</span>
+    <div class="gov-bar">
+      <span class="badge b-green">佐證完整</span>
+      <!-- review = blue (待確認), NOT red (風險) -->
+      <button class="b-review" onclick="toggleReview()">⚑ 5 條待確認</button>
+    </div>
+  </div>
+
+  <div class="results-card-body">
+
+    <!-- ═══ LAYER 0: Primary Narrative ═══ -->
+    <div class="narr-card narr-watch">
+      <div class="narr-icon">🟡</div>
+      <div class="narr-body">
+        <div class="narr-label">系統主結論</div>
+        <div class="narr-title">短期營運波動</div>
+        <div class="narr-conf">
+          信心程度 76%
+          <div class="narr-conf-bar"><div class="narr-conf-fill" style="width:76%"></div></div>
+        </div>
+        <div class="narr-cols">
+          <div>
+            <div class="narr-col-title">主要原因</div>
+            <ul class="narr-points">
+              <li>營收下滑可追溯至具體遞延事件</li>
+              <li>毛利影響項目屬非常態一次性費用</li>
+              <li>現金流動性維持穩健</li>
+            </ul>
+          </div>
+          <div>
+            <div class="narr-col-title">需持續觀察</div>
+            <ul class="narr-points">
+              <li>下季訂單入帳時間確認</li>
+              <li>一次性費用是否重複發生</li>
+              <li>毛利率是否恢復基準水位</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ LAYER 1: Decision Banner ═══ -->
+    <div class="decision-banner">
+      <div class="db-signal db-ok"><div class="db-icon">✓</div><div><div class="db-label">期間一致性</div><div class="db-value">期間一致</div></div></div>
+      <div class="db-signal db-warn"><div class="db-icon">↓</div><div><div class="db-label">營收趨勢</div><div class="db-value">-8%</div></div></div>
+      <div class="db-signal db-warn"><div class="db-icon">⚠</div><div><div class="db-label">風險概況</div><div class="db-value">部分高風險</div></div></div>
+      <div class="db-signal db-ok"><div class="db-icon">✓</div><div><div class="db-label">治理</div><div class="db-value">無投資建議</div></div></div>
+    </div>
+
+    <!-- ═══ LAYER 2a: Executive Summary ═══ -->
+    <div class="exec-card">
+      <div class="ec-label">財務摘要</div>
+      <div class="ec-text">2026Q1 合併營收 NT$4.2 億，較前季下滑 8%，主因 CDMO 訂單遞延至 Q2 入帳。毛利率由 42.3% 降至 38.7%，主要受一次性設備折舊費用影響。EPS -0.12 元，為近四季最低。現金及約當現金 NT$18.5 億，短期流動性無虞。</div>
+    </div>
+
+    <!-- ═══ LAYER 2b: Hero KPI Cards ═══ -->
+    <div class="section-label">關鍵指標一覽</div>
+    <div class="findings-grid">
+
+      <!-- Hero card: 高影響 → 雙欄，帶說明文字 -->
+      <div class="finding-card fc-down fc-hero">
+        <div class="fc-hero-left">
+          <div class="fc-metric">毛利率</div>
+          <div class="fc-delta">-3.6pp</div>
+          <div class="fc-dir dir-down">↓ 下降</div>
+          <div class="fc-impact"><span class="badge b-red">影響：高</span></div>
+        </div>
+        <div class="fc-hero-right">一次性設備折舊費用 NT$820 萬計入當季成本，屬非常態調整項目。若排除此因素，毛利率約為 41.1%，接近前季水準。</div>
+      </div>
+
+      <!-- 次要卡片 -->
+      <div class="finding-card fc-down">
+        <div class="fc-impact"><span class="badge b-amber">影響：中</span></div>
+        <div class="fc-metric">營收</div>
+        <div class="fc-delta">-8%</div>
+        <div class="fc-dir dir-down">↓ 下降</div>
+        <div class="fc-claim">CDMO 訂單遞延，季環比下滑 NT$3,700 萬</div>
+      </div>
+
+      <div class="finding-card fc-flat">
+        <div class="fc-impact"><span class="badge b-gray">影響：低</span></div>
+        <div class="fc-metric">現金</div>
+        <div class="fc-delta">+2%</div>
+        <div class="fc-dir dir-flat">→ 持平</div>
+        <div class="fc-claim">現金餘額 NT$18.5 億，流動性穩健</div>
+      </div>
+
+    </div>
+
+    <!-- ═══ LAYER 3: Attention Panel（語意分色）═══ -->
+    <div class="attention-panel">
+      <div class="attn-header">⚠ 注意事項</div>
+      <div class="attn-items">
+        <!-- 結構風險 → 紅色 tag -->
+        <div class="attn-item">
+          <span class="attn-tag-risk">結構風險</span>
+          <span class="attn-text">毛利壓力：毛利率降幅 3.6 pp，高於歷史季波動區間（±1.5 pp）</span>
+        </div>
+        <!-- 結構風險 → 紅色 tag -->
+        <div class="attn-item">
+          <span class="attn-tag-risk">結構風險</span>
+          <span class="attn-text">客戶集中度：無明確集中度比率揭露，無法評估單一客戶依賴風險</span>
+        </div>
+        <!-- 待確認 → 藍色 tag（不確定性，非風險） -->
+        <div class="attn-item">
+          <span class="attn-tag-info">待確認</span>
+          <span class="attn-text">5 條觀察需人工確認（不確定性提示，非風險判斷）</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ LAYER 4: Full KPI Grid（高影響/次要分組）═══ -->
+    <div class="fr-section">
+      <div class="fr-title">完整指標變化</div>
+      <div class="kpi-group-label kg-primary">核心指標（高影響）</div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">毛利率</div><div class="kpi-value">-3.6pp</div><div class="kpi-delta delta-up">↓ 下降</div><div class="kpi-impact">影響程度：高</div></div>
+        <div class="kpi-card"><div class="kpi-label">每股損益</div><div class="kpi-value">-0.12</div><div class="kpi-delta delta-up">↓ 下降</div><div class="kpi-impact">影響程度：高</div></div>
+        <div class="kpi-card"><div class="kpi-label">營業利益</div><div class="kpi-value">-22%</div><div class="kpi-delta delta-up">↓ 下降</div><div class="kpi-impact">影響程度：高</div></div>
+      </div>
+      <div class="kpi-group-label kg-secondary">次要指標</div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">營收</div><div class="kpi-value">-8%</div><div class="kpi-delta delta-up">↓ 下降</div><div class="kpi-impact">影響程度：中</div></div>
+        <div class="kpi-card"><div class="kpi-label">現金</div><div class="kpi-value">+2%</div><div class="kpi-delta delta-flat">→ 持平</div><div class="kpi-impact">影響程度：低</div></div>
+        <div class="kpi-card"><div class="kpi-label">匯兌損益</div><div class="kpi-value">—</div><div class="kpi-delta delta-flat">→ 持平</div><div class="kpi-impact">影響程度：低</div></div>
+      </div>
+    </div>
+
+    <!-- Risk Table -->
+    <div class="fr-section">
+      <div class="fr-title">風險面向</div>
+      <table class="risk-table">
+        <tr><th>風險項目</th><th>程度</th><th>趨勢</th><th>說明</th></tr>
+        <tr><td>毛利壓力</td><td>高</td><td>上升</td><td>毛利率降幅 3.6 pp</td></tr>
+        <tr><td>客戶集中度</td><td>高</td><td>持平</td><td>無明確集中度比率揭露</td></tr>
+        <tr><td>流動性壓力</td><td>低</td><td>持平</td><td>現金揭露存在</td></tr>
+        <tr><td>匯兌風險</td><td>低</td><td>持平</td><td>匯兌揭露存在</td></tr>
+      </table>
+    </div>
+
+    <!-- AI Transparency -->
+    <div class="fr-section">
+      <div class="fr-title">AI 透明度</div>
+      <div class="transparency-box">
+        <span class="badge b-amber">可信度：中</span>
+        <span class="badge b-blue">佐證覆蓋率：84%</span>
+        <!-- review badge 改用藍色 -->
+        <button class="b-review" onclick="toggleReview()">⚑ 需人工審查：5 條</button>
+        <div style="margin-top:8px;font-size:.74rem;color:#92400e;width:100%;">敘事密度 0.42 / 加權密度 0.38（未超標）</div>
+      </div>
+    </div>
+
+    <!-- Key Findings -->
+    <div class="kf-section">
+      <div class="kf-label">核心直接事實</div>
+      <div class="kf-grid">
+        <div class="kf-card">
+          <div class="kf-text">2026Q1 合併營收 NT$4.2 億，較 2025Q4 之 NT$4.57 億下滑約 8.1%，主因 CDMO 客戶訂單遞延至 Q2 入帳，公司於法說會中確認此為時間性差異。</div>
+          <div class="kf-meta"><span class="badge b-blue">直接事實</span><span class="kf-page">P.3</span><span class="kf-page">P.7</span></div>
+        </div>
+        <div class="kf-card">
+          <div class="kf-text">毛利率 38.7%，低於前季 42.3%，差距 3.6 個百分點；公司揭露一次性設備折舊費用 NT$820 萬計入當季成本，屬非常態調整項目。</div>
+          <div class="kf-meta"><span class="badge b-blue">直接事實</span><span class="kf-page">P.11</span><span class="badge b-review">待確認</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Review Panel（可展開）═══ -->
+    <button class="review-toggle-btn" onclick="toggleReview()" id="rev-btn">▶ 展開 5 條待確認項目</button>
+    <div class="review-panel" id="rev-panel">
+      <div class="review-panel-header">待確認觀察（不確定性提示，非風險判斷）</div>
+      <div class="review-panel-items">
+        <div class="review-panel-item"><span class="review-panel-item-tag">前瞻性說明</span><span class="review-panel-item-text">管理層預期 Q2 訂單能見度回升，CDMO 管線多樣化策略奏效。</span><span class="review-panel-item-page">P.18</span></div>
+        <div class="review-panel-item"><span class="review-panel-item-tag">AI詮釋類</span><span class="review-panel-item-text">系統推斷設備折舊屬一次性費用，但文件未明確標示 non-recurring。</span><span class="review-panel-item-page">P.11</span></div>
+        <div class="review-panel-item"><span class="review-panel-item-tag">缺乏頁碼佐證</span><span class="review-panel-item-text">客戶集中度相關觀察無法對應具體 PDF 頁碼，需人工核對。</span><span class="review-panel-item-page">—</span></div>
+        <div class="review-panel-item"><span class="review-panel-item-tag">前瞻性說明</span><span class="review-panel-item-text">管理層說明下半年接單策略將調整，有望降低單一客戶依賴。</span><span class="review-panel-item-page">P.22</span></div>
+        <div class="review-panel-item"><span class="review-panel-item-tag">敘事語氣偏強</span><span class="review-panel-item-text">執行長表示「大幅改善」，但數據僅顯示 2% 回升，語氣與數據有落差。</span><span class="review-panel-item-page">P.25</span></div>
+      </div>
+    </div>
+
+    <!-- ═══ LAYER 5: Evidence Explorer ═══ -->
+    <div class="explorer-sep"><span class="explorer-sep-label">逐條佐證</span></div>
+    <div class="tabs">
+      <div class="tab active">💰 關鍵財務<span class="tab-count">8</span></div>
+      <div class="tab">📈 營收<span class="tab-count">4</span></div>
+      <div class="tab">⚠ 風險<span class="tab-count">3</span></div>
+      <div class="tab">🔬 研發管線<span class="tab-count">2</span></div>
+    </div>
+    <div>
+      <div class="claim-stub">
+        <div class="claim-stub-head">2026Q1 EPS -0.12 元，為近四季最低，上季 EPS 0.08 元。</div>
+        <div style="font-size:.75rem;color:var(--muted);line-height:1.5;margin-top:4px;">計算公式：淨損 NT$-1,850 萬 ÷ 加權平均股數 1.54 億股 = -0.12 元</div>
+        <div class="claim-stub-meta"><span class="badge b-green" style="border-radius:4px">衍生指標</span><span style="font-size:.63rem;background:#f1f5f9;color:#475569;padding:1px 5px;border-radius:3px">P.14</span></div>
+      </div>
+      <div class="claim-stub">
+        <div class="claim-stub-head">現金及約當現金 NT$18.5 億，較前季增加 NT$3,200 萬（+2%）。</div>
+        <div class="claim-stub-meta"><span class="badge b-blue" style="border-radius:4px">直接事實</span><span style="font-size:.63rem;background:#f1f5f9;color:#475569;padding:1px 5px;border-radius:3px">P.16</span></div>
+      </div>
+    </div>
+
+  </div><!-- .results-card-body -->
+</div><!-- .results-card -->
+
+<script>
+function toggleReview() {
+  const panel = document.getElementById('rev-panel');
+  const btn = document.getElementById('rev-btn');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+  if (btn) btn.textContent = panel.style.display === 'block' ? '▼ 收起待確認項目' : '▶ 展開 5 條待確認項目';
+}
+</script>
+</body>
+</html>

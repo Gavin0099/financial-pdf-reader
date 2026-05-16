@@ -2,11 +2,13 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt /app/requirements.txt
+# Install dependencies first (better layer caching)
+COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-EXPOSE 8080
+# Copy application code
+COPY . .
 
-COPY . /app
+EXPOSE 8080
 
 CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT:-8080}"]

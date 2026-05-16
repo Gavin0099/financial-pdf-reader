@@ -1,7 +1,7 @@
 # Active Task
 
-**最後更新**: 2026-05-14（Phase 10D 完成）
-**當前 Phase**: Phase 10D 完成 — Governance Layer 完整（10A–10D）
+**最後更新**: 2026-05-16（Phase 11A 完成，Cloud Run 部署完成）
+**當前 Phase**: Phase 11A 完成 — Output Completeness Rules (OC-1/OC-2)
 
 ## 已完成
 
@@ -132,22 +132,69 @@
 - `prompts/__init__.py`：加 `FORWARD_LOOKING_INDICATOR_PHRASES`（14 個詞）
 - `_parse_claims()`：auto-detect forward_looking（only strategic/management，覆蓋 Claude 的 False）
 - 自動設 requires_human_review=True
-- `tests/test_forward_looking_guard.py`：9 tests；共 42 tests 通過
+- `tests/test_forward_looking_guard.py`：9 tests
+
+### Phase 10E ✅
+- Quotation-layer：「公司宣稱 X」≠「X 成立」
+- `services/summarization/quotation_layer.py`：quote_attribution prefix
+- management_claim vs observed_fact 區分強化
+
+### Phase 11A ✅（2026-05-16）
+- `services/summarization/output_completeness.py`：OC-1、OC-2 rules
+- OC-1：adjusted_gross_margin 有 non-recurring adjustments 才計算
+- OC-2：liquidity_safety_margin（現金安全墊）= cash / (operating_expense / 4)
+- `AIReport.completeness_warnings: list[str]`（空 list = 無警告）
+- `services/dashboard_contract.py` 新建（修復缺失模組 ImportError）：`DASHBOARD_CONTRACT_VERSION`、`METRIC_TYPE`、`TREND_ENUM`、`validate_dashboard_contract_v1`、`serialize_summary_response`
+- `services/summarization/__init__.py`：移除 `"metric": m["metric"]`（KeyError 修復）
+- UI：`.completeness-banner` 黃色警告橫幅（有警告才顯示）
+- UI：全面中文化（30+ 標籤翻譯）
+
+## 部署狀態（2026-05-16）
+
+- 平台：**GCP Cloud Run**（已從 Railway 遷移）
+- Service URL：`https://financial-pdf-reader-647193990749.asia-east1.run.app`
+- GCP Project：`hearth-491015`，Region：`asia-east1`，Memory：512Mi
+- MongoDB Atlas：Cluster `cluster0.4sqzpoq.mongodb.net`，Network Access `0.0.0.0/0`
 
 ## 測試總覽
 
 | 測試檔案 | Tests | 說明 |
 |---------|-------|------|
+| test_governance.py | 44 | R1-R7 governance rules（Phase 8）|
 | test_reasoning_patterns.py | 16 | Pattern engine（9E + 9F）|
+| test_disclosure_coverage.py | 10 | Disclosure coverage（9D）|
 | test_source_type_governance.py | 9 | Source type governance（10B）|
-| test_rhetorical_governance.py | 8 | Rhetorical risk + weighted density（10C）|
 | test_forward_looking_guard.py | 9 | Forward-looking auto-detect（10D）|
-| **合計** | **42** | **全部通過** |
+| test_rhetorical_governance.py | 8 | Rhetorical risk + weighted density（10C）|
+| **合計** | **96** | **全部通過** |
 
-## 下一步候選
+### Phase 2A ✅（2026-05-17）
+- UI Semantic Color System：4 色語意固定（綠/黃/紅/藍）
+- `b-review` 藍色 badge（review ≠ risk，修正 uncertainty-risk collapse）
+- `attn-tag-risk / attn-tag-watch / attn-tag-info / attn-tag-oc` 標籤分類
+- KPI Impact badge 分色（高=紅，中=橘，低=灰）
 
-- Railway redeploy（9C/D/E/9F/10A-10D 尚未部署）
-- Phase 10E：Quotation-layer（「公司宣稱 X」≠「X 成立」）
+### Phase 2B ✅（2026-05-17）
+- `computeNarrative()` client-side 函式：從 dashboard data 推斷主結論
+- 三種結論：🟢 整體穩健 / 🟡 短期波動 / 🔴 結構壓力
+- Primary Narrative Card（Layer 0）：主結論 + 信心程度 + 主要原因 + 需觀察清單
+- Hero KPI Card（`fc-hero`）：高影響第一張卡片雙欄展示
+- Review Workflow Panel：可展開 N 條待確認，分類 epistemic failure mode
+- `toggleReviewPanel()` 函式
+- `static/mock_results.html` 更新為 Phase 2A/2B 預覽
+
+## 下一步候選（Backlog）
+
+### P0（UI 繼續）
+- **Narrative Explainability Layer**：主結論顯示 evidence 支撐 + 衝突訊號（最高優先）
+- **Review Severity Model**：L1 語氣偏強 / L2 詮釋無佐證 / L3 證據缺失 / L4 證據矛盾
+
+### P1（UI 繼續）
+- **Materiality Engine**：magnitude ≠ importance，高影響判斷從 rule-based 升級
+- Mini Trend Strip（需多期資料，先跳過）
+
+### P2（後端/測試）
+- Step 5 財報檢查模式在 Cloud Run 上確認
+- `tests/test_quotation_layer.py` 補測試（Phase 10E 無測試）
+- Auth wiring（`auth/` 骨架存在，未接路由）
 - DiffReport R6 audit endpoint（選做）
-- Auth wiring（auth/ 已有骨架但未接入 router）
-- [x] Promoted memory: Fix HTTP 500 / ValidationError / ROC year bugs; implement Phase 11A Output Completeness Rules (OC-1/OC-2); fix session auto-memory pipeline

@@ -38,6 +38,10 @@
 - Phase 10B: Source Type Layer（source_type 4 types；forward_looking；narrative_density_score；pipeline section_key）
 - Phase 10C: Rhetorical Risk Classifier（RHETORICAL_RISK_PHRASES；narrative_density_weighted_score；雙軸 banner）
 - Phase 10D: Forward-Looking Implication Guard（FORWARD_LOOKING_INDICATOR_PHRASES；auto-detect implicit forward-looking）
+- Phase 10E: Quotation Layer（quote_attribution prefix；management_claim vs observed_fact）
+- Phase 11A: Output Completeness Rules（OC-1 adjusted_gross_margin；OC-2 liquidity_safety_margin；completeness_warnings field）
+- Phase 2A: UI Semantic Color System（review≠risk；4 色語意固定；attn-tag 分類；b-review 藍色）
+- Phase 2B: Cognitive Workflow UI（Primary Narrative；Hero KPI Card；Review Workflow Panel；computeNarrative client-side）
 
 ## 重要設計決策
 
@@ -67,6 +71,32 @@
 - Rhetorical scan 只掃 narrative 類型；financial_evidence 不受影響（避免「營收大幅增加」誤傷）
 - narrative_flag = count density > 0.6 OR weighted density > 0.6（任一超標觸發）
 - Forward-looking guard 只掃 strategic_narrative / management_expectation；auto-override Claude 的 forward_looking=False
+- OC-1 只在有 non-recurring adjustments 時才計算 adjusted_gross_margin（避免誤算）
+- OC-2 liquidity_safety_margin = cash / (operating_expense / 4)，任一欄位缺失則不計算
+- `completeness_warnings` 空 list = 無問題，UI 不顯示橫幅（正確行為）
+- `serialize_summary_response` 是 response 序列化的唯一出口，在 `dashboard_contract.py`
+- UI 語意色彩固定：綠=驗證/健康、黃=待觀察、紅=結構風險、藍=不確定待確認（metadata）
+- review-required ≠ risk — 不確定性不等於危險，禁止 uncertainty-risk collapse
+- Primary Narrative 是 interpretation，必須永遠可回溯 evidence（Narrative Explainability Layer 待做）
+- computeNarrative() 是純 client-side 函式，從現有 dashboard data 衍生，不需後端 API 改動
+- Hero KPI card（fc-hero）：第一張高影響卡片雙欄顯示 + 說明文字，視覺 attention orchestration
+- Review type taxonomy：前瞻性說明 / AI詮釋類 / 缺乏佐證 / 敘事語氣偏強 — 不同 epistemic failure mode
+- 下一步待做：Narrative Explainability Layer（主結論可回溯）、Review Severity Model（L1-L4）、Materiality Engine（magnitude ≠ importance）
+
+## 部署（2026-05-16）
+
+- 平台：GCP Cloud Run（從 Railway 遷移，free tier 2M req/月）
+- GCP Project：`hearth-491015`，Region：`asia-east1`
+- Service URL：`https://financial-pdf-reader-647193990749.asia-east1.run.app`
+- MongoDB Atlas：Network Access 必須設 `0.0.0.0/0`（Cloud Run IP 動態）
+- 部署指令：`gcloud run deploy financial-pdf-reader --source . --region asia-east1`
+- 密碼不得含特殊字元（`$`, `+`, `@`）— PowerShell 環境會截斷
+
+## 已知 Bug（2026-05-16 修復）
+
+- `services/dashboard_contract.py` 缺失（commit 3321115 引入，後端啟動即 ImportError）→ 新建檔案修復
+- `_build_dashboard_payload`：`m["metric"]` KeyError → 移除該行
+- UI `completeness_warnings` 未顯示 → 加 `.completeness-banner` 渲染
 
 ## Memory 漏記根本原因（2026-05-14 分析）
 

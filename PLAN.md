@@ -4,7 +4,7 @@
 > **技術棧**: Python / FastAPI / MongoDB Atlas / Claude API / pdfplumber
 > **複雜度**: L2
 > **Owner**: User
-> **最後更新**: 2026-05-14
+> **最後更新**: 2026-05-16
 > **Freshness**: Sprint (7d)
 > **Planning Window**: 2026-05 ~ 2026-08
 
@@ -31,22 +31,29 @@
 ## 階段總覽
 
 ```
-├─ [✅] Phase 0: Repo Bootstrap & Backend 跑起來
-├─ [✅] Phase 1: PDF Ingestion MVP（page-aware）
-├─ [✅] Phase 2: Evidence-Bound Summary
-├─ [✅] Phase 3: Financial Section Classification
-├─ [✅] Phase 4: Two-PDF Diff Report
-├─ [✅] Phase 5: Table Extraction & Numeric Cross-Check
-├─ [✅] Phase 6: Taiwan Data Source Integration
-├─ [✅] Phase 7: Governance Layer（R1-R7）
-├─ [✅] Phase 8: Tests + Cleanup
+├─ [✅] Phase 0:  Repo Bootstrap & Backend 跑起來
+├─ [✅] Phase 1:  PDF Ingestion MVP（page-aware）
+├─ [✅] Phase 2:  Evidence-Bound Summary
+├─ [✅] Phase 3:  Financial Section Classification
+├─ [✅] Phase 4:  Two-PDF Diff Report
+├─ [✅] Phase 5:  Table Extraction & Numeric Cross-Check
+├─ [✅] Phase 6:  Taiwan Data Source Integration
+├─ [✅] Phase 7:  Governance Layer（R1-R7）
+├─ [✅] Phase 8:  Tests + Cleanup
 ├─ [✅] Phase 9B: UI Redesign（Key Findings grid, tabs, collapsible evidence）
 ├─ [✅] Phase 9C: Industry Type Field + CDMO/半導體 Prompt Supplement
 ├─ [✅] Phase 9D: Disclosure Coverage Engine（14 項法定揭露稽核）
-└─ [✅] Phase 9E: Financial Review Pattern Registry（6 個財報檢查模式）
+├─ [✅] Phase 9E: Financial Review Pattern Registry（6 個財報檢查模式）
+├─ [✅] Phase 9F: Pattern Trigger Precision + Claim Discipline
+├─ [✅] Phase 10A: Interpretation Isolation UI
+├─ [✅] Phase 10B: Source Type Layer + Narrative Density
+├─ [✅] Phase 10C: Rhetorical Risk Classifier
+├─ [✅] Phase 10D: Forward-Looking Implication Guard
+├─ [✅] Phase 10E: Quotation Layer（Attribution Prefix）
+└─ [✅] Phase 11A: Output Completeness Rules（OC-1/OC-2）
 ```
 
-**當前 Phase**: **Phase 9E 完成 — 三條 pipeline 齊備**
+**當前 Phase**: **Phase 11A 完成 — Governance + UI 完整**
 
 ---
 
@@ -147,7 +154,7 @@
 - `core/governance.py`：GovernanceViolation / GovernanceAuditResult + R1-R7 rule checkers
 - `services/audit/`：run_audit() 執行稽核
 - `GET /api/v1/documents/{id}/audit`
-- `AGENTS.md` 部署至根目錄，修復 memory + PLAN.md 更新遺漏問題
+- `AGENTS.md` 部署至根目錄
 
 **Claim Levels**: `observed_fact` / `derived_metric` / `interpretation` / `hypothesis` / `insufficient_evidence`
 
@@ -158,12 +165,8 @@
 **目標**: 補齊測試、清理未使用依賴
 
 **完成項目**:
-- [x] `tests/test_governance.py` — R1-R7 unit tests，44 tests，44 passed
-- [x] `requirements.txt` 清理 — 移除 chromadb、langchain\*、sentence-transformers、huggingface-hub、beanie、motor；新增 python-dotenv（實際使用但遺漏）
-
-**Gate 條件**:
-- [x] `pytest tests/` 全綠（44 passed）
-- [x] `requirements.txt` 只保留實際使用的依賴
+- `tests/test_governance.py` — R1-R7 unit tests，44 tests passed
+- `requirements.txt` 清理 — 移除 chromadb、langchain* 等 8 個未使用套件
 
 ---
 
@@ -172,11 +175,10 @@
 **目標**: 重建 HTML UI — Key Findings grid、tabs、collapsible evidence、claim-level 色碼（中性）
 
 **完成項目**:
-- Key Findings grid（tier_a + observed_fact/derived_metric only）
-- 各 section tabs（核心財務 / 會計調整 / 流動性 / 風險 / 不足）
+- Key Findings grid（tier_a + observed_fact/derived_metric only，上限 4 條）
+- 各 section tabs（核心財務 / 會計調整 / 流動性 / 風險 / Pipeline / 不足）
 - Collapsible evidence per claim
-- Claim-level badge 改為中性色系（不用情緒色）
-- 一次性項目 badge 改為中性灰（非橙色）
+- Claim-level badge 中性色系；一次性項目 badge 中性灰
 
 ---
 
@@ -187,13 +189,10 @@
 **完成項目**:
 - `PDFDocument.industry_type` field（choices: general/cdmo/semiconductor）
 - 上傳表單新增產業別下拉選單
-- `INDUSTRY_SUPPLEMENTS` dict（general/cdmo/semiconductor）
-- CDMO supplement：Backlog、LOI、Milestone payment 提取提示
-- **Governance fix**: supplement 改為 evidence-first 規則，非 authority grant
-  - 有頁碼佐證 → claim_level=observed_fact，materiality 獨立判斷
-  - 僅描述性提及 → interpretation + tier_b + requires_human_review=True
-  - PDF 中不存在 → 完全不產生 claim
-- Executive Summary prompt 新增禁用因果歸因語言（"主要受⋯驅動"）
+- `INDUSTRY_SUPPLEMENTS` dict — extraction hint（非 authority grant）
+- CDMO supplement：Backlog、LOI、Milestone payment
+- Evidence-first governance：有頁碼 → observed_fact；僅描述 → interpretation + review
+- Executive Summary 禁用因果歸因語言
 
 ---
 
@@ -204,17 +203,10 @@
 **完成項目**:
 - `DISCLOSURE_REGISTRY`：14 項（台灣第 12、17 條 + IFRS）
 - `STATUS_CHOICES`：found / found_incomplete / not_found / ambiguous / not_applicable
-- `models/disclosures/`：DisclosureCoverageItem + DisclosureCoverageReport
-- `services/disclosure_coverage/`：check_disclosure_coverage()
-  - 使用 claude-haiku-4-5（成本約為 Sonnet 1/10）
-  - Claude 漏回的 key 自動填補為 ambiguous（guarantee 14 keys）
-- `apis/v1/routers/disclosures.py`：POST /{id}/disclosure-coverage
-- UI Step 4：14 項 coverage matrix 顯示
-- `tests/test_disclosure_coverage.py`：10 tests 全通過
-
-**Guard**:
-- 只判斷「揭露是否存在」，不代表財報品質或投資建議
-- not_applicable 不計入 not_found_count
+- `models/disclosures/`、`services/disclosure_coverage/`、`apis/v1/routers/disclosures.py`
+- claude-haiku-4-5（低成本）；缺失 key 自動填補 ambiguous
+- UI Step 4：14 項 coverage matrix
+- `tests/test_disclosure_coverage.py`：10 tests 通過
 
 ---
 
@@ -224,25 +216,137 @@
 
 **完成項目**:
 - `reasoning_patterns/schemas.py`：ClaimPropertyFilter / PatternDefinition / TriggerResult
-- 6 個 pattern（獨立檔案）：
-  1. `operating_vs_net_income`：營業損益與稅後損益方向差異
-  2. `non_recurring_eps`：非常態項目影響 EPS
-  3. `fx_driven_profit`：匯兌損益影響損益
-  4. `expense_ratio_offset`：獲利趨勢與營收趨勢不一致
-  5. `debt_maturity_risk`：短期債務/可轉債到期壓力
-  6. `customer_concentration`：客戶集中度風險
-- `services/reasoning_patterns/`：evidence_resolver + engine + 主服務
+- 6 個 pattern：operating_vs_net_income / non_recurring_eps / fx_driven_profit /
+  expense_ratio_offset / debt_maturity_risk / customer_concentration
+- `services/reasoning_patterns/`：evidence_resolver + engine + run_pattern_analysis()
 - `models/patterns/`：PatternRunResult + PatternRunReport
 - `apis/v1/routers/patterns.py`：POST /{id}/patterns/run
 - UI Step 5：pattern 結果 + source claims accordion
-- `tests/test_reasoning_patterns.py`：14 tests 全通過
+- `tests/test_reasoning_patterns.py`：14 tests 通過
 
-**Guard（hardcoded）**:
-- CLAIM_LEVEL = "interpretation"（永遠不升級）
-- REQUIRES_REVIEW = True（永遠需人工確認）
-- IN_KEY_FINDINGS = False（不進 Key Findings）
-- contaminated claims 排除於 pattern 分析
-- FX 損益不自動標為一次性
+**Guards（hardcoded）**: CLAIM_LEVEL=interpretation、REQUIRES_REVIEW=True、IN_KEY_FINDINGS=False
+
+---
+
+## Phase 9F: Pattern Trigger Precision ✅
+
+**目標**: 降低 pattern 誤觸發率，收緊 claim discipline
+
+**完成項目**:
+- `non_recurring_eps`：加 `_AMOUNT_KEYWORDS` filter（bare qualitative → insufficient_evidence）
+- `fx_driven_profit`：加量化金額第二層 filter；排除 bare "元" 避免「美元」誤觸發
+- `prompts/__init__.py`：observed_fact 禁止 AI 自算比率；derived_metric 必填公式
+- Key Findings 上限降為 4 條（原 6），超出顯示「+N 條請見分頁」
+- `tests/test_reasoning_patterns.py`：共 16 tests 通過
+
+---
+
+## Phase 10A: Interpretation Isolation UI ✅
+
+**目標**: UI 層隔離 AI 詮釋與直接事實，防止詮釋被當成事實閱讀
+
+**完成項目**:
+- interpretation/hypothesis 預設折疊（`.interp-section`）
+- `EVIDENCE_DISTANCE` 常數 + `.ed-label` badge（5 個層級）
+- `renderClaim()` 加 ed-label；interpretation 前綴「可能需要檢查：」
+- `.interp-disclaimer` 警告橫幅；`toggleInterp()` 展開收起
+
+---
+
+## Phase 10B: Source Type Layer + Narrative Density ✅
+
+**目標**: 為每個 claim 標記資訊來源類型（財報數字/運營事實/戰略敘事/管理展望），並量測敘事密度
+
+**完成項目**:
+- `AIClaim`：加 `source_type`（4 choices）+ `forward_looking: bool`
+- `AIReport`：加 `narrative_density_score: float` + `narrative_flag: bool`
+- `prompts/__init__.py`：source_type/forward_looking 定義 + governance 規則
+- `_parse_claims()`：observed_fact 降級 / confidence cap / forward_looking 規則
+- `generate_summary()`：計算 narrative_density_score + narrative_flag（score > 0.6）
+- UI：SOURCE_TYPE_BADGE；pipeline 🔬 tab；narrative banner；fwd-tag
+- `tests/test_source_type_governance.py`：9 tests 通過
+
+---
+
+## Phase 10C: Rhetorical Risk Classifier ✅
+
+**目標**: 偵測語氣過強的敘事型 claim，雙軸密度評分
+
+**完成項目**:
+- `RHETORICAL_RISK_PHRASES`（16 個語氣詞）
+- `AIClaim`：加 `rhetorical_risk_flag: bool` + `rhetorical_risk_terms: list[str]`
+- `AIReport`：加 `narrative_density_weighted_score: float`（文字長度加權）
+- `_parse_claims()`：語氣掃描（只掃 narrative types，不影響 financial_evidence）
+- narrative_flag = count density > 0.6 OR weighted > 0.6
+- UI：banner 顯示雙指標；`.rhet-tag`（hover 顯示命中詞）
+- `tests/test_rhetorical_governance.py`：8 tests 通過
+
+---
+
+## Phase 10D: Forward-Looking Implication Guard ✅
+
+**目標**: 自動偵測隱性前瞻語言，不依賴 Claude 自我標記
+
+**完成項目**:
+- `FORWARD_LOOKING_INDICATOR_PHRASES`（14 個詞）
+- `_parse_claims()`：auto-detect forward_looking（只掃 strategic/management，覆蓋 Claude False）
+- 自動設 requires_human_review=True
+- `tests/test_forward_looking_guard.py`：9 tests 通過
+
+---
+
+## Phase 10E: Quotation Layer（Attribution Prefix）✅
+
+**目標**: 明確區分「公司宣稱 X」與「X 成立」，引用型敘事必加歸因前綴
+
+**完成項目**:
+- `AIClaim.attribution_prefix` field
+- `_parse_claims()`：`_ATTRIBUTION_MAP`：strategic_narrative → "公司宣稱："；management_expectation → "管理層表示："
+- UI：`.attr-prefix` CSS；renderClaim() 前綴歸因標籤
+
+---
+
+## Phase 11A: Output Completeness Rules（OC-1/OC-2）✅
+
+**目標**: 後處理驗證器，確保財報中有非常態項目或流動性壓力時，AI 必須產出對應的衍生指標
+
+**完成項目**:
+- `prompts/__init__.py`：Phase 2.5 Output Completeness Rules 段落
+  - OC-1（Gross Margin Adjustment）：recurring=false + 毛利相關 → 必填調整後毛利率 derived_metric
+  - OC-2（Liquidity Safety Margin）：現金 + 借款/股利並存 → 必填現金安全墊 derived_metric
+- `_check_completeness(claims)`：後處理驗證，回傳 list[str] warnings
+- `AIReport.completeness_warnings`：ListField(StringField())
+- `apis/v1/routers/summary.py`：GET endpoint 回傳 completeness_warnings
+- UI：OC 警告黃色橫幅（completeness-banner），只在有警告時顯示
+- `services/dashboard_contract.py`：新建模組（DASHBOARD_CONTRACT_VERSION / METRIC_TYPE /
+  TREND_ENUM / validate_dashboard_contract_v1 / serialize_summary_response）
+- Bug fix：`_build_dashboard_payload` 移除不存在的 `m["metric"]` KeyError
+
+---
+
+## Backlog
+
+### P0（下一步）
+- **部署**：選定免費平台（Railway 已排除），部署 Phase 9C–11A 所有功能
+- **test_quotation_layer.py**：Phase 10E 尚無測試，需補齊
+
+### P1
+- Auth wiring：`auth/` 骨架已存在（jwt_bearer.py、jwt_handler.py），尚未接入 router
+- DiffReport R6 audit endpoint（選做）
+
+### P2
+- OC-1/OC-2 trigger keyword edge case 擴充（現金安全墊關鍵字漏邊緣案例）
+
+---
+
+## Anti-Goals（本階段不做）
+
+- 不做自動選股、買賣建議、股價預測
+- 不做投資組合推薦
+- 不做即時交易訊號
+- 不把 AI 推論包裝成事實
+- 不做 multi-tenant / 帳號系統（Auth 是骨架，不是當前 Sprint）
+- 不做即時 WebSocket streaming（Claude API 回應以 REST 為主）
 
 ---
 
@@ -261,14 +365,38 @@
 
 ---
 
+## 測試總覽（截至 2026-05-16）
+
+| 測試檔案 | Tests | 說明 |
+|---------|-------|------|
+| test_governance.py | 44 | R1-R7 governance rules |
+| test_reasoning_patterns.py | 16 | Pattern engine（9E + 9F）|
+| test_source_type_governance.py | 9 | Source type governance（10B）|
+| test_rhetorical_governance.py | 8 | Rhetorical risk + weighted density（10C）|
+| test_forward_looking_guard.py | 9 | Forward-looking auto-detect（10D）|
+| test_disclosure_coverage.py | 10 | Disclosure coverage engine（9D）|
+| **合計** | **96** | ⚠ 需要安裝 anthropic + mongoengine 才能全跑 |
+
+---
+
 ## 變更歷史
 
 | 日期 | 變更內容 |
 |------|---------|
-| 2026-05-13 | 專案啟動，Phase 0~7 完成，PLAN.md 補齊至真實進度 |
-| 2026-05-13 | Phase 8: tests/test_governance.py 44 tests 全綠 |
-| 2026-05-13 | Phase 8 ✅: requirements.txt 清理，移除 chromadb/langchain 等 8 個未使用套件 |
-| 2026-05-14 | Phase 9B ✅: UI 重設計 — Key Findings grid、tabs、中性色碼 |
-| 2026-05-14 | Phase 9C ✅: industry_type field + CDMO/半導體 prompt supplement（evidence-first governance fix）|
-| 2026-05-14 | Phase 9D ✅: Disclosure Coverage Engine — 14 項法定揭露，10 tests 通過 |
-| 2026-05-14 | Phase 9E ✅: Pattern Registry — 6 patterns，純 Python 不呼叫 Claude，14 tests 通過 |
+| 2026-05-13 | 專案啟動，Phase 0~7 完成 |
+| 2026-05-13 | Phase 8 ✅: 44 tests 全綠，requirements.txt 清理 |
+| 2026-05-14 | Phase 9B ✅: UI 重設計 |
+| 2026-05-14 | Phase 9C ✅: industry_type + CDMO/半導體 supplement |
+| 2026-05-14 | Phase 9D ✅: Disclosure Coverage Engine，10 tests |
+| 2026-05-14 | Phase 9E ✅: Pattern Registry，6 patterns，14 tests |
+| 2026-05-15 | Phase 9F ✅: Pattern precision + claim discipline |
+| 2026-05-15 | Phase 10A ✅: Interpretation isolation UI |
+| 2026-05-15 | Phase 10B ✅: Source type + narrative density |
+| 2026-05-15 | Phase 10C ✅: Rhetorical risk classifier |
+| 2026-05-15 | Phase 10D ✅: Forward-looking guard |
+| 2026-05-15 | Phase 10E ✅: Quotation layer / attribution prefix |
+| 2026-05-15 | Phase 11A ✅: Output Completeness Rules OC-1/OC-2 |
+| 2026-05-15 | Bug fix: HTTP 500 / ValidationError / ROC year 民國年轉換 |
+| 2026-05-15 | Bug fix: session closeout auto-memory pipeline |
+| 2026-05-16 | Bug fix: dashboard_contract.py 缺失（後端 import 錯誤）+ KeyError m["metric"] |
+| 2026-05-16 | UI: completeness_warnings OC 警告橫幅顯示 |

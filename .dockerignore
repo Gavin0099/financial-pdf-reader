@@ -1,0 +1,39 @@
+# Environment & secrets
+.env
+.env.*
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+.coverage
+*.egg-info/
+
+# Local dev
+.venv/
+venv/
+env/
+
+# Project memory & docs (not needed at runtime)
+memory/
+docs/
+governance_harness.py
+governance_tools/
+
+# Git
+.git/
+.gitignore
+
+# Railway config (not needed on Cloud Run)
+railway.toml
+
+# IDE
+.vscode/
+.idea/
+*.DS_Store
