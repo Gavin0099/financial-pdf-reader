@@ -1,0 +1,15 @@
+{
+  "name": "financial-pdf-reader-ui-smoke",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Playwright smoke tests for static/index.html regression baseline",
+  "scripts": {
+    "ui:test": "playwright test",
+    "ui:test:headed": "playwright test --headed",
+    "ui:test:debug": "playwright test --debug"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.1"
+  }
+}
+

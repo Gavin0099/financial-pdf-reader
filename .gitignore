@@ -30,6 +30,9 @@ Thumbs.db
 # Test artifacts
 .coverage
 htmlcov/
+node_modules/
+playwright-report/
+test-results/
 
 # AI Governance source repo (deployed to project root, no need to track subfolder)
 ai-governance-framework/
