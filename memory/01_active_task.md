@@ -209,3 +209,5 @@
 - [x] Promoted memory: Fix HTTP 500 / ValidationError / ROC year bugs; implement Phase 11A Output Completeness Rules (OC-1/OC-2); fix session auto-memory pipeline
 - [x] Promoted memory: Fix HTTP 500 / ValidationError / ROC year bugs; implement Phase 11A Output Completeness Rules (OC-1/OC-2); fix session auto-memory pipeline
 - [x] Promoted memory: Fix HTTP 500 / ValidationError / ROC year bugs; implement Phase 11A Output Completeness Rules (OC-1/OC-2); fix session auto-memory pipeline
+- [x] Promoted memory: Implement P0 UI features (Narrative Explainability, Review Severity L1-L4, test_quotation_layer.py) and P1 backend upgrades (Materiality Engine _calc_impact(), Cloud Run Step 5 verification)
+- [x] Promoted memory: Implement P0 UI features (Narrative Explainability, Review Severity L1-L4, test_quotation_layer.py) and P1 backend upgrades (Materiality Engine _calc_impact(), Cloud Run Step 5 verification)
