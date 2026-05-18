@@ -86,11 +86,28 @@ _VALID_CONFIDENCE = {"high", "medium", "low"}
 # Keywords triggering OC-1 (non-recurring COGS/gross-margin items)
 _OC1_TRIGGER_KEYWORDS = ["迴轉利益", "跌價損失", "存貨跌價", "減損損失", "不動產減損", "廠房減損"]
 # Keywords triggering OC-2 liquidity items (debt/dividend side)
-_OC2_DEBT_KEYWORDS = ["借款", "可轉債", "股利"]
+_OC2_CASH_KEYWORDS = ["現金", "cash", "cash balance"]
+_OC2_DEBT_KEYWORDS = [
+    "短期借款",
+    "借款",
+    "流動負債",
+    "公司債",
+    "可轉債",
+    "可轉換公司債",
+    "convertible bond",
+    "corporate bond",
+    "應付股利",
+    "股利",
+]
 # Keywords indicating OC-1 adjustment already present
 _OC1_ADJUSTMENT_KEYWORDS = ["調整後毛利率", "排除此項目"]
 # Keywords indicating OC-2 safety margin already present
-_OC2_SAFETY_KEYWORDS = ["安全墊", "現金安全墊"]
+_OC2_SAFETY_KEYWORDS = ["安全墊", "現金安全墊", "liquidity_safety_margin"]
+
+
+def _contains_any(text: str, keywords: list[str]) -> bool:
+    lower = (text or "").lower()
+    return any(kw.lower() in lower for kw in keywords)
 
 
 def _check_completeness(claims: list[AIClaim]) -> list[str]:
@@ -123,18 +140,18 @@ def _check_completeness(claims: list[AIClaim]) -> list[str]:
 
     # OC-2 check
     has_cash_claim = any(
-        c.section_key == "liquidity" and "現金" in c.claim
+        c.section_key == "liquidity" and _contains_any(c.claim, _OC2_CASH_KEYWORDS)
         for c in claims
     )
     has_debt_claim = any(
         c.section_key == "liquidity"
-        and any(kw in c.claim for kw in _OC2_DEBT_KEYWORDS)
+        and _contains_any(c.claim, _OC2_DEBT_KEYWORDS)
         for c in claims
     )
     has_oc2_safety = any(
         c.claim_level == "derived_metric"
         and c.section_key == "liquidity"
-        and any(kw in c.claim for kw in _OC2_SAFETY_KEYWORDS)
+        and _contains_any(c.claim, _OC2_SAFETY_KEYWORDS)
         for c in claims
     )
     if has_cash_claim and has_debt_claim and not has_oc2_safety:
