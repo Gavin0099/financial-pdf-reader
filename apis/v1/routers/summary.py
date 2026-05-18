@@ -1,13 +1,14 @@
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from models.reports import AIReport
 from services.dashboard_contract import serialize_summary_response
 from services.summarization import generate_summary
+from auth.jwt_bearer import JWTBearer
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(JWTBearer())])
 
 
 @router.post("/{document_id}/summary")
