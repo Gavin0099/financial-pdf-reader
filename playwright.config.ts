@@ -27,7 +27,9 @@ export default defineConfig({
   webServer: {
     command: webServerCommand,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    // CI workflow may start a static server in a separate step.
+    // Reuse if one already exists to avoid EADDRINUSE on 8080.
+    reuseExistingServer: true,
     timeout: 60_000,
   },
 });
