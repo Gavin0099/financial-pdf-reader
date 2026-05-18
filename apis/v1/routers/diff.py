@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from models.reports import DiffReport
 from services.diff import generate_diff, _serialize_report
+from services.audit import run_diff_audit
 from auth.jwt_bearer import JWTBearer
 
 router = APIRouter(dependencies=[Depends(JWTBearer())])
@@ -35,3 +36,11 @@ async def get_diff_report(diff_report_id: str):
     if not report:
         raise HTTPException(status_code=404, detail="Diff report not found")
     return _serialize_report(report)
+
+
+@router.get("/diff/{diff_report_id}/audit")
+async def get_diff_report_audit(diff_report_id: str):
+    try:
+        return run_diff_audit(diff_report_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))

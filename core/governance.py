@@ -177,6 +177,20 @@ def check_r7_claim(claim_id: str, claim_text: str) -> GovernanceViolation | None
     return None
 
 
+def check_r6_diff(diff_id: str, diff_type: str, tone_only: bool) -> GovernanceViolation | None:
+    """R6: tone_shift diff item must be explicitly marked tone_only=True."""
+    if diff_type != "tone_shift":
+        return None
+    if tone_only:
+        return None
+    return GovernanceViolation(
+        rule="R6",
+        claim_id=diff_id,
+        description="tone_shift item must set tone_only=True to avoid financial-overstatement drift",
+        severity="error",
+    )
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Main audit function
 # ─────────────────────────────────────────────────────────────────────────────
@@ -244,4 +258,25 @@ def audit_claims(
         if v:
             result.warnings.append(v)
 
+    return result
+
+
+def audit_diff_items(
+    report_id: str,
+    document_id: str,
+    items: list[dict],
+) -> GovernanceAuditResult:
+    """Audit diff items with R6 guard."""
+    result = GovernanceAuditResult(
+        report_id=report_id,
+        document_id=document_id,
+        total_claims=len(items),
+    )
+    for item in items:
+        diff_id = item.get("diff_id", "unknown")
+        diff_type = item.get("diff_type", "")
+        tone_only = bool(item.get("tone_only", False))
+        v = check_r6_diff(diff_id, diff_type, tone_only)
+        if v:
+            result.violations.append(v)
     return result

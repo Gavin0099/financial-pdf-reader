@@ -8,12 +8,14 @@ from core.governance import (
     GovernanceViolation,
     GovernanceAuditResult,
     audit_claims,
+    audit_diff_items,
     check_r1,
     check_r2,
     check_r3,
     check_r4_report,
     check_r4_claim,
     check_r5,
+    check_r6_diff,
     check_r7_claim,
 )
 
@@ -339,3 +341,32 @@ class TestAuditClaims:
         r2_violations = [v for v in result.violations if v.rule == "R2"]
         assert len(r2_violations) == 1
         assert result.passed is False
+
+
+class TestR6:
+    def test_r6_pass_when_not_tone_shift(self):
+        assert check_r6_diff("d1", "numeric_change", False) is None
+
+    def test_r6_pass_when_tone_shift_marked_tone_only(self):
+        assert check_r6_diff("d1", "tone_shift", True) is None
+
+    def test_r6_fail_when_tone_shift_not_tone_only(self):
+        v = check_r6_diff("d1", "tone_shift", False)
+        assert v is not None
+        assert v.rule == "R6"
+        assert v.severity == "error"
+
+
+class TestAuditDiffItems:
+    def test_diff_items_pass_when_tone_shift_is_tone_only(self):
+        items = [{"diff_id": "d1", "diff_type": "tone_shift", "tone_only": True}]
+        result = audit_diff_items("dr1", "doc-1", items)
+        assert result.passed is True
+        assert result.violation_count == 0
+
+    def test_diff_items_fail_when_tone_shift_not_tone_only(self):
+        items = [{"diff_id": "d1", "diff_type": "tone_shift", "tone_only": False}]
+        result = audit_diff_items("dr1", "doc-1", items)
+        assert result.passed is False
+        assert result.violation_count == 1
+        assert result.violations[0].rule == "R6"

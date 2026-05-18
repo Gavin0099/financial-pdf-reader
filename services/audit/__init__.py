@@ -6,7 +6,8 @@ Audit Service — Phase 7
 from __future__ import annotations
 
 from models.reports import AIReport
-from core.governance import audit_claims, GovernanceAuditResult
+from models.reports import DiffReport
+from core.governance import audit_claims, audit_diff_items, GovernanceAuditResult
 
 
 def _claim_to_dict(claim) -> dict:
@@ -70,6 +71,49 @@ def run_audit(document_id: str, report_id: str | None = None) -> dict:
         "report_id": result.report_id,
         "document_id": result.document_id,
         "total_claims": result.total_claims,
+        "passed": result.passed,
+        "violation_count": result.violation_count,
+        "warning_count": result.warning_count,
+        "violations": [_serialize_violation(v) for v in result.violations],
+        "warnings": [_serialize_violation(w) for w in result.warnings],
+        "summary": _build_summary(result),
+    }
+
+
+def run_diff_audit(diff_report_id: str) -> dict:
+    report = DiffReport.objects(diff_report_id=diff_report_id).first()
+    if not report:
+        raise ValueError(f"DiffReport not found: diff_report_id={diff_report_id}")
+
+    items = [
+        {
+            "diff_id": i.diff_id,
+            "diff_type": i.diff_type,
+            "tone_only": i.tone_only,
+        }
+        for i in report.items
+    ]
+    result: GovernanceAuditResult = audit_diff_items(
+        report_id=report.diff_report_id,
+        document_id=report.current_document_id,
+        items=items,
+    )
+
+    def _serialize_violation(v) -> dict:
+        return {
+            "rule": v.rule,
+            "claim_id": v.claim_id,
+            "description": v.description,
+            "severity": v.severity,
+            "auto_fixed": v.auto_fixed,
+            "fix_description": v.fix_description,
+        }
+
+    return {
+        "diff_report_id": report.diff_report_id,
+        "current_document_id": report.current_document_id,
+        "previous_document_id": report.previous_document_id,
+        "total_items": len(report.items),
         "passed": result.passed,
         "violation_count": result.violation_count,
         "warning_count": result.warning_count,
