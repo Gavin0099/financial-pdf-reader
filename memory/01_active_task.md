@@ -183,18 +183,29 @@
 - `toggleReviewPanel()` 函式
 - `static/mock_results.html` 更新為 Phase 2A/2B 預覽
 
+### Phase 2C ✅（2026-05-18）
+- **Narrative Explainability Layer**：`computeNarrative()` 收集 `evidence_claim_ids`，顯示主結論依據（最多 3 條 claim + 頁碼）+ 衝突訊號；`toggleNarrEv()` 展開收起
+- **Review Severity Model L1-L4**：`_reviewSeverityLevel()` 函式；`SEV_META/SEV_ORDER` dict；待確認清單依嚴重度排序；每條前綴 badge（L4=紅/L3=黃/L2=藍/L1=灰）；header 更新
+- **`tests/test_quotation_layer.py`**：9 tests，Phase 10E 缺失測試補齊，全數通過
+
+### Phase 2D ✅（2026-05-18）
+- **Materiality Engine**：`_METRIC_BASE_IMPACT` dict + `_calc_impact(metric_id, delta_pct, direction)`（三因子：base 重要性 + 變化幅度升降 + 方向風險）；取代 `_build_dashboard_payload` 中硬編碼規則
+- **Cloud Run Step 5 確認**：patterns router 已掛載，`reasoning_patterns/` 已在 COPY 範圍，6 個 pattern 正常載入
+
+| 測試檔案 | Tests | 說明 |
+|---------|-------|------|
+| test_quotation_layer.py | 9 | Attribution prefix (Phase 10E) |
+| **合計** | **109** | **全部通過** |
+
 ## 下一步候選（Backlog）
 
-### P0（UI 繼續）
-- **Narrative Explainability Layer**：主結論顯示 evidence 支撐 + 衝突訊號（最高優先）
-- **Review Severity Model**：L1 語氣偏強 / L2 詮釋無佐證 / L3 證據缺失 / L4 證據矛盾
-
-### P1（UI 繼續）
-- **Materiality Engine**：magnitude ≠ importance，高影響判斷從 rule-based 升級
-- Mini Trend Strip（需多期資料，先跳過）
-
 ### P2（後端/測試）
-- Step 5 財報檢查模式在 Cloud Run 上確認
-- `tests/test_quotation_layer.py` 補測試（Phase 10E 無測試）
+- OC-2 關鍵字邊界補強（公司債 vs 可轉債 等邊界詞）
 - Auth wiring（`auth/` 骨架存在，未接路由）
 - DiffReport R6 audit endpoint（選做）
+- Mini Trend Strip（需多期資料，先跳過）
+- [x] Promoted memory: Fix HTTP 500 / ValidationError / ROC year bugs; implement Phase 11A Output Completeness Rules (OC-1/OC-2); fix session auto-memory pipeline
+- [x] Promoted memory: Fix HTTP 500 / ValidationError / ROC year bugs; implement Phase 11A Output Completeness Rules (OC-1/OC-2); fix session auto-memory pipeline
+- [x] Promoted memory: Fix HTTP 500 / ValidationError / ROC year bugs; implement Phase 11A Output Completeness Rules (OC-1/OC-2); fix session auto-memory pipeline
+- [x] Promoted memory: Fix HTTP 500 / ValidationError / ROC year bugs; implement Phase 11A Output Completeness Rules (OC-1/OC-2); fix session auto-memory pipeline
+- [x] Promoted memory: Fix HTTP 500 / ValidationError / ROC year bugs; implement Phase 11A Output Completeness Rules (OC-1/OC-2); fix session auto-memory pipeline

@@ -291,6 +291,37 @@ def _direction_from_text(claim_text: str, delta: float | None) -> str:
     return "flat"
 
 
+_METRIC_BASE_IMPACT: dict[str, str] = {
+    "gross_margin":           "high",
+    "operating_income":       "high",
+    "eps":                    "high",
+    "revenue":                "medium",
+    "cash":                   "medium",
+    "debt":                   "medium",
+    "fx":                     "low",
+    "customer_concentration": "low",
+}
+_IMPACT_RANK  = {"high": 2, "medium": 1, "low": 0}
+_IMPACT_LABEL = {2: "high", 1: "medium", 0: "low"}
+_DOWN_ESCALATE_METRICS = {"revenue", "cash"}
+
+
+def _calc_impact(metric_id: str, delta_pct: float | None, direction: str) -> str:
+    """Multi-factor materiality: base importance + delta magnitude + directional risk."""
+    base = _METRIC_BASE_IMPACT.get(metric_id, "medium")
+    rank = _IMPACT_RANK[base]
+    if delta_pct is not None:
+        abs_delta = abs(delta_pct)
+        if abs_delta >= 15:
+            rank = min(rank + 1, 2)
+        elif abs_delta < 2:
+            rank = max(rank - 1, 0)
+    if direction == "down" and metric_id in _DOWN_ESCALATE_METRICS:
+        if delta_pct is not None and abs(delta_pct) >= 10:
+            rank = min(rank + 1, 2)
+    return _IMPACT_LABEL[rank]
+
+
 def _build_dashboard_payload(
     clean_claims: list[AIClaim],
     all_claims: list[AIClaim],
@@ -334,7 +365,7 @@ def _build_dashboard_payload(
                     "direction": m["direction"],
                     "delta_pct": m["delta_pct"],
                     "evidence_claim_ids": m["evidence_claim_ids"],
-                    "impact": "high" if key in {"gross_margin", "operating_income", "eps"} else "medium",
+                    "impact": _calc_impact(key, m["delta_pct"], m["direction"]),
                     "claim_text": m["claim_text"],
                     "confidence": m["confidence"],
                 }

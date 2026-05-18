@@ -437,6 +437,37 @@ input::placeholder { color: #cbd5e1; }
 .review-panel-item-tag { font-size: .62rem; background: #fff; border: 1px solid #bae6fd; border-radius: 3px; padding: 1px 5px; color: #0369a1; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
 .review-panel-item-text { color: #0c4a6e; line-height: 1.5; flex: 1; }
 .review-panel-item-page { font-size: .65rem; color: #0369a1; font-weight: 700; flex-shrink: 0; }
+
+/* ── Narrative Explainability Layer ── */
+.narr-ev-toggle { font-size: 0.72rem; font-weight: 600; background: none; border: none; cursor: pointer; padding: 8px 0 0; display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; }
+.narr-ok .narr-ev-toggle { color: #166534; }
+.narr-watch .narr-ev-toggle { color: #92400e; }
+.narr-risk .narr-ev-toggle { color: #9f1239; }
+.narr-ev-panel { display: none; margin-top: 6px; padding: 8px 10px; border-radius: 6px; }
+.narr-ok .narr-ev-panel { background: rgba(22,163,74,.07); border: 1px dashed #86efac; }
+.narr-watch .narr-ev-panel { background: rgba(217,119,6,.07); border: 1px dashed #fde68a; }
+.narr-risk .narr-ev-panel { background: rgba(225,29,72,.07); border: 1px dashed #fda4af; }
+.narr-ev-panel.open { display: block; }
+.narr-ev-item { display: flex; gap: 8px; font-size: 0.72rem; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,.05); }
+.narr-ev-item:last-child { border-bottom: none; }
+.narr-ev-page { font-weight: 700; flex-shrink: 0; font-size: 0.65rem; padding-top: 1px; }
+.narr-ok .narr-ev-page { color: #166534; }
+.narr-watch .narr-ev-page { color: #92400e; }
+.narr-risk .narr-ev-page { color: #9f1239; }
+.narr-ev-text { line-height: 1.4; }
+.narr-ok .narr-ev-text { color: #14532d; }
+.narr-watch .narr-ev-text { color: #78350f; }
+.narr-risk .narr-ev-text { color: #881337; }
+.narr-conflict { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(0,0,0,.1); }
+.narr-conflict-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; opacity: .7; display: block; margin-bottom: 3px; }
+.narr-conflict-item { font-size: 0.7rem; padding: 2px 0; opacity: .8; line-height: 1.4; }
+
+/* ── Review Severity Badges ── */
+.rev-sev { font-size: 0.62rem; font-weight: 700; border-radius: 3px; padding: 1px 5px; flex-shrink: 0; margin-top: 2px; }
+.rev-sev-l4 { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; }
+.rev-sev-l3 { background: #fef3c7; border: 1px solid #fde68a; color: #92400e; }
+.rev-sev-l2 { background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; }
+.rev-sev-l1 { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; }
 </style>
 </head>
 <body>
@@ -1011,7 +1042,6 @@ function renderResults(data) {
 
   // ── Review Panel (expandable) ──
   if (reviewClaims.length > 0) {
-    const TAG_ZH = {observed_fact:'直接事實',derived_metric:'衍生指標',interpretation:'AI詮釋',hypothesis:'假設',insufficient_evidence:'佐證不足'};
     const REVIEW_REASON = c => {
       if (c.forward_looking) return '前瞻性說明';
       if (c.claim_level === 'interpretation' || c.claim_level === 'hypothesis') return 'AI詮釋類';
@@ -1019,13 +1049,24 @@ function renderResults(data) {
       if (c.rhetorical_risk_flag) return '敘事語氣偏強';
       return '需人工驗證';
     };
+    const SEV_META = {
+      L4: { cls:'rev-sev rev-sev-l4', label:'L4 · 缺乏佐證' },
+      L3: { cls:'rev-sev rev-sev-l3', label:'L3 · 佐證缺失' },
+      L2: { cls:'rev-sev rev-sev-l2', label:'L2 · AI詮釋' },
+      L1: { cls:'rev-sev rev-sev-l1', label:'L1 · 語氣偏強' },
+    };
+    const SEV_ORDER = { L4:0, L3:1, L2:2, L1:3 };
+    const sortedReview = [...reviewClaims].sort((a,b) => (SEV_ORDER[_reviewSeverityLevel(a)]||4) - (SEV_ORDER[_reviewSeverityLevel(b)]||4));
     html += `<div class="review-toggle-btn" onclick="toggleReviewPanel()" id="review-toggle-btn">▶ 展開 ${reviewClaims.length} 條待確認項目</div>
     <div class="review-panel" id="review-panel">
-      <div class="review-panel-header">待確認觀察（不確定性提示，非風險判斷）</div>
+      <div class="review-panel-header">待確認觀察（嚴重度 L4→L1，非風險判斷）</div>
       <div class="review-panel-items">`;
-    reviewClaims.forEach(c => {
+    sortedReview.forEach(c => {
       const pages = (c.evidence||[]).map(e=>`P.${e.page}`).join(' ');
+      const sev = _reviewSeverityLevel(c);
+      const sm = SEV_META[sev] || SEV_META.L2;
       html += `<div class="review-panel-item">
+        <span class="${sm.cls}">${sm.label}</span>
         <span class="review-panel-item-tag">${REVIEW_REASON(c)}</span>
         <span class="review-panel-item-text">${c.claim}</span>
         ${pages?`<span class="review-panel-item-page">${pages}</span>`:''}
@@ -1142,6 +1183,42 @@ function computeNarrative(data, highRisk, riskRows, cleanClaims, whatChanged) {
 
   if (reasons.length === 0) reasons = ['財務指標未見重大異常'];
 
+  // ── Narrative Explainability: collect driving evidence claim IDs ──
+  let drivingIds = [];
+  let conflictSignals = [];
+  if (type === 'structural') {
+    const gm = whatChanged.find(m => m.metric_id === 'gross_margin');
+    if (gm) drivingIds.push(...(gm.evidence_claim_ids || []));
+    const mr = riskRows.find(r => r.label === 'Margin pressure');
+    if (mr) drivingIds.push(...(mr.evidence_claim_ids || []));
+    if (adjustments.length > 0) conflictSignals.push(`${adjustments.length} 項非常態調整存在（可能為一次性壓力）`);
+  } else if (type === 'transient') {
+    const rv = whatChanged.find(m => m.metric_id === 'revenue');
+    if (rv) drivingIds.push(...(rv.evidence_claim_ids || []));
+    adjustments.forEach(a => drivingIds.push(...(a.evidence_claim_ids || [])));
+    if (highRisk.some(r => r.label === 'Margin pressure')) conflictSignals.push('毛利率指標仍有壓力訊號，請確認是否一次性');
+  } else {
+    const rv = whatChanged.find(m => m.metric_id === 'revenue');
+    if (rv) drivingIds.push(...(rv.evidence_claim_ids || []));
+    const liq = riskRows.find(r => r.risk_id === 'liquidity');
+    if (liq) drivingIds.push(...(liq.evidence_claim_ids || []));
+    if (highRisk.length > 0) conflictSignals.push(`${highRisk.length} 項高風險訊號存在但未達結構壓力門檻`);
+  }
+  drivingIds = [...new Set(drivingIds)];
+  const drivingClaims = drivingIds.map(id => cleanClaims.find(c => c.claim_id === id)).filter(Boolean).slice(0, 3);
+
+  let evHtml = '';
+  if (drivingClaims.length > 0) {
+    const evItems = drivingClaims.map(c => {
+      const pages = (c.evidence || []).map(e => `P.${e.page}`).join(' ');
+      return `<div class="narr-ev-item"><span class="narr-ev-page">${pages || '無頁碼'}</span><span class="narr-ev-text">${c.claim.length > 80 ? c.claim.slice(0,80)+'…' : c.claim}</span></div>`;
+    }).join('');
+    const conflictHtml = conflictSignals.length > 0
+      ? `<div class="narr-conflict"><span class="narr-conflict-label">衝突訊號</span>${conflictSignals.map(s => `<div class="narr-conflict-item">· ${s}</div>`).join('')}</div>`
+      : '';
+    evHtml = `<button class="narr-ev-toggle" onclick="toggleNarrEv('narr-ev-panel')">▶ 主結論依據（${drivingClaims.length} 條）</button><div class="narr-ev-panel" id="narr-ev-panel">${evItems}${conflictHtml}</div>`;
+  }
+
   const confPct = confidence + '%';
   return `<div class="narr-card ${colorCls}">
     <div class="narr-icon">${icon}</div>
@@ -1162,6 +1239,7 @@ function computeNarrative(data, highRisk, riskRows, cleanClaims, whatChanged) {
           <ul class="narr-points">${watchPoints.map(w=>`<li>${w}</li>`).join('')}</ul>
         </div>
       </div>
+      ${evHtml}
     </div>
   </div>`;
 }
@@ -1327,6 +1405,24 @@ function togglePatClaims(id) {
   el.classList.toggle('open');
   const toggle = el.previousElementSibling;
   if (toggle) toggle.textContent = toggle.textContent.replace(/^[▶▼]/,el.classList.contains('open')?'▼':'▶');
+}
+function toggleNarrEv(id) {
+  const el = document.getElementById(id); if (!el) return;
+  const btn = el.previousElementSibling;
+  el.classList.toggle('open');
+  const cnt = el.querySelectorAll('.narr-ev-item').length;
+  btn.textContent = el.classList.contains('open') ? '▼ 收起主結論依據' : `▶ 主結論依據（${cnt} 條）`;
+}
+function _reviewSeverityLevel(c) {
+  // L4: forward-looking AND no evidence — prediction with zero basis
+  if (c.forward_looking && (c.evidence||[]).length === 0) return 'L4';
+  // L3: any claim with no evidence pages at all
+  if ((c.evidence||[]).length === 0) return 'L3';
+  // L2: AI interpretation/hypothesis (has some evidence but still inferred)
+  if (c.claim_level === 'interpretation' || c.claim_level === 'hypothesis') return 'L2';
+  // L1: rhetorical style concern only
+  if (c.rhetorical_risk_flag) return 'L1';
+  return 'L2';
 }
 </script>
 </body>
