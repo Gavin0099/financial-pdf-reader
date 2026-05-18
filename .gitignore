@@ -50,3 +50,10 @@ artifacts/session-closeout.txt
 artifacts/runtime/
 artifacts/candidates/
 artifacts/session-index.ndjson
+artifacts/claim-enforcement/
+artifacts/governance/
+
+# Memory pipeline intermediates (auto-generated, not committed)
+memory/candidates/
+memory/archive/
+memory/04_review_log.md
