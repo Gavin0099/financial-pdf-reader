@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: financial-pdf-reader
+    env: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: MONGODB_URL
+        sync: false          # 在 Render dashboard 手動填入
+      - key: MONGODB_DB_NAME
+        value: financial_pdf_reader
+      - key: ANTHROPIC_API_KEY
+        sync: false          # 在 Render dashboard 手動填入
+      - key: FINMIND_TOKEN
+        sync: false          # 可選，提高 FinMind rate limit
+      - key: ALLOWED_ORIGINS
+        value: "*"           # 個人工具，允許所有 origin
