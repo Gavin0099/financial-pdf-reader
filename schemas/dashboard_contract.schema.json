@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dashboard_contract.schema.json",
+  "title": "Dashboard Contract v1",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "metrics",
+    "what_changed",
+    "causal_edges",
+    "risk_surface",
+    "adjustments",
+    "transparency"
+  ],
+  "properties": {
+    "contract_version": { "const": "dashboard_contract_v1" },
+    "metrics": { "type": "array" },
+    "what_changed": { "type": "array" },
+    "causal_edges": { "type": "array" },
+    "risk_surface": { "type": "array" },
+    "adjustments": { "type": "array" },
+    "transparency": { "type": "object" }
+  },
+  "additionalProperties": true
+}
