@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from services.classification import classify_document, manual_override, SECTIONS
+from auth.jwt_bearer import JWTBearer
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(JWTBearer())])
 
 
 class ManualOverrideRequest(BaseModel):

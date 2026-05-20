@@ -1,11 +1,12 @@
 import uuid
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from pydantic import BaseModel
 
 from models.documents import PDFDocument, PDFChunk
 from services.pdf_ingestion import ingest_pdf, save_uploaded_file
+from auth.jwt_bearer import JWTBearer
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(JWTBearer())])
 
 
 # ── Request / Response schemas ────────────────────────────────────────────────

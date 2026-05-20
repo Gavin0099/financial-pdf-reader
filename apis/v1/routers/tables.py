@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from models.documents import PDFTable
 from services.text_extraction import extract_tables, find_numeric_evidence
+from auth.jwt_bearer import JWTBearer
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(JWTBearer())])
 
 
 @router.post("/{document_id}/extract-tables")

@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 
 from services.disclosure_coverage import check_disclosure_coverage
+from auth.jwt_bearer import JWTBearer
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(JWTBearer())])
 
 
 @router.post("/{document_id}/disclosure-coverage")

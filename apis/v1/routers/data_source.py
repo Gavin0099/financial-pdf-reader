@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel
 from models.external import ExternalDataRecord
 from services.data_source import (
@@ -6,8 +6,9 @@ from services.data_source import (
     fetch_financial_statement,
     crosscheck_with_pdf,
 )
+from auth.jwt_bearer import JWTBearer
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(JWTBearer())])
 
 
 @router.post("/{stock_id}/fetch-revenue")
