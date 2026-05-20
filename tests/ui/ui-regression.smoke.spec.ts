@@ -107,9 +107,9 @@ test('stepper advances and results badges render', async ({ page }) => {
   await page.click('#summary-btn');
   await expect(page.locator('#results-area')).not.toHaveClass(/hidden/);
   await expect(page.locator('#sn4')).toHaveClass(/active/);
-  await expect(page.locator('.gov-bar')).toContainText('佐證完整');
-  await expect(page.locator('.gov-bar')).toContainText('1 條待確認');
-  await expect(page.locator('#results-area')).toContainText('無投資建議');
+  await expect(page.getByTestId('gov-bar')).toContainText('佐證完整');
+  await expect(page.getByTestId('review-count-btn')).toContainText('1 條待確認');
+  await expect(page.getByTestId('advice-signal-value')).toContainText('無投資建議');
 });
 
 test('error/loading/success states are visible', async ({ page }) => {

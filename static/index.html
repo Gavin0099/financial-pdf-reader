@@ -870,7 +870,7 @@ function renderResults(data) {
   let html = `<div class="results-card">
     <div class="results-card-header">
       <span class="report-title">${data.stock_id||''} ${data.period||''}</span>
-      <div class="gov-bar">${evBadge} ${reviewCount>0?`<button class="b-review" onclick="toggleReviewPanel()">⚑ ${reviewCount} 條待確認</button>`:''}</div>
+      <div class="gov-bar" data-testid="gov-bar">${evBadge} ${reviewCount>0?`<button class="b-review" data-testid="review-count-btn" onclick="toggleReviewPanel()">⚑ ${reviewCount} 條待確認</button>`:''}</div>
     </div>
     <div class="results-card-body">`;
 
@@ -886,7 +886,7 @@ function renderResults(data) {
     <div class="db-signal ${periodSignal[2]}"><div class="db-icon">${periodSignal[0]}</div><div><div class="db-label">期間一致性</div><div class="db-value">${periodSignal[1]}</div></div></div>
     <div class="db-signal ${revSignal[2]}"><div class="db-icon">${revSignal[0]}</div><div><div class="db-label">營收趨勢</div><div class="db-value">${revSignal[1]}</div></div></div>
     <div class="db-signal ${covSignal[2]}"><div class="db-icon">${covSignal[0]}</div><div><div class="db-label">風險概況</div><div class="db-value">${covSignal[1]}</div></div></div>
-    <div class="db-signal ${advSignal[2]}"><div class="db-icon">${advSignal[0]}</div><div><div class="db-label">治理</div><div class="db-value">${advSignal[1]}</div></div></div>
+    <div class="db-signal ${advSignal[2]}" data-testid="advice-signal"><div class="db-icon">${advSignal[0]}</div><div><div class="db-label">治理</div><div class="db-value" data-testid="advice-signal-value">${advSignal[1]}</div></div></div>
   </div>`;
 
   if (!periodOk) {
