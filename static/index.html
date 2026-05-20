@@ -536,7 +536,10 @@ input::placeholder { color: #cbd5e1; }
             <option value="semiconductor">半導體</option>
           </select>
         </div>
-        <div class="form-group"></div>
+        <div class="form-group">
+          <label>API Bearer Token (optional)</label>
+          <input type="password" id="api_token" placeholder="JWT token for protected API endpoints">
+        </div>
       </div>
       <label>PDF 檔案 <span class="req">*</span></label>
       <div class="dropzone" id="dropzone"
@@ -635,10 +638,40 @@ input::placeholder { color: #cbd5e1; }
     </div>
   </div>
 
+  <div class="section-result-card">
+    <div class="src-header"><span>R6</span><h3>Diff Audit</h3></div>
+    <div class="src-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>diff_report_id</label>
+          <input type="text" id="diff_audit_id" placeholder="Paste diff_report_id">
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end;">
+          <button class="btn btn-primary" onclick="runDiffAudit()" id="diff-audit-btn">Run R6 Audit</button>
+        </div>
+      </div>
+      <div id="diff-audit-result"></div>
+      <div class="hidden" id="diff-audit-area">
+        <div class="section-result-card" style="margin-top:10px;">
+          <div class="src-header"><span>R6</span><h3>Audit Result</h3></div>
+          <div class="src-body" id="diff-audit-body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
 let documentId = null;
+
+function authHeaders(extra = {}) {
+  const tokenInput = document.getElementById('api_token');
+  const token = tokenInput ? tokenInput.value.trim() : '';
+  const headers = { ...extra };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+}
 
 /* ── Stepper ── */
 function updateStepper(step) {
@@ -746,7 +779,7 @@ async function uploadPDF() {
   fd.append('company_name',companyName); fd.append('period',period);
   fd.append('document_type',docType); fd.append('industry_type',industryType);
   try {
-    const data = await parseResponse(await fetch('/api/v1/documents/upload',{method:'POST',body:fd}));
+    const data = await parseResponse(await fetch('/api/v1/documents/upload',{method:'POST',body:fd,headers:authHeaders()}));
     documentId = data.document_id;
     document.getElementById('badge1').textContent = '✓';
     document.getElementById('badge1').classList.add('done');
@@ -763,7 +796,7 @@ async function ingestDoc() {
   const btn = document.getElementById('ingest-btn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 解析中...';
   try {
-    const data = await parseResponse(await fetch(`/api/v1/documents/${documentId}/ingest`,{method:'POST'}));
+    const data = await parseResponse(await fetch(`/api/v1/documents/${documentId}/ingest`,{method:'POST',headers:authHeaders()}));
     document.getElementById('badge2').textContent = '✓';
     document.getElementById('badge2').classList.add('done');
     document.getElementById('ingest-success-msg').innerHTML =
@@ -780,7 +813,7 @@ async function generateSummary() {
   const btn = document.getElementById('summary-btn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Claude 分析中，請稍候...';
   try {
-    const data = await parseResponse(await fetch(`/api/v1/documents/${documentId}/summary`,{method:'POST'}));
+    const data = await parseResponse(await fetch(`/api/v1/documents/${documentId}/summary`,{method:'POST',headers:authHeaders()}));
     document.getElementById('badge3').textContent = '✓';
     document.getElementById('badge3').classList.add('done');
     renderResults(data);
@@ -798,7 +831,7 @@ async function runCoverage() {
   const btn = document.getElementById('coverage-btn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Haiku 稽核中...';
   try {
-    const data = await parseResponse(await fetch(`/api/v1/documents/${documentId}/disclosure-coverage`,{method:'POST'}));
+    const data = await parseResponse(await fetch(`/api/v1/documents/${documentId}/disclosure-coverage`,{method:'POST',headers:authHeaders()}));
     document.getElementById('badge4').textContent = '✓';
     document.getElementById('badge4').classList.add('done');
     renderCoverage(data);
@@ -1349,7 +1382,7 @@ async function runPatterns() {
   const btn = document.getElementById('patterns-btn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 分析中...';
   try {
-    const data = await parseResponse(await fetch(`/api/v1/documents/${documentId}/patterns/run`,{method:'POST'}));
+    const data = await parseResponse(await fetch(`/api/v1/documents/${documentId}/patterns/run`,{method:'POST',headers:authHeaders()}));
     document.getElementById('badge5').textContent = '✓';
     document.getElementById('badge5').classList.add('done');
     renderPatterns(data);
@@ -1413,6 +1446,51 @@ function toggleNarrEv(id) {
   const cnt = el.querySelectorAll('.narr-ev-item').length;
   btn.textContent = el.classList.contains('open') ? '▼ 收起主結論依據' : `▶ 主結論依據（${cnt} 條）`;
 }
+async function runDiffAudit() {
+  const input = document.getElementById('diff_audit_id');
+  const btn = document.getElementById('diff-audit-btn');
+  const diffId = (input?.value || '').trim();
+  if (!diffId) {
+    setResult('diff-audit-result', 'error', 'Please provide diff_report_id');
+    return;
+  }
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Running...';
+  try {
+    const data = await parseResponse(await fetch(`/api/v1/reports/diff/${encodeURIComponent(diffId)}/audit`, {
+      method: 'GET',
+      headers: authHeaders(),
+    }));
+    setResult('diff-audit-result', 'success', `Loaded audit for ${diffId}`);
+    renderDiffAudit(data);
+    document.getElementById('diff-audit-area').classList.remove('hidden');
+  } catch (e) {
+    setResult('diff-audit-result', 'error', 'Diff audit failed: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Run R6 Audit';
+  }
+}
+
+function renderDiffAudit(data) {
+  const violations = data.violations || [];
+  const warn = data.warnings || [];
+  const html = `
+    <div style="margin-bottom:8px;">
+      <span class="badge ${data.passed ? 'b-green' : 'b-red'}">${data.passed ? 'PASSED' : 'FAILED'}</span>
+      <span style="margin-left:8px;font-size:.82rem;color:var(--muted);">
+        diff_report_id=${data.diff_report_id || ''} / items=${data.total_items ?? 0}
+      </span>
+    </div>
+    <div style="font-size:.82rem;line-height:1.6;">
+      <div>Violations: <b>${data.violation_count ?? 0}</b>, Warnings: <b>${data.warning_count ?? 0}</b></div>
+      ${violations.length ? `<div style="margin-top:6px;"><b>Violations</b><ul>${violations.map(v => `<li>[${v.rule}] ${v.description}</li>`).join('')}</ul></div>` : ''}
+      ${warn.length ? `<div style="margin-top:6px;"><b>Warnings</b><ul>${warn.map(v => `<li>[${v.rule}] ${v.description}</li>`).join('')}</ul></div>` : ''}
+    </div>
+  `;
+  document.getElementById('diff-audit-body').innerHTML = html;
+}
+
 function _reviewSeverityLevel(c) {
   // L4: forward-looking AND no evidence — prediction with zero basis
   if (c.forward_looking && (c.evidence||[]).length === 0) return 'L4';
