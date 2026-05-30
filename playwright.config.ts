@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 const baseURL = process.env.UI_BASE_URL || 'http://127.0.0.1:8080';
 const webServerCommand =
   process.env.UI_SERVER_COMMAND ||
-  (process.platform === 'win32' ? 'py -m http.server 8080' : 'python3 -m http.server 8080');
+  'node scripts/static-server.js';
 
 export default defineConfig({
   testDir: './tests/ui',

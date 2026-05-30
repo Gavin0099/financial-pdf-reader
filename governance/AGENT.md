@@ -6,6 +6,11 @@ overridden_by: ~
 default_load: always
 ---
 
+<!-- governance:memory_authority -->
+memory_root: memory/
+external_memory_allowed: false
+operational_records_must_stay_under_memory_root: true
+
 # AGENT.md
 **AI Agent 行為契約 - v4.3**
 
@@ -91,6 +96,32 @@ L0 fast-track 路徑：
 - security、correctness、或 data-integrity critical path
 
 這類工作必須完整套用 `ARCHITECTURE.md` 與 `TESTING.md`，不得在沒有 human approval 的情況下取捷徑。
+
+### 2.5 Post-Review Remediation Permission
+
+Review finding 產出後，依 finding 的改動性質決定是否可以立即修：
+
+**Mechanical remediation — 可以在 review 後直接修，不需額外確認：**
+- typo / copy / label
+- missing config path
+- missing test case
+- stale PLAN checkbox
+- evidence refresh
+- small consistency fix
+- 任何不改變 authority、gate、contract、或 domain behavior 的修正
+
+以上等同 L0 或 content-only L1。套用 2.2 節的 fast-track path。
+
+**Structural remediation — 必須先停下來，取得明確 user 確認或獨立 plan：**
+- new authority source 或 gate behavior 改動
+- contract / schema change
+- domain risk boundary change
+- native update behavior change
+- cross-agent lifecycle change
+
+以上屬於 L1 behavior change 或 L2。不得在 review session 中自行滑入。
+
+**分類不確定時：** 向 structural 靠攏，先確認再修。不要在模糊時用「看起來像 mechanical」做為自行執行的依據。
 
 ---
 
@@ -258,3 +289,26 @@ L0 fast-track 路徑：
 
 原因：治理框架本身也需要停止條件。
 目前最大風險不是 governance 不夠，而是 governance recursive self-expansion。
+## 12. Governance Surface Expansion Gate (Mandatory)
+
+> **Mandatory gate. Enforced by design review.**
+
+Before adding any new governance layer, the proposer must answer:
+1. Is this problem governance-critical (contract/evidence/risk), or only operational hygiene?
+2. What existing governance rule cannot already cover it?
+3. What is the minimal added surface, and how will regression prove non-expansion side effects?
+
+Decision rule:
+- `governance_required=true` only when failure would weaken fail-closed semantics, evidence admissibility, or risk accountability.
+- Otherwise classify as `operational_hygiene` and do not create a new governance gate.
+
+Scope control rule:
+- One governance concept change per stream.
+- Do not bundle evidence semantics changes with unrelated policy expansion in the same commit stream.
+
+## 13. Operational Semantics Binding Rule (Mandatory)
+
+When using `hooks_ready`, `repo_native_verified`, `clean_admissibility`,
+`expected_dirty_ttl`, or `self_hosting_gap_closed`, use the definitions in
+`governance/fleet/operational_semantics_v1.md`. Do not imply broader authority
+than the verifier can prove.

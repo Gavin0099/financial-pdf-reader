@@ -1,0 +1,79 @@
+version: "0.1"
+as_of: "2026-05-15"
+scope: "high-risk semantic islands only"
+mode: "observation_only"
+authority_note: "Non-authoritative semantic layer; cannot independently grant execution authority."
+
+invariants:
+  - invariant_id: ownership_boundary
+    domain: firmware_update_semantics
+    statement: "trackedQty and authority decisions only reflect AI-owned routes/positions."
+    violation_class:
+      - SF-03
+      - SF-05
+      - SF-06
+    severity_default: S3
+    check_mode: observation
+    allowed_revision: "explicit evidence-backed reviewer-visible revision only"
+
+  - invariant_id: topology_identity_isolation
+    domain: topology_semantics
+    statement: "Route/device identity cannot be merged across topology contexts without explicit binding evidence."
+    violation_class:
+      - SF-04
+      - SF-06
+      - SF-07
+    severity_default: S3
+    check_mode: observation
+    allowed_revision: "only with new topology evidence and explicit mapping artifact"
+
+  - invariant_id: no_cross_route_contamination
+    domain: runtime_recovery_semantics
+    statement: "State or actions from one route must not influence another route unless policy explicitly permits it."
+    violation_class:
+      - SF-04
+      - SF-06
+    severity_default: S3
+    check_mode: observation
+    allowed_revision: "policy update required; not by local reasoning"
+
+  - invariant_id: authority_not_equal_physical_truth
+    domain: authority_semantics
+    statement: "Observed physical/live state cannot overwrite governance authority classification by itself."
+    violation_class:
+      - SF-03
+      - SF-06
+      - SF-07
+    severity_default: S3
+    check_mode: observation
+    allowed_revision: "requires formal policy decision artifact"
+
+  - invariant_id: observation_not_enforcement
+    domain: governance_runtime_semantics
+    statement: "Observation signals cannot be consumed as execution authority without explicit promotion contract."
+    violation_class:
+      - SF-01
+      - SF-03
+      - SF-07
+    severity_default: S2
+    check_mode: observation
+    allowed_revision: "promotion contract + reviewer confirmation required"
+
+  - invariant_id: evidence_output_alignment
+    domain: evidence_output_semantics
+    statement: "Material output decisions should be semantically supportable by declared evidence fragments."
+    violation_class:
+      - SF-01
+      - SF-05
+    severity_default: S2
+    check_mode: observation
+    allowed_revision: "evidence trace update or output downgrade"
+
+policy:
+  reviewer_required_for:
+    - S3
+    - invariant_reinterpretation
+  non_goals:
+    - universal_semantic_correctness_scoring
+    - automatic_truth_judgement
+    - self_explanation_as_authority

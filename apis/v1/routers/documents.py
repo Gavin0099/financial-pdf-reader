@@ -1,4 +1,5 @@
 import uuid
+import re
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from pydantic import BaseModel
 
@@ -7,6 +8,36 @@ from services.pdf_ingestion import ingest_pdf, save_uploaded_file
 from auth.jwt_bearer import JWTBearer
 
 router = APIRouter(dependencies=[Depends(JWTBearer())])
+
+
+def _infer_document_meta(file_name: str, stock_id: str, company_name: str, period: str) -> tuple[str, str, str]:
+    """
+    將 upload 表單欄位改為選填：
+    - 有填就用使用者值
+    - 未填則優先從檔名推斷
+    - 都推不到則使用保守預設，避免阻塞上傳流程
+    """
+    stem = (file_name or "").rsplit(".", 1)[0]
+
+    inferred_stock = stock_id.strip() if stock_id else ""
+    if not inferred_stock:
+        m_stock = re.search(r"\b(\d{4})\b", stem)
+        inferred_stock = m_stock.group(1) if m_stock else "UNKNOWN"
+
+    inferred_period = period.strip() if period else ""
+    if not inferred_period:
+        m_period = re.search(r"(20\d{2}\s*[Qq][1-4])", stem)
+        inferred_period = m_period.group(1).replace(" ", "").upper() if m_period else "UNKNOWN"
+
+    inferred_company = company_name.strip() if company_name else ""
+    if not inferred_company:
+        # 嘗試移除常見 token 後取剩餘片段
+        candidate = re.sub(r"(20\d{2}\s*[Qq][1-4])", "", stem)
+        candidate = re.sub(r"\b\d{4}\b", "", candidate)
+        candidate = re.sub(r"[_\-\s]+", " ", candidate).strip()
+        inferred_company = candidate or "未命名公司"
+
+    return inferred_stock, inferred_company, inferred_period
 
 
 # ── Request / Response schemas ────────────────────────────────────────────────
@@ -37,9 +68,9 @@ class ChunkOut(BaseModel):
 @router.post("/upload", response_model=UploadResponse)
 async def upload_document(
     file: UploadFile = File(...),
-    stock_id: str = Form(...),
-    company_name: str = Form(...),
-    period: str = Form(...),
+    stock_id: str = Form(""),
+    company_name: str = Form(""),
+    period: str = Form(""),
     document_type: str = Form("quarterly_report"),
     industry_type: str = Form("general"),
 ):
@@ -54,12 +85,18 @@ async def upload_document(
     file_bytes = await file.read()
     safe_name = f"{document_id}_{file.filename}"
     file_path = save_uploaded_file(file_bytes, safe_name)
+    final_stock_id, final_company_name, final_period = _infer_document_meta(
+        file.filename or "",
+        stock_id,
+        company_name,
+        period,
+    )
 
     doc = PDFDocument(
         document_id=document_id,
-        stock_id=stock_id,
-        company_name=company_name,
-        period=period,
+        stock_id=final_stock_id,
+        company_name=final_company_name,
+        period=final_period,
         document_type=document_type,
         industry_type=industry_type,
         file_name=file.filename,

@@ -1,0 +1,40 @@
+baseline_version: "2026-05-27"
+
+required_surfaces:
+  hooks_config:
+    introduced_in: "2026-05-20"
+    remediation_key: "hooks"
+    hard_required: true
+
+  framework_lock:
+    introduced_in: "2026-05-20"
+    remediation_key: "fw"
+    hard_required: true
+
+  agents_calibration:
+    introduced_in: "2026-05-20"
+    updated_at: "2026-05-26"
+    remediation_key: "agents"
+    hard_required: true
+
+  expected_dirty:
+    introduced_in: "2026-05-20"
+    remediation_key: "dirty_ok"
+    hard_required: true
+
+  closeout_evidence:
+    introduced_in: "2026-05-20"
+    remediation_key: "evidence"
+    hard_required: true
+
+  head_commit_match:
+    introduced_in: "2026-05-20"
+    remediation_key: "head_ok"
+    hard_required: true
+
+  timestamp_freshness:
+    introduced_in: "2026-05-25"
+    updated_at: "2026-05-25"
+    evidence_window_days: 7
+    remediation_key: "ts_ok"
+    hard_required: true

@@ -132,6 +132,10 @@ Escalation 是給仍未解決的重大歧義，不只是 defect。
 每次 review 回應都應包含：
 
 ```markdown
+### Review Inputs Checked
+- governance/REVIEW_CRITERIA.md
+- <list any additional documents read per REVIEW_CRITERIA.md conditions>
+
 ### [Decision Summary]
 **Verdict**: APPROVED | CHANGES_REQUESTED | ESCALATED
 **Risk Level**: Low | Medium | High

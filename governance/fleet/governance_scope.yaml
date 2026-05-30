@@ -1,0 +1,92 @@
+# Governance Fleet Scope Classification
+# ─────────────────────────────────────
+# This file defines the governance tier for each repo in the fleet.
+#
+# AUTHORITY RULE: tier is determined by risk/authority, NOT by current
+# verification status. "verified" is an outcome, not a scope criterion.
+#
+# Tier definitions:
+#   required    — must be included in scope-normalized confidence denominator
+#                 applies when: firmware/device-control/update path,
+#                 kernel/driver/security boundary, governance framework itself,
+#                 primary company toolchain, AI-assisted production development
+#
+#   recommended — tracked separately; not in required confidence denominator
+#                 applies when: domain contract, governance-supporting tool,
+#                 spec/review assistant, experimental repo with reusable
+#                 governance patterns
+#
+#   exempt      — excluded from required confidence denominator
+#                 applies when: low-risk personal project, archive/demo/sandbox,
+#                 no production/device/security/governance authority
+#
+# Last reviewed: 2026-05-25
+# Reviewer: Gavin0099
+
+tiers:
+  required:
+    meaning: must be included in scope-normalized confidence denominator
+    repos:
+      - path: E:\BackUp\Git_EE\hp-firmware-stresstest-tool
+        reason: firmware device-control and stress-test toolchain
+      - path: E:\BackUp\Git_EE\cli
+        reason: primary company CLI toolchain, AI-assisted production development
+      - path: E:\BackUp\Git_EE\CFU
+        reason: component firmware update path, high device-control risk
+      - path: E:\BackUp\IsptoolRefine2018_EndUser_Tool
+        reason: ISP tool production path, has governance contract
+      - path: E:\BackUp\Git_EE\lenoveo-isp-tool-avalonia
+        reason: ISP tool production path
+      - path: E:\BackUp\Git_EE\gl_electron_tool
+        reason: primary company electron tool, production toolchain
+      - path: E:\BackUp\Git_EE\Command_Line_Tool
+        reason: firmware/tool mainline, primary company CLI
+      - path: E:\BackUp\Git_EE\General_End_User_Tool
+        reason: primary company end-user tool, production path
+      - path: E:\BackUp\Git_EE\ai-governance-framework
+        reason: governance framework itself; framework integrity is required
+        note: |
+          Known tension: this repo is the rule-maker evaluated by its own rules.
+          If it cannot sustain verified status (e.g. framework dev is permanently
+          dirty), the correct resolution is NOT to lower the standard — it is to
+          treat the dirty state as permanent-expected and document it explicitly.
+          Do NOT reclassify to recommended/exempt to escape the metric.
+      - path: E:\BackUp\Git_EE\Kernel-Driver-Contract
+        reason: kernel/driver security boundary, highest risk tier
+        agents_note: |
+          Known tension: this repo's AGENTS.md is a domain contract document
+          (KSTATE/IRQL/IRP/dispatch rules), not a governance calibration template.
+          Fleet governance calibration must NOT be written into AGENTS.md — doing
+          so would contaminate domain authority. The preferred resolution is a
+          separate governance/fleet.AGENTS.md referenced by contract.yaml, with
+          the agents_calibration checker reading the declared source rather than
+          defaulting to AGENTS.md. Until checker support is confirmed, agents=scaffold
+          for this repo is an expected and documented state, not a deficiency.
+          See: docs/fleet/plan_10of10_kernel_driver_contract.md
+
+  recommended:
+    meaning: tracked separately; not in required confidence denominator
+    repos:
+      - path: E:\BackUp\Git_EE\SpecAuthority
+        reason: spec/review assistant; governance-supporting tool
+        note: appears as both company and private repo — same path counted once
+      - path: E:\BackUp\Git_EE\Enumd
+        reason: tooling repo with reusable governance patterns
+      - path: E:\BackUp\Git_EE\Mirra
+        reason: not confirmed as production/security boundary
+      - path: E:\BackUp\Git_EE\verilog-domain-contract
+        reason: domain contract repo; governance-supporting
+      - path: E:\BackUp\Git_EE\writing-contract
+        reason: domain contract repo
+      - path: E:\BackUp\Git_EE\ZoneTruth
+        reason: external governance repo; governance-supporting
+      - path: E:\BackUp\Git_EE\Bookstore-Scraper
+        reason: personal utility; no production/security authority
+
+  exempt:
+    meaning: excluded from required confidence denominator
+    repos:
+      - path: E:\BackUp\Git_EE\FinancialAdvisorGPT
+        reason: personal project; not confirmed to have production financial authority
+      - path: E:\BackUp\Git_EE\Hearth
+        reason: purpose unclear; exempt until confirmed to have production authority

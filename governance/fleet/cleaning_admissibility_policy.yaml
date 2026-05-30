@@ -1,0 +1,145 @@
+version: "2026-05-26.v1"
+scope: required_verified_repos
+mode: observation_only
+intent: >
+  Define what dirty paths are safe for generated-only cleanup without touching
+  real engineering changes. This policy is admissibility guidance, not an
+  executable cleanup command set.
+
+global:
+  generated_safe_to_clean:
+    - "**/bin/"
+    - "**/obj/"
+    - "**/build/"
+    - "**/.vs/"
+    - "**/.pytest_cache/"
+    - "artifacts/runtime/**"
+    - "**/*.log"
+    - "**/*.tlog"
+    - "**/*.pdb"
+    - "**/*.ipch"
+    - "**/*.exp"
+    - "**/*.lib"
+  never_auto_clean:
+    - "**/src/**"
+    - "**/*.cpp"
+    - "**/*.h"
+    - "**/*.cs"
+    - "**/*.js"
+    - "**/*.ts"
+    - "**/*.ps1"
+    - "contract.yaml"
+    - "AGENTS.md"
+    - "PLAN.md"
+    - "governance/**"
+    - ".governance/**"
+    - ".gitmodules"
+    - "package.json"
+  requires_manual_review:
+    - "submodule pointer changes (git status: m <submodule>)"
+    - "untracked governance files (governance/**, .governance/**)"
+    - "contract/framework lock mutations"
+    - "memory/*.md updates"
+    - "source + artifact mixed dirty state in same repo"
+
+repos:
+  E:\BackUp\Git_EE\gl_electron_tool:
+    observed_state: mixed_source_and_artifacts
+    generated_safe_to_clean:
+      - "artifacts/runtime/**"
+      - ".tmp/**"
+      - "tests/__pycache__/"
+    never_auto_clean:
+      - "avalonia-mock-host/**.cs"
+      - "firmwareUpdateService.js"
+      - "ipcController.js"
+      - "web/preload.js"
+      - "contract.yaml"
+      - "AGENTS.md"
+      - "PLAN.md"
+      - ".gitmodules"
+    requires_manual_review:
+      - "untracked governance/** and docs/status/**"
+      - "ai-governance-framework submodule pointer change"
+
+  E:\BackUp\Git_EE\Command_Line_Tool:
+    observed_state: mixed_source_and_bootstrap_untracked
+    generated_safe_to_clean:
+      - "artifacts/**"
+      - ".pytest_cache/"
+    never_auto_clean:
+      - "GLHubUpdateTool/**.cpp"
+      - "GLHubUpdateTool/**.h"
+      - "contract.yaml"
+      - "AGENTS.md"
+      - "PLAN.md"
+    requires_manual_review:
+      - "isp_engine submodule pointer change"
+      - "bulk untracked governance/bootstrap files"
+
+  E:\BackUp\Git_EE\CFU:
+    observed_state: mixed_firmware_source_and_packages
+    generated_safe_to_clean:
+      - "Tools/**/FW_Validation_Package_*.zip"
+      - "Tools/**/build_output.txt"
+      - "artifacts/**"
+    never_auto_clean:
+      - "Firmware/**.c"
+      - "Tools/**.cpp"
+      - "Tools/**.h"
+      - "Tools/**.vcxproj"
+      - "contract.yaml"
+    requires_manual_review:
+      - "massive untracked package directories"
+      - "ai-governance-framework submodule pointer change"
+
+  E:\BackUp\IsptoolRefine2018_EndUser_Tool:
+    observed_state: heavy_mixed_source_and_build_outputs
+    generated_safe_to_clean:
+      - "**/.vs/**"
+      - "**/Debug/**"
+      - "**/Release/**"
+      - "CommonDLL/build/**"
+      - "CommonDLL/lib/**"
+      - "artifacts/**"
+    never_auto_clean:
+      - "**/*.cpp"
+      - "**/*.h"
+      - "**/*.vcxproj"
+      - "contract.yaml"
+      - "governance/**"
+    requires_manual_review:
+      - "tracked source files changed alongside generated binaries"
+      - "untracked governance and memory files"
+
+  E:\BackUp\Git_EE\lenoveo-isp-tool-avalonia:
+    observed_state: untracked_bootstrap_plus_build_outputs
+    generated_safe_to_clean:
+      - "CrossPlatform/**/bin/**"
+      - "CrossPlatform/**/obj/**"
+      - "artifacts/**"
+    never_auto_clean:
+      - "contract.yaml"
+      - "AGENTS.md"
+      - "governance/**"
+      - ".governance/**"
+    requires_manual_review:
+      - "bulk untracked governance/bootstrap files"
+      - "external/ subtree before any cleanup"
+
+decision_rule:
+  clean_pilot_eligible_if:
+    - "all dirty paths are subset of generated_safe_to_clean"
+    - "no path matches never_auto_clean"
+    - "no requires_manual_review condition present"
+  otherwise: "reject_clean_pilot_and_preserve_working_state"
+
+governance_self_hosting_gap:
+  repo: E:\BackUp\Git_EE\ai-governance-framework
+  category: hook_installation
+  effect:
+    commit_performed_with_no_verify: true
+    note: pre-commit hook missing during policy commit (0118ad0)
+  mitigation:
+    - install or repair local pre-commit hook wiring
+    - rerun hook verification before next governance-policy commit
