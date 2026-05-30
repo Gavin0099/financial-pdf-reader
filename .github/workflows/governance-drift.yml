@@ -1,0 +1,42 @@
+name: Governance Drift
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".governance/**"
+      - "AGENTS.base.md"
+      - "AGENTS.md"
+      - "PLAN.md"
+      - "contract.yaml"
+      - "governance/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".governance/**"
+      - "AGENTS.base.md"
+      - "AGENTS.md"
+      - "PLAN.md"
+      - "contract.yaml"
+      - "governance/**"
+  workflow_dispatch:
+
+jobs:
+  governance-drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run governance drift check
+        run: |
+          python governance/governance_tools/governance_drift_checker.py \
+            --repo . \
+            --framework-root governance \
+            --format human

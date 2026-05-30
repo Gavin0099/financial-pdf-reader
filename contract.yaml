@@ -1,0 +1,15 @@
+name: financial-pdf-reader-contract
+plugin_version: "1.0.0"
+framework_interface_version: "1"
+framework_compatible: ">=1.0.0,<2.0.0"
+domain: financial-pdf-reader
+documents:
+  - AGENTS.base.md
+  - PLAN.md
+  - governance/TESTING.md
+  - governance/ARCHITECTURE.md
+ai_behavior_override:
+  - AGENTS.base.md
+rule_roots:
+  - governance/rules
+validators:

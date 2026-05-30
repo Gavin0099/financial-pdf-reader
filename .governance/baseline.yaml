@@ -1,0 +1,75 @@
+# .governance/baseline.yaml
+# Written by governance_tools/adopt_governance.py — do not edit manually.
+# Verified by: python governance_tools/governance_drift_checker.py --repo .
+#
+# Semantic layers in this file:
+#   PROVENANCE  — who generated this baseline and from which commit
+#   INTEGRITY   — sha256 hashes + overridability of tracked files
+#   CONTRACT    — governance mandates that MUST be satisfied (enforced by drift checker)
+#   OBSERVED    — snapshot of repo structure at adoption time (informational, not enforced)
+
+# ── PROVENANCE ────────────────────────────────────────────────────────────────
+schema_version: "1"
+baseline_version: 1.0.0
+source_commit: a2292d65d65e0cec3de49e6337b781c2fa73c866
+framework_root: D:\ai-governance-framework
+initialized_at: 2026-05-30T02:28:12Z
+initialized_by: governance_tools/adopt_governance.py
+
+# ── INTEGRITY ─────────────────────────────────────────────────────────────────
+# sha256.<file>: hash recorded at init/refresh time; "protected" files are hash-verified
+# overridable.<file>: protected = must not change | overridable = repo may extend freely
+sha256.AGENTS.base.md: c16617acca72b517fe6f6280e75372a1b30ef7b10edd6ed9000a1a948ca691b9
+sha256.PLAN.md: ad43e8452dde0fef3664217f6377ff0ee82d0ac266983500563353bd7827ef27
+sha256.contract.yaml: 05c785acd7ebf38b04b27719a8f057b6be6c98b4b3effe2c985074dd0f317767
+sha256.AGENTS.md: b856e4f4f81ad1d6ed8187ece8f4f68e83d00a7a4bf1bca17fdd8c9b1d2a1138
+overridable.AGENTS.base.md: protected
+overridable.PLAN.md: overridable
+overridable.contract.yaml: overridable
+overridable.AGENTS.md: overridable
+
+# ── CONTRACT (framework-enforced mandates) ────────────────────────────────────
+# Fields listed here are actively checked by drift checker; violations block ci/gate.
+# CONTRACT layer policy: only values that affect validation judgments belong here.
+#   Do NOT use this layer for metadata, notes, or domain-specific configuration.
+# plan_required_sections: ## headings that MUST be present in PLAN.md (governance mandate).
+#   Empty = no mandate enforced (adopt-existing default). Set explicitly to harden.
+# plan_freshness_threshold_days: CONTRACT OVERRIDE — changes the staleness threshold
+#   for plan_freshness check. Default: 14d (framework default) or PLAN.md Freshness header.
+contract_required_fields:
+  - name
+  - framework_interface_version
+  - framework_compatible
+  - domain
+
+# ── OBSERVED (repo snapshot — informational only, never enforced) ──────────────
+# plan_section_inventory: ## headings detected in PLAN.md at adoption/refresh time.
+#   Drift checker surfaces these for visibility but never fails on missing inventory items.
+plan_section_inventory:
+  - "## 專案目標"
+  - "## 階段總覽"
+  - "## Phase 0: Repo Bootstrap ✅"
+  - "## Phase 1: PDF Ingestion MVP ✅"
+  - "## Phase 2: Evidence-Bound Summary ✅"
+  - "## Phase 3: Financial Section Classification ✅"
+  - "## Phase 4: Two-PDF Diff Report ✅"
+  - "## Phase 5: Table Extraction ✅"
+  - "## Phase 6: Taiwan Data Source Integration ✅"
+  - "## Phase 7: Governance Layer ✅"
+  - "## Phase 8: Tests + Cleanup ✅"
+  - "## Phase 9B: UI Redesign ✅"
+  - "## Phase 9C: Industry Type + Prompt Supplement ✅"
+  - "## Phase 9D: Disclosure Coverage Engine ✅"
+  - "## Phase 9E: Financial Review Pattern Registry ✅"
+  - "## Phase 9F: Pattern Trigger Precision ✅"
+  - "## Phase 10A: Interpretation Isolation UI ✅"
+  - "## Phase 10B: Source Type Layer + Narrative Density ✅"
+  - "## Phase 10C: Rhetorical Risk Classifier ✅"
+  - "## Phase 10D: Forward-Looking Implication Guard ✅"
+  - "## Phase 10E: Quotation Layer（Attribution Prefix）✅"
+  - "## Phase 11A: Output Completeness Rules（OC-1/OC-2）✅"
+  - "## Backlog"
+  - "## Anti-Goals（本階段不做）"
+  - "## AI 協作規則"
+  - "## 測試總覽（截至 2026-05-16）"
+  - "## 變更歷史"
