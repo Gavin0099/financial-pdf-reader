@@ -638,6 +638,29 @@ input::placeholder { color: #cbd5e1; }
     </div>
   </div>
 
+  <!-- Phase 3A: Multi-Period KPI Trend Strip -->
+  <div class="section-result-card">
+    <div class="src-header"><span>📈</span><h3>跨期 KPI 趨勢</h3></div>
+    <div class="src-body">
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:8px;">
+        輸入同一公司不同季的 document_id（至少 2 筆，建議 3 筆以上，每行一個）
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label>Document IDs（每行一個）</label>
+          <textarea id="trend_doc_ids" rows="4" placeholder="uuid-period1&#10;uuid-period2&#10;uuid-period3" style="width:100%;font-family:monospace;font-size:.82rem;padding:6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text-primary);resize:vertical;"></textarea>
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end;">
+          <button class="btn btn-primary" onclick="runTrend()" id="trend-btn">產生趨勢報告</button>
+        </div>
+      </div>
+      <div id="trend-result"></div>
+      <div class="hidden" id="trend-area">
+        <div id="trend-strip-container" style="margin-top:12px;overflow-x:auto;"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="section-result-card">
     <div class="src-header"><span>R6</span><h3>Diff Audit</h3></div>
     <div class="src-body">
@@ -1489,6 +1512,109 @@ function renderDiffAudit(data) {
     </div>
   `;
   document.getElementById('diff-audit-body').innerHTML = html;
+}
+
+async function runTrend() {
+  const raw = (document.getElementById('trend_doc_ids').value || '').trim();
+  const ids = raw.split('\n').map(s => s.trim()).filter(Boolean);
+  if (ids.length < 2) {
+    setResult('trend-result', 'error', '至少需要 2 個 document_id');
+    return;
+  }
+  const btn = document.getElementById('trend-btn');
+  btn.disabled = true;
+  btn.textContent = '產生中…';
+  setResult('trend-result', 'info', '正在聚合跨期 KPI…');
+  try {
+    const res = await fetch('/api/v1/reports/trend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ document_ids: ids }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || res.statusText);
+    }
+    const data = await res.json();
+    setResult('trend-result', 'success', `趨勢報告產生完成（${data.periods.length} 期）`);
+    document.getElementById('trend-area').classList.remove('hidden');
+    renderTrendStrip(data);
+  } catch (e) {
+    setResult('trend-result', 'error', '趨勢報告失敗：' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '產生趨勢報告';
+  }
+}
+
+function renderTrendStrip(data) {
+  const ARROW = { up: '↑', down: '↓', flat: '→', unknown: '—' };
+  const COLOR = { up: 'var(--green)', down: 'var(--red)', flat: 'var(--muted)', unknown: 'var(--muted)' };
+  const KPI_LABEL = {
+    revenue: '營收', gross_margin: '毛利率', operating_income: '營業利益',
+    eps: 'EPS', cash: '現金', net_income: '淨利', debt_ratio: '負債比', fx: '匯兌',
+  };
+
+  const periods = data.periods || [];
+  const kpiTrends = data.kpi_trends || [];
+
+  let html = '';
+
+  // R7 warning banner
+  if (data.r7_warning) {
+    html += `<div class="completeness-banner" style="margin-bottom:10px;">
+      ⚠️ ${data.governance_flags.join(' ')}
+    </div>`;
+  }
+
+  // Trend table
+  html += `<table style="width:100%;border-collapse:collapse;font-size:.84rem;">
+    <thead>
+      <tr style="background:var(--surface-alt,#f5f5f5);">
+        <th style="padding:6px 10px;text-align:left;border-bottom:1px solid var(--border);min-width:110px;">KPI</th>
+        ${periods.map(p => `<th style="padding:6px 10px;text-align:center;border-bottom:1px solid var(--border);">${p}</th>`).join('')}
+      </tr>
+    </thead>
+    <tbody>`;
+
+  for (const kpi of kpiTrends) {
+    const label = KPI_LABEL[kpi.metric_id] || kpi.metric_id;
+    const pointsByPeriod = {};
+    for (const pt of (kpi.points || [])) pointsByPeriod[pt.period] = pt;
+
+    html += `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:6px 10px;font-weight:500;">${label}</td>`;
+
+    for (const p of periods) {
+      const pt = pointsByPeriod[p];
+      if (!pt) {
+        html += `<td style="padding:6px 10px;text-align:center;color:var(--muted);">—</td>`;
+      } else {
+        const arrow = ARROW[pt.direction] || '—';
+        const color = COLOR[pt.direction] || 'var(--muted)';
+        const delta = pt.delta_pct != null ? `${pt.delta_pct > 0 ? '+' : ''}${pt.delta_pct.toFixed(1)}%` : '';
+        const tip = pt.claim_text ? pt.claim_text.substring(0, 80) + (pt.claim_text.length > 80 ? '…' : '') : '';
+        html += `<td style="padding:6px 10px;text-align:center;" title="${tip}">
+          <span style="color:${color};font-size:1rem;font-weight:600;">${arrow}</span>
+          ${delta ? `<span style="font-size:.78rem;color:var(--muted);display:block;">${delta}</span>` : ''}
+        </td>`;
+      }
+    }
+    html += `</tr>`;
+  }
+
+  if (kpiTrends.length === 0) {
+    html += `<tr><td colspan="${periods.length + 1}" style="padding:12px;text-align:center;color:var(--muted);">
+      未找到可追蹤的 KPI（請確認各期均已完成 /summary）
+    </td></tr>`;
+  }
+
+  html += `</tbody></table>
+    <div style="margin-top:6px;font-size:.78rem;color:var(--muted);">
+      trend_report_id: ${data.trend_report_id}
+    </div>`;
+
+  document.getElementById('trend-strip-container').innerHTML = html;
 }
 
 function _reviewSeverityLevel(c) {

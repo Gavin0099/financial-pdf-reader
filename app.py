@@ -76,6 +76,10 @@ app.include_router(DisclosureRouter, tags=["Disclosures"], prefix="/api/v1/docum
 from apis.v1.routers.patterns import router as PatternsRouter
 app.include_router(PatternsRouter, tags=["Patterns"], prefix="/api/v1/documents")
 
+# Phase 3A: Multi-Period KPI Trend
+from apis.v1.routers.trends import router as TrendsRouter
+app.include_router(TrendsRouter, tags=["Trend"], prefix="/api/v1/reports")
+
 # Phase 9: Simple HTML UI
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
