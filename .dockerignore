@@ -33,6 +33,14 @@ governance_tools/
 # Railway config (not needed on Cloud Run)
 railway.toml
 
+# Node / Playwright (UI smoke tests only — not needed at runtime)
+node_modules/
+playwright-report/
+test-results/
+package.json
+package-lock.json
+playwright.config.ts
+
 # IDE
 .vscode/
 .idea/
