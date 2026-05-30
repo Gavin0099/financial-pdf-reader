@@ -23,8 +23,9 @@ anthropic>=0.40.0             # Claude claude-sonnet-4-6 via Anthropic SDK
 pdfplumber>=0.10.4            # page-aware text + table extraction
 
 # ── C extension pins (Cloud Run image import compatibility) ───────────────────
-# cffi 2.0.0 released 2026-05-30 breaks Cloud Run ContainerImageImportFailed;
-# pin to 1.x until Cloud Run infrastructure supports the new wheel format.
+# pypdfium2 5.x and cffi 2.x released 2026-05-30 break ContainerImageImportFailed;
+# pin both to last known-good minor series.
+pypdfium2<5.0.0
 cffi<2.0.0
 
 # ── Data & validation ─────────────────────────────────────────────────────────
