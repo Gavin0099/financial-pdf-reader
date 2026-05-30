@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from models.documents import PDFTable
 from services.text_extraction import extract_tables, find_numeric_evidence
+from services.kpi_normalization import extract_kpis
 from auth.jwt_bearer import JWTBearer
 
 router = APIRouter(dependencies=[Depends(JWTBearer())])
@@ -52,6 +53,22 @@ async def get_tables(document_id: str, page: int | None = None, section: str | N
         }
         for t in tables
     ]
+
+
+@router.get("/{document_id}/kpi")
+async def get_kpis(document_id: str):
+    """
+    從已抽取的 PDFTable 中正規化提取 8 個核心 KPI。
+
+    需先執行 POST /{document_id}/extract-tables。
+    單位以 unit_hint 回傳但不自動換算（千元 vs 百萬 混用是已知限制）。
+    """
+    try:
+        return extract_kpis(document_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{document_id}/numeric-check")
