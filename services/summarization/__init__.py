@@ -86,18 +86,22 @@ _VALID_CONFIDENCE = {"high", "medium", "low"}
 # Keywords triggering OC-1 (non-recurring COGS/gross-margin items)
 _OC1_TRIGGER_KEYWORDS = ["迴轉利益", "跌價損失", "存貨跌價", "減損損失", "不動產減損", "廠房減損"]
 # Keywords triggering OC-2 liquidity items (debt/dividend side)
-_OC2_CASH_KEYWORDS = ["現金", "cash", "cash balance"]
+_OC2_CASH_KEYWORDS = ["現金", "約當現金", "cash", "cash balance", "cash equivalent"]
 _OC2_DEBT_KEYWORDS = [
     "短期借款",
+    "長期借款",
+    "一年內到期長期負債",
     "借款",
     "流動負債",
     "公司債",
+    "應付公司債",
     "可轉債",
     "可轉換公司債",
+    "商業本票",
+    "ECB",
     "convertible bond",
     "corporate bond",
     "應付股利",
-    "股利",
 ]
 # Keywords indicating OC-1 adjustment already present
 _OC1_ADJUSTMENT_KEYWORDS = ["調整後毛利率", "排除此項目"]
