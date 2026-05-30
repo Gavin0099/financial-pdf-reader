@@ -11,16 +11,16 @@
 # ── PROVENANCE ────────────────────────────────────────────────────────────────
 schema_version: "1"
 baseline_version: 1.0.0
-source_commit: a2292d65d65e0cec3de49e6337b781c2fa73c866
+source_commit: 63c5179a615fc9bd28022d2c3a4d37a8a982ef8a
 framework_root: D:\ai-governance-framework
-initialized_at: 2026-05-30T02:28:12Z
+initialized_at: 2026-05-30T02:38:16Z
 initialized_by: governance_tools/adopt_governance.py
 
 # ── INTEGRITY ─────────────────────────────────────────────────────────────────
 # sha256.<file>: hash recorded at init/refresh time; "protected" files are hash-verified
 # overridable.<file>: protected = must not change | overridable = repo may extend freely
 sha256.AGENTS.base.md: c16617acca72b517fe6f6280e75372a1b30ef7b10edd6ed9000a1a948ca691b9
-sha256.PLAN.md: ad43e8452dde0fef3664217f6377ff0ee82d0ac266983500563353bd7827ef27
+sha256.PLAN.md: 23a2d5ab2831cd45fdb58bcfce0efdedecdc578a010a07f9eea7cecf7d5d83bf
 sha256.contract.yaml: 05c785acd7ebf38b04b27719a8f057b6be6c98b4b3effe2c985074dd0f317767
 sha256.AGENTS.md: b856e4f4f81ad1d6ed8187ece8f4f68e83d00a7a4bf1bca17fdd8c9b1d2a1138
 overridable.AGENTS.base.md: protected
@@ -68,8 +68,13 @@ plan_section_inventory:
   - "## Phase 10D: Forward-Looking Implication Guard ✅"
   - "## Phase 10E: Quotation Layer（Attribution Prefix）✅"
   - "## Phase 11A: Output Completeness Rules（OC-1/OC-2）✅"
+  - "## Phase 2A: UI Semantic Color System ✅"
+  - "## Phase 2B: Cognitive Workflow UI ✅"
+  - "## Phase 2C: Narrative Explainability + Review Severity L1-L4 ✅"
+  - "## Phase 2D: Materiality Engine ✅"
+  - "## Phase 3A: Multi-Period Trend 🚧"
   - "## Backlog"
   - "## Anti-Goals（本階段不做）"
   - "## AI 協作規則"
-  - "## 測試總覽（截至 2026-05-16）"
+  - "## 測試總覽（截至 2026-05-30）"
   - "## 變更歷史"
