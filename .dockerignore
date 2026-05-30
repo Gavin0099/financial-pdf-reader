@@ -39,6 +39,7 @@ AGENTS.md
 AGENTS.base.md
 contract.yaml
 tests/
+services/kpi_normalization/
 
 # Git
 .git/
