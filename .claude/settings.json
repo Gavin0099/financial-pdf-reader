@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python D:/ai-governance-framework/governance_tools/session_closeout_entry.py --project-root . 2>/dev/null || true",
+            "statusMessage": "Running governance session closeout..."
+          }
+        ]
+      }
+    ]
+  }
+}
