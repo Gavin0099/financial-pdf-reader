@@ -22,12 +22,6 @@ anthropic>=0.40.0             # Claude claude-sonnet-4-6 via Anthropic SDK
 # ── PDF extraction ────────────────────────────────────────────────────────────
 pdfplumber>=0.10.4            # page-aware text + table extraction
 
-# ── C extension / binary pins (Cloud Run image import compatibility) ────────────
-# New releases on 2026-05-30 break ContainerImageImportFailed on Cloud Run.
-# Pin to versions confirmed working in revision 00008 (2026-05-16).
-pypdfium2<5.0.0
-cffi<2.0.0
-pdfminer.six==20221105
 
 # ── Data & validation ─────────────────────────────────────────────────────────
 pydantic>=2.4.2
