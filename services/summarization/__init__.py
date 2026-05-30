@@ -64,6 +64,98 @@ def _retrieve_chunks(document_id: str, max_chunks: int = 60) -> list[PDFChunk]:
     )
 
 
+# 每個 section 的最大 chunk 配額（與 classify_chunk 的 20 個段落 + unknown 對齊）
+_SECTION_QUOTA: dict[str, int] = {
+    "營收":        12,
+    "毛利率":      10,
+    "營業利益":    10,
+    "淨利":         8,
+    "EPS":          8,
+    "管理層展望":  10,
+    "客戶需求":     8,
+    "產業展望":     6,
+    "風險因素":     8,
+    "現金流":       8,
+    "負債":         6,
+    "存貨":         5,
+    "應收帳款":     5,
+    "資本支出":     5,
+    "匯率影響":     4,
+    "產能":         5,
+    "稼動率":       4,
+    "重大會計估計": 4,
+    "會計政策變更": 3,
+    "董事會說明":   3,
+    "unknown":      8,
+}
+
+
+def _allocate_section_budget(
+    by_section: dict[str, list],
+    budget: int,
+) -> dict[str, int]:
+    """
+    純函數：給定 {section → chunk list}，回傳每個 section 應取的 chunk 數。
+
+    算法：
+    1. 每個 section desired = min(實際數量, SECTION_QUOTA)
+    2. sum(desired) <= budget → 直接使用 desired
+    3. sum(desired) > budget → floor 比例縮減，剩餘名額依 desired 遞減順序補充
+    """
+    desired: dict[str, int] = {}
+    for section, chunks in by_section.items():
+        quota = _SECTION_QUOTA.get(section, _SECTION_QUOTA["unknown"])
+        desired[section] = min(len(chunks), quota)
+
+    total_desired = sum(desired.values())
+    if total_desired <= budget:
+        return desired.copy()
+
+    # Floor 比例縮減
+    allocation: dict[str, int] = {}
+    for s, d in desired.items():
+        allocation[s] = int(d * budget / total_desired)  # floor
+
+    # 補充剩餘名額（依 desired 遞減順序，優先補高重要段落）
+    remaining = budget - sum(allocation.values())
+    for s in sorted(desired, key=lambda s: desired[s], reverse=True):
+        if remaining <= 0:
+            break
+        headroom = desired[s] - allocation[s]
+        if headroom > 0:
+            allocation[s] += 1
+            remaining -= 1
+
+    return allocation
+
+
+def _retrieve_chunks_section_aware(document_id: str, budget: int = 60) -> list[PDFChunk]:
+    """
+    Section-aware retrieval：取代固定前 N chunks。
+    按段落配額挑選 chunks，確保核心財務段落不會被 boilerplate 擠掉。
+    結果依頁碼排序（保留原文閱讀順序）。
+    """
+    from collections import defaultdict
+
+    all_chunks = list(PDFChunk.objects(document_id=document_id).order_by("page"))
+    if not all_chunks:
+        return []
+
+    by_section: dict[str, list[PDFChunk]] = defaultdict(list)
+    for chunk in all_chunks:
+        section = chunk.section or "unknown"
+        by_section[section].append(chunk)
+
+    allocation = _allocate_section_budget(by_section, budget)
+
+    selected: list[PDFChunk] = []
+    for section, chunks in by_section.items():
+        count = allocation.get(section, 0)
+        selected.extend(chunks[:count])
+
+    return sorted(selected, key=lambda c: c.page)
+
+
 def _build_chunks_text(chunks: list[PDFChunk]) -> str:
     parts = []
     for c in chunks:
@@ -515,9 +607,12 @@ def generate_summary(document_id: str) -> dict:
     if doc.status != "completed":
         raise ValueError(f"Document not yet ingested (status={doc.status}). Run /ingest first.")
 
-    chunks = _retrieve_chunks(document_id)
+    chunks = _retrieve_chunks_section_aware(document_id)
     if not chunks:
         raise ValueError("No chunks found. Run /ingest first.")
+
+    chunks_used_ids = [c.chunk_id for c in chunks]
+    pages_covered = sorted({c.page for c in chunks if c.page is not None})
 
     chunks_text = _build_chunks_text(chunks)
     industry_type = getattr(doc, 'industry_type', 'general') or 'general'
@@ -637,6 +732,8 @@ def generate_summary(document_id: str) -> dict:
         dashboard=dashboard_payload,
         dashboard_contract_valid=dashboard_contract_valid,
         dashboard_contract_errors=dashboard_contract_errors,
+        chunks_used=chunks_used_ids,
+        pages_covered=pages_covered,
     )
     report.save()
 

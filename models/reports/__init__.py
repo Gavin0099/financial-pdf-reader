@@ -1,6 +1,7 @@
 from mongoengine import (
     Document,
     StringField,
+    IntField,
     DateTimeField,
     BooleanField,
     ListField,
@@ -178,6 +179,9 @@ class AIReport(Document):
     dashboard = DictField(default=dict)
     dashboard_contract_valid = BooleanField(default=False)
     dashboard_contract_errors = ListField(StringField(), default=list)
+    # Coverage metadata — recorded at summarization time
+    chunks_used = ListField(StringField(), default=list)
+    pages_covered = ListField(IntField(), default=list)
     created_at = DateTimeField(default=lambda: datetime.now(timezone.utc))
 
     meta = {

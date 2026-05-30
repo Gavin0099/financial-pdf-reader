@@ -1,0 +1,44 @@
+name: Pytest Smoke
+
+on:
+  pull_request:
+    paths:
+      - "apis/**"
+      - "models/**"
+      - "services/**"
+      - "tests/**"
+      - "prompts/**"
+      - "requirements.txt"
+      - ".github/workflows/pytest-smoke.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apis/**"
+      - "models/**"
+      - "services/**"
+      - "tests/**"
+      - "prompts/**"
+      - "requirements.txt"
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        env:
+          ANTHROPIC_API_KEY: "test-key-ci-no-real-calls"
+          MONGODB_URI: ""
+          UPLOAD_DIR: "/tmp/pdf_uploads"
+        run: pytest tests/ -v --tb=short
