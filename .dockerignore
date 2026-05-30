@@ -25,6 +25,20 @@ memory/
 docs/
 governance_harness.py
 governance_tools/
+governance/
+runtime_hooks/
+scripts/
+schemas/
+.governance/
+.github/
+reasoning_patterns/
+docker-compose.yml
+render.yaml
+PLAN.md
+AGENTS.md
+AGENTS.base.md
+contract.yaml
+tests/
 
 # Git
 .git/
