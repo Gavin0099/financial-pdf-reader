@@ -34,9 +34,16 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Clone ai-governance-framework
+        run: |
+          git clone --depth=1 https://github.com/Gavin0099/ai-governance-framework.git /tmp/ai-governance-framework
+
+      - name: Install governance tools dependencies
+        run: |
+          pip install pyyaml
+
       - name: Run governance drift check
         run: |
-          python governance/governance_tools/governance_drift_checker.py \
+          python /tmp/ai-governance-framework/governance_tools/governance_drift_checker.py \
             --repo . \
-            --framework-root governance \
-            --format human
+            --framework-root /tmp/ai-governance-framework
