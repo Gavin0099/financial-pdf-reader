@@ -4,7 +4,7 @@
 > **技術棧**: Python / FastAPI / MongoDB Atlas / Claude API / pdfplumber
 > **複雜度**: L2
 > **Owner**: User
-> **最後更新**: 2026-05-16
+> **最後更新**: 2026-05-30
 > **Freshness**: Sprint (7d)
 > **Planning Window**: 2026-05 ~ 2026-08
 
@@ -50,10 +50,18 @@
 ├─ [✅] Phase 10C: Rhetorical Risk Classifier
 ├─ [✅] Phase 10D: Forward-Looking Implication Guard
 ├─ [✅] Phase 10E: Quotation Layer（Attribution Prefix）
-└─ [✅] Phase 11A: Output Completeness Rules（OC-1/OC-2）
+├─ [✅] Phase 11A: Output Completeness Rules（OC-1/OC-2）
+├─ [✅] Phase 2A:  UI Semantic Color System
+├─ [✅] Phase 2B:  Cognitive Workflow UI（Primary Narrative + Review Panel）
+├─ [✅] Phase 2C:  Narrative Explainability + Review Severity L1-L4
+├─ [✅] Phase 2D:  Materiality Engine
+├─ [✅] Auth:      JWT protection 全路由覆蓋
+├─ [✅] Audit:     DiffReport R6 audit endpoint
+├─ [✅] Governance: ai-governance-framework sync + adopt baseline
+└─ [🚧] Phase 3A: Multi-Period Trend（進行中）
 ```
 
-**當前 Phase**: **Phase 11A 完成 — Governance + UI 完整**
+**當前 Phase**: **Phase 3A — Multi-Period KPI Trend**
 
 ---
 
@@ -324,18 +332,93 @@
 
 ---
 
+## Phase 2A: UI Semantic Color System ✅
+
+**目標**: 修正 UI 色彩混亂，建立語意固定的 4 色系統
+
+**完成項目**:
+- 4 色語意固定：綠（事實）/ 黃（警示）/ 紅（風險）/ 藍（待審）
+- `b-review` 藍色 badge（review ≠ risk，修正 uncertainty-risk collapse）
+- `attn-tag-risk / attn-tag-watch / attn-tag-info / attn-tag-oc` 標籤分類
+- KPI Impact badge 分色（高=紅，中=橘，低=灰）
+
+---
+
+## Phase 2B: Cognitive Workflow UI ✅
+
+**目標**: 建立 L0 主結論 card，使閱讀流程符合認知層次
+
+**完成項目**:
+- `computeNarrative()` client-side 函式（🟢/🟡/🔴 三種主結論）
+- Primary Narrative Card（Layer 0）：主結論 + 信心程度 + 主要原因 + 需觀察清單
+- Hero KPI Card（`fc-hero`）：高影響第一張卡片雙欄展示
+- Review Workflow Panel：N 條待確認，分類 epistemic failure mode
+- `static/mock_results.html` Phase 2A/2B 預覽
+
+---
+
+## Phase 2C: Narrative Explainability + Review Severity L1-L4 ✅
+
+**目標**: 主結論附依據，待審清單依嚴重度排序
+
+**完成項目**:
+- `computeNarrative()` 收集 `evidence_claim_ids`（最多 3 條 claim + 頁碼）+ 衝突訊號
+- `_reviewSeverityLevel()` 函式；`SEV_META/SEV_ORDER` dict
+- 待確認清單依 L4→L1 排序；每條前綴 badge（L4=紅/L3=黃/L2=藍/L1=灰）
+- `tests/test_quotation_layer.py`：9 tests 補齊 Phase 10E
+
+---
+
+## Phase 2D: Materiality Engine ✅
+
+**目標**: 用三因子公式取代 dashboard hardcode 規則，KPI 影響程度可計算
+
+**完成項目**:
+- `_METRIC_BASE_IMPACT` dict + `_calc_impact(metric_id, delta_pct, direction)`
+- 三因子：base 重要性 × 變化幅度升降 × 方向風險
+- 取代 `_build_dashboard_payload` 中硬編碼規則
+
+---
+
+## Phase 3A: Multi-Period Trend 🚧
+
+**目標**: 讓使用者上傳同公司 2-4 季財報，自動產生 KPI 跨期趨勢，可視化變化走勢
+
+**範圍**:
+- 接收多個 `document_id`（已各自 ingest + summary 完成）
+- 從各期 `AIReport` 聚合固定 KPI（營收、毛利率、現金、負債比等）
+- 輸出 `TrendReport`：每個 KPI 跨期的 value list + direction + governance warning
+- UI：Trend Strip — 每個 KPI 一欄，橫軸為期別，顯示值與方向箭頭
+
+**Governance guards**:
+- R7 guard：不可從 2 期以下資料推論「長期趨勢」
+- 每個 trend point 必須有 source document_id（防止跨文件推論未標示）
+- 只顯示 observed_fact / derived_metric 的 KPI，不混入 interpretation
+
+**API**:
+- `POST /api/v1/reports/trend`（body: `{document_ids: [...], kpi_list?: [...]}`）
+- `GET /api/v1/reports/trend/{trend_report_id}`
+
+**模型**:
+- `TrendReport`：trend_report_id / stock_id / periods / kpis / created_at
+- `TrendPoint`：period / document_id / value / unit / source_claim_id / governance_flags
+
+**完成項目**:
+- [ ] `models/trends/` TrendReport + TrendPoint
+- [ ] `services/trend/` — KPI 聚合 + R7 guard
+- [ ] `apis/v1/routers/trends.py`
+- [ ] UI Trend Strip（Static HTML）
+- [ ] Tests
+
+---
+
 ## Backlog
 
-### P0（下一步）
-- **部署**：選定免費平台（Railway 已排除），部署 Phase 9C–11A 所有功能
-- **test_quotation_layer.py**：Phase 10E 尚無測試，需補齊
+### 下一步（Phase 3B）
+- Report Export：分析結果輸出 JSON / PDF，配合 `dashboard_contract.schema.json`
 
-### P1
-- Auth wiring：`auth/` 骨架已存在（jwt_bearer.py、jwt_handler.py），尚未接入 router
-- DiffReport R6 audit endpoint（選做）
-
-### P2
-- OC-1/OC-2 trigger keyword edge case 擴充（現金安全墊關鍵字漏邊緣案例）
+### 技術債
+- PLAN.md freshness：每次 sprint 完成後更新（7d threshold）
 
 ---
 
@@ -365,17 +448,24 @@
 
 ---
 
-## 測試總覽（截至 2026-05-16）
+## 測試總覽（截至 2026-05-30）
 
 | 測試檔案 | Tests | 說明 |
 |---------|-------|------|
-| test_governance.py | 44 | R1-R7 governance rules |
+| test_governance.py | 49 | R1-R7 governance rules |
 | test_reasoning_patterns.py | 16 | Pattern engine（9E + 9F）|
 | test_source_type_governance.py | 9 | Source type governance（10B）|
 | test_rhetorical_governance.py | 8 | Rhetorical risk + weighted density（10C）|
 | test_forward_looking_guard.py | 9 | Forward-looking auto-detect（10D）|
 | test_disclosure_coverage.py | 10 | Disclosure coverage engine（9D）|
-| **合計** | **96** | ⚠ 需要安裝 anthropic + mongoengine 才能全跑 |
+| test_quotation_layer.py | 9 | Attribution prefix（10E）|
+| test_dashboard_contract.py | 104 | Dashboard contract schema |
+| test_audit_service.py | 3 | Diff audit service edge-cases |
+| test_diff_audit_api.py | 3 | R6 audit API |
+| test_auth_wiring.py | 6 | JWT auth wiring |
+| test_auth_wiring_extended.py | 5 | JWT auth extended coverage |
+| test_output_completeness.py | 8 | OC-1/OC-2 rules |
+| **合計** | **239** | ⚠ API 層測試需 mongoengine + httpx |
 
 ---
 
@@ -400,3 +490,15 @@
 | 2026-05-15 | Bug fix: session closeout auto-memory pipeline |
 | 2026-05-16 | Bug fix: dashboard_contract.py 缺失（後端 import 錯誤）+ KeyError m["metric"] |
 | 2026-05-16 | UI: completeness_warnings OC 警告橫幅顯示 |
+| 2026-05-17 | Phase 2A ✅: UI Semantic Color System（4 色語意固定）|
+| 2026-05-17 | Phase 2B ✅: Cognitive Workflow UI（Primary Narrative Card + Review Panel）|
+| 2026-05-18 | Phase 2C ✅: Narrative Explainability + Review Severity L1-L4 + test_quotation_layer.py |
+| 2026-05-18 | Phase 2D ✅: Materiality Engine _calc_impact() |
+| 2026-05-20 | Auth ✅: JWT guard 擴展至全部 write routers（documents/classification/tables/data_source/disclosures）|
+| 2026-05-20 | Audit ✅: DiffReport R6 audit endpoint + test_diff_audit_api.py |
+| 2026-05-20 | UI ✅: JWT token input + Diff Audit panel（static/index.html）|
+| 2026-05-30 | Governance ✅: ai-governance-framework sync（7 新文件 + fleet/）|
+| 2026-05-30 | Fix ✅: JWT guard 加至 audit.py；OC-2 debt keywords 補強（長期借款 / 應付公司債 / ECB 等）|
+| 2026-05-30 | Deploy ✅: Cloud Run revision 00007-7bz |
+| 2026-05-30 | Governance ✅: adopt_governance baseline（17/18 checks PASS）|
+| 2026-05-30 | Phase 3A 🚧: Multi-Period Trend 開始 |
