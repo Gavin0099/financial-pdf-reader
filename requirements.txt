@@ -20,7 +20,7 @@ mongoengine>=0.27.0
 anthropic>=0.40.0             # Claude claude-sonnet-4-6 via Anthropic SDK
 
 # ── PDF extraction ────────────────────────────────────────────────────────────
-pdfplumber>=0.10.4            # page-aware text + table extraction
+pdfplumber>=0.10.4,<0.11.0    # page-aware text + table extraction; pin <0.11 to avoid pypdfium2 binary dependency
 
 # ── Data & validation ─────────────────────────────────────────────────────────
 pydantic>=2.4.2
