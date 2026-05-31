@@ -37,4 +37,3 @@ railway.toml
 .vscode/
 .idea/
 *.DS_Store
-services/summarization/__init__.py
