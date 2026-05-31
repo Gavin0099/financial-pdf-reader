@@ -25,6 +25,20 @@ memory/
 docs/
 governance_harness.py
 governance_tools/
+governance/
+runtime_hooks/
+scripts/
+schemas/
+.governance/
+.github/
+reasoning_patterns/
+docker-compose.yml
+render.yaml
+PLAN.md
+AGENTS.md
+AGENTS.base.md
+contract.yaml
+tests/
 
 # Git
 .git/
@@ -32,6 +46,14 @@ governance_tools/
 
 # Railway config (not needed on Cloud Run)
 railway.toml
+
+# Node / Playwright (UI smoke tests only — not needed at runtime)
+node_modules/
+playwright-report/
+test-results/
+package.json
+package-lock.json
+playwright.config.ts
 
 # IDE
 .vscode/
