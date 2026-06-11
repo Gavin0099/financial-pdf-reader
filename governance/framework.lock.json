@@ -1,19 +1,19 @@
 {
-    "framework_repo":  "https://github.com/Gavin0099/ai-governance-framework.git",
-    "adopted_release":  "1.2.0",
-    "adopted_commit":  "39820de676e89d32f0de648777e99106e926f99f",
-    "framework_interface_version":  "1",
-    "framework_compatible":  "\u003e=1.0.0,\u003c2.0.0",
-    "_self_reference_note":  "This lock records the framework version used by this repo to evaluate itself. It does not prove framework correctness; it only fixes the self-assessment baseline.",
-    "framework_baseline_version":  "2026-05-27",
-    "adopted_surfaces":  [
-                             "hooks_config",
-                             "framework_lock",
-                             "agents_calibration",
-                             "expected_dirty",
-                             "closeout_evidence",
-                             "head_commit_match",
-                             "timestamp_freshness"
-                         ],
-    "updated_at":  "2026-05-27T13:53:15.4880342+08:00"
+  "framework_repo": "https://github.com/Gavin0099/ai-governance-framework.git",
+  "adopted_release": "1.2.0",
+  "adopted_commit": "ca5d26dfe2f3f07853e999d4271d802f7102ec03",
+  "framework_interface_version": "1",
+  "framework_compatible": ">=1.0.0,<2.0.0",
+  "_self_reference_note": "This lock records the framework version used by this repo to evaluate itself. It does not prove framework correctness; it only fixes the self-assessment baseline.",
+  "framework_baseline_version": "2026-05-27",
+  "adopted_surfaces": [
+    "hooks_config",
+    "framework_lock",
+    "agents_calibration",
+    "expected_dirty",
+    "closeout_evidence",
+    "head_commit_match",
+    "timestamp_freshness"
+  ],
+  "updated_at": "2026-06-11T06:10:14.588637+00:00"
 }
